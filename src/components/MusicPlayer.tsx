@@ -427,7 +427,7 @@ export default function MusicPlayer() {
     }
   };
 
-  // Add song handler
+  // Add song handler - 수정된 버전 (타임아웃 제거 + 로깅 강화)
   const handleAddSong = async () => {
     if (!newSong.title || !newSong.category) {
       toast.error('곡 제목과 카테고리는 필수입니다.');
@@ -440,11 +440,7 @@ export default function MusicPlayer() {
     }
 
     setIsAddingSong(true);
-
-    const timeoutId = setTimeout(() => {
-      setIsAddingSong(false);
-      toast.error('곡 추가 시간이 초과되었습니다. 네트워크 연결을 확인하고 다시 시도해주세요.');
-    }, 10000);
+    console.log('🎵 [AddSong] 곡 추가 시작:', newSong.title);
 
     try {
       const finalAudioUrl = generateR2UrlFromTitle(newSong.title);
@@ -468,7 +464,10 @@ export default function MusicPlayer() {
         songData.lyrics = newSong.lyrics.trim();
       }
 
+      console.log('🎵 [AddSong] songData 준비 완료:', songData);
+
       if (isOfflineMode || !db) {
+        console.log('🔌 [AddSong] 오프라인 모드로 저장');
         const newSongWithId = {
           ...songData,
           id: `local-${Date.now()}`
@@ -484,11 +483,12 @@ export default function MusicPlayer() {
           throw new Error('Firebase 연결이 끊어졌습니다.');
         }
         
+        console.log('📡 [AddSong] Firebase에 저장 시작...');
         const docRef = await addDoc(collection(db, 'songs'), songData);
+        console.log('✅ [AddSong] Firebase 저장 성공! 문서 ID:', docRef.id);
+        
         toast.success(`새 곡이 추가되었습니다: ${newSong.title}`);
       }
-      
-      clearTimeout(timeoutId);
       
       // 폼 초기화
       setNewSong({ 
@@ -498,10 +498,10 @@ export default function MusicPlayer() {
         youtubeUrl: '', 
         lyrics: '' 
       });
+      console.log('✅ [AddSong] 폼 초기화 완료');
       
     } catch (error: any) {
       console.error('❌ [AddSong] 저장 오류:', error);
-      clearTimeout(timeoutId);
       
       let errorMessage = '곡 추가 중 오류가 발생했습니다.';
       
@@ -517,6 +517,7 @@ export default function MusicPlayer() {
       
     } finally {
       setIsAddingSong(false);
+      console.log('🎵 [AddSong] 프로세스 종료');
     }
   };
 
