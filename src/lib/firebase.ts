@@ -1,9 +1,9 @@
+// Build cache bypass - 2024.11.17
 console.log('🔥 [Firebase] firebase.ts 파일 로드 시작');
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
 
-// Firebase configuration - 실제 프로젝트 설정
 const firebaseConfig = {
   apiKey: "AIzaSyDx15L9nIaNbG0dnXDTiQIHGtiJ-Qn0G9w",
   authDomain: "symusic-7f651.firebaseapp.com",
@@ -15,7 +15,6 @@ const firebaseConfig = {
 
 console.log('🔥 [Firebase] Config 준비 완료:', firebaseConfig.projectId);
 
-// Initialize Firebase
 let app: FirebaseApp;
 let db: Firestore;
 
