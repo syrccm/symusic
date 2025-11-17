@@ -143,7 +143,7 @@ export default function MusicPlayer() {
   const [duration, setDuration] = useState(0);
   
   // Playback modes
-  const [repeatMode, setRepeatMode] = useState<RepeatMode>('all'); // 기본값: 전체 반복
+  const [repeatMode, setRepeatMode] = useState<RepeatMode>('all');
   const [isShuffleEnabled, setIsShuffleEnabled] = useState(false);
   const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
   
@@ -189,7 +189,6 @@ export default function MusicPlayer() {
 
   // Helper function to generate R2 URL from song title
   const generateR2UrlFromTitle = (title: string) => {
-    // Add .mp3 extension if not present
     const filename = title.endsWith('.mp3') ? title : `${title}.mp3`;
     const encodedFilename = encodeURIComponent(filename);
     return `${R2_CONFIG.publicUrl}/${encodedFilename}`;
@@ -259,7 +258,6 @@ export default function MusicPlayer() {
       id: `default-song-${Date.now()}`
     };
     
-    // 즉시 UI에 추가
     setSongs(prevSongs => {
       const exists = prevSongs.some(song => song.title === DEFAULT_SONG.title);
       if (!exists) {
@@ -282,15 +280,12 @@ export default function MusicPlayer() {
     try {
       setLoading(true);
       
-      // 먼저 기본 곡을 즉시 설치
       forceInstallDefaultSong();
       
-      // Firebase 연결 확인
       if (!db) {
         console.warn('⚠️ [MusicPlayer] Firestore가 없음 - 오프라인 모드로 전환');
         setIsOfflineMode(true);
         
-        // 로컬 스토리지에서 데이터 로드
         const savedSongs = localStorage.getItem('symusic-songs');
         const savedCategories = localStorage.getItem('symusic-categories');
         
@@ -302,7 +297,6 @@ export default function MusicPlayer() {
         if (savedCategories) {
           setCategories(JSON.parse(savedCategories));
         } else {
-          // 기본 카테고리 설정
           const defaultCats = DEFAULT_CATEGORIES.map((cat, index) => ({
             id: `local-${index}`,
             name: cat.name,
@@ -319,7 +313,6 @@ export default function MusicPlayer() {
       console.log('📡 [MusicPlayer] Firestore 리스너 설정 중...');
       setIsOfflineMode(false);
 
-      // Categories 실시간 리스너
       const categoriesQuery = query(
         collection(db, 'categories'), 
         orderBy('created_at', 'desc')
@@ -354,7 +347,6 @@ export default function MusicPlayer() {
         }
       );
 
-      // Songs 실시간 리스너
       const songsQuery = query(
         collection(db, 'songs'), 
         orderBy('created_at', 'desc')
@@ -368,7 +360,6 @@ export default function MusicPlayer() {
             ...doc.data()
           } as Song));
           
-          // 기본 곡이 Firebase에 있는지 확인
           const defaultExists = songsData.some(song => song.title === DEFAULT_SONG.title);
           
           if (!defaultExists && !defaultSongInstalled) {
@@ -394,7 +385,6 @@ export default function MusicPlayer() {
             });
           }
           
-          // 로컬 스토리지에 백업
           localStorage.setItem('symusic-songs', JSON.stringify(songsData));
         },
         (error) => {
@@ -405,7 +395,6 @@ export default function MusicPlayer() {
 
       toast.success('🎵 음악 플레이어가 준비되었습니다! (Firebase 연결됨)');
 
-      // Cleanup function
       return () => {
         unsubscribeCategories();
         unsubscribeSongs();
@@ -427,7 +416,7 @@ export default function MusicPlayer() {
     }
   };
 
-  // Add song handler - 수정된 버전 (타임아웃 제거 + 로깅 강화)
+  // Add song handler
   const handleAddSong = async () => {
     if (!newSong.title || !newSong.category) {
       toast.error('곡 제목과 카테고리는 필수입니다.');
@@ -490,7 +479,6 @@ export default function MusicPlayer() {
         toast.success(`새 곡이 추가되었습니다: ${newSong.title}`);
       }
       
-      // 폼 초기화
       setNewSong({ 
         title: '', 
         category: '', 
@@ -628,10 +616,6 @@ export default function MusicPlayer() {
       
       toast.success('관리자로 로그인되었습니다.');
       
-      // 관리자 로그인 성공 후 즉시 관리 창 열기
-      console.log('🔐 [Admin] 관리 창 열기 예약...');
-      
-      // React의 상태 업데이트가 비동기이므로 다음 렌더링 사이클에서 실행
       requestAnimationFrame(() => {
         console.log('🔐 [Admin] 관리 창 열기 실행');
         setShowAdminManagementDialog(true);
@@ -643,16 +627,14 @@ export default function MusicPlayer() {
     }
   };
 
-  // Admin management access handler (with password check)
+  // Admin management access handler
   const handleAdminManagementAccess = () => {
     console.log('🔐 [Admin] 관리 접근 시도, isAdmin:', isAdmin);
     
     if (!isAdmin) {
-      // 관리자가 아닌 경우 비밀번호 입력 창 표시
       console.log('🔐 [Admin] 비밀번호 입력 창 표시');
       setShowAdminDialog(true);
     } else {
-      // 이미 관리자인 경우 바로 관리 창 열기
       console.log('🔐 [Admin] 바로 관리 창 열기');
       setShowAdminManagementDialog(true);
     }
@@ -687,22 +669,19 @@ export default function MusicPlayer() {
       if (currentShuffleIndex < shuffledIndices.length - 1) {
         return shuffledIndices[currentShuffleIndex + 1];
       } else {
-        // End of shuffle list
         if (repeatMode === 'all') {
-          return shuffledIndices[0]; // Start over
+          return shuffledIndices[0];
         }
-        return -1; // Stop
+        return -1;
       }
     } else {
-      // Normal sequential playback
       if (currentIndex < filteredSongs.length - 1) {
         return currentIndex + 1;
       } else {
-        // End of list
         if (repeatMode === 'all') {
-          return 0; // Start over
+          return 0;
         }
-        return -1; // Stop
+        return -1;
       }
     }
   };
@@ -721,7 +700,7 @@ export default function MusicPlayer() {
         setIsPlaying(true);
         toast.success(`재생 중: ${song.title}`);
       }).catch(error => {
-        console.error('Playbook failed:', error);
+        console.error('Playback failed:', error);
         toast.error(`오디오 재생에 실패했습니다: ${song.title}`);
       });
     } else {
@@ -860,13 +839,11 @@ export default function MusicPlayer() {
       setIsPlaying(false);
       
       if (repeatMode === 'one') {
-        // Repeat current song
         audio.currentTime = 0;
         audio.play().then(() => {
           setIsPlaying(true);
         });
       } else {
-        // Move to next song or stop
         const filteredSongs = getFilteredSongs();
         const currentIndex = filteredSongs.findIndex(song => songs.indexOf(song) === currentSongIndex);
         const nextIndex = getNextSongIndex(currentIndex);
@@ -921,10 +898,8 @@ export default function MusicPlayer() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      {/* Mobile-First Layout */}
       <div className="flex flex-col h-screen max-w-md mx-auto">
         
-        {/* Header - Fixed */}
         <div className="flex-shrink-0 p-4 pb-2">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -952,7 +927,6 @@ export default function MusicPlayer() {
                 )}
               </div>
               
-              {/* Combined Admin Access Button */}
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -964,7 +938,6 @@ export default function MusicPlayer() {
             </div>
           </div>
 
-          {/* Category Selector */}
           <div className="mt-3">
             <Select value={currentCategory} onValueChange={setCurrentCategory}>
               <SelectTrigger className="w-full bg-slate-800/50 border-purple-400 text-white h-12">
@@ -991,7 +964,6 @@ export default function MusicPlayer() {
           </div>
         </div>
 
-        {/* Song List - Compact and minimal */}
         <div className="flex-shrink-0 px-4 pb-2">
           <Card className="bg-slate-800/50 border-slate-700">
             <CardHeader className="p-2 pb-1">
@@ -1051,16 +1023,13 @@ export default function MusicPlayer() {
           </Card>
         </div>
 
-        {/* Main Content Area - Player Controls with Repeat & Shuffle */}
         <div className="flex-1 overflow-hidden flex flex-col">
           
-          {/* Current Song Display - MINIMAL */}
           <div className="flex-shrink-0 px-4 pb-2">
             <Card className="bg-slate-800/50 border-slate-700">
               <CardContent className="p-3">
                 {currentSong ? (
                   <div className="space-y-3">
-                    {/* Progress Bar */}
                     <div className="space-y-1">
                       <div 
                         className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
@@ -1077,9 +1046,7 @@ export default function MusicPlayer() {
                       </div>
                     </div>
                     
-                    {/* Main Controls with Repeat and Shuffle */}
                     <div className="flex items-center justify-center space-x-3">
-                      {/* Repeat Button */}
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -1102,7 +1069,6 @@ export default function MusicPlayer() {
                         )}
                       </Button>
                       
-                      {/* Previous Button */}
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -1112,7 +1078,6 @@ export default function MusicPlayer() {
                         <SkipBack className="h-4 w-4" />
                       </Button>
                       
-                      {/* Play/Pause Button */}
                       <Button 
                         onClick={togglePlay}
                         size="sm"
@@ -1122,7 +1087,6 @@ export default function MusicPlayer() {
                         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
                       </Button>
                       
-                      {/* Next Button */}
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -1132,7 +1096,6 @@ export default function MusicPlayer() {
                         <SkipForward className="h-4 w-4" />
                       </Button>
                       
-                      {/* Shuffle Button */}
                       <Button 
                         variant="ghost" 
                         size="sm"
@@ -1160,7 +1123,6 @@ export default function MusicPlayer() {
             </Card>
           </div>
 
-          {/* Lyrics Area - FIXED HEIGHT (절반 크기) */}
           <div className="flex-shrink-0 px-4 pb-4">
             <Card className="bg-slate-800/50 border-slate-700 h-48">
               <CardHeader className="p-3 pb-2 flex-shrink-0">
@@ -1220,7 +1182,6 @@ export default function MusicPlayer() {
           </div>
         </div>
 
-        {/* Admin Login Dialog */}
         <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
           <DialogContent className="bg-slate-800 border-slate-700 mx-4">
             <DialogHeader>
@@ -1267,7 +1228,6 @@ export default function MusicPlayer() {
           </DialogContent>
         </Dialog>
 
-        {/* Admin Management Dialog */}
         <Dialog open={showAdminManagementDialog} onOpenChange={setShowAdminManagementDialog}>
           <DialogContent className="bg-slate-800 border-slate-700 mx-4 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1280,7 +1240,6 @@ export default function MusicPlayer() {
                 <TabsTrigger value="manage" className="text-white data-[state=active]:bg-purple-600">기존 곡 관리</TabsTrigger>
               </TabsList>
               
-              {/* 새 곡 추가 탭 */}
               <TabsContent value="add" className="space-y-4">
                 <div>
                   <Label htmlFor="new-song-category" className="text-white">카테고리 *</Label>
@@ -1374,10 +1333,8 @@ export default function MusicPlayer() {
                 </div>
               </TabsContent>
               
-              {/* 기존 곡 관리 탭 */}
               <TabsContent value="manage" className="space-y-4">
                 {editingSong ? (
-                  // 곡 수정 폼
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-white">곡 수정</h3>
@@ -1471,7 +1428,6 @@ export default function MusicPlayer() {
                     </div>
                   </div>
                 ) : (
-                  // 곡 목록
                   <div className="space-y-2">
                     <h3 className="text-lg font-semibold text-white mb-4">기존 곡 목록</h3>
                     {songs.length === 0 ? (
@@ -1536,7 +1492,6 @@ export default function MusicPlayer() {
           </DialogContent>
         </Dialog>
 
-        {/* Hidden Audio Element */}
         <audio 
           ref={audioRef} 
           crossOrigin="anonymous"
@@ -1546,3 +1501,6 @@ export default function MusicPlayer() {
     </div>
   );
 }
+
+
+
