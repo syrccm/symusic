@@ -811,7 +811,7 @@ export default function MusicPlayer() {
     }
   };
 
-  // Initialize on mount
+  // ✅ 수정된 부분: Initialize on mount
   useEffect(() => {
     const savedAdmin = localStorage.getItem('symusic-admin');
     if (savedAdmin === 'true') {
@@ -819,7 +819,21 @@ export default function MusicPlayer() {
       setRememberAdmin(true);
     }
     
-    initializeData();
+    // ✅ async 함수를 제대로 처리
+    let cleanup: (() => void) | undefined;
+    
+    const init = async () => {
+      cleanup = await initializeData();
+    };
+    
+    init();
+    
+    // ✅ cleanup 함수 반환
+    return () => {
+      if (cleanup && typeof cleanup === 'function') {
+        cleanup();
+      }
+    };
   }, []);
 
   // Update shuffled indices when songs or category changes
