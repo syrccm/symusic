@@ -3,6 +3,7 @@ console.log('🔥 [Firebase] firebase.ts 파일 로드 시작 - VERSION 3');
 
 import { initializeApp, getApps, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
+import { getAuth, Auth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: "AIzaSyDx15L9nIaNbG0dnXDTiQIHGtiJ-Qn0G9w",
@@ -17,6 +18,7 @@ console.log('🔥 [Firebase] Config 준비 완료 (v3):', firebaseConfig.project
 
 let app: FirebaseApp;
 let db: Firestore;
+let auth: Auth;
 
 try {
   if (getApps().length === 0) {
@@ -29,9 +31,12 @@ try {
 
   db = getFirestore(app);
   console.log('✅ [Firebase] Firestore 인스턴스 생성 완료 (v3)');
+
+  auth = getAuth(app);
+  console.log('✅ [Firebase] Auth 인스턴스 생성 완료 (v3)');
 } catch (error) {
   console.error('❌ [Firebase] 초기화 실패:', error);
   throw error;
 }
 
-export { app, db };
+export { app, db, auth };

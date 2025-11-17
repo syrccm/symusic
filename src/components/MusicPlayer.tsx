@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { db } from '@/lib/firebase';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { db, auth } from '@/lib/firebase';
 import { 
   collection, 
   addDoc, 
@@ -10,6 +10,7 @@ import {
   orderBy,
   updateDoc 
 } from 'firebase/firestore';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -123,6 +124,8 @@ const R2_CONFIG = {
 };
 
 const ADMIN_PASSWORD = '5155';
+const FIREBASE_ADMIN_EMAIL = import.meta.env.VITE_FIREBASE_ADMIN_EMAIL || '';
+const FIREBASE_ADMIN_PASSWORD = import.meta.env.VITE_FIREBASE_ADMIN_PASSWORD || '';
 
 export default function MusicPlayer() {
   // State
@@ -152,6 +155,7 @@ export default function MusicPlayer() {
   const [showAdminDialog, setShowAdminDialog] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [rememberAdmin, setRememberAdmin] = useState(false);
+  const [isAdminAuthenticating, setIsAdminAuthenticating] = useState(false);
   
   // Admin management dialog
   const [showAdminManagementDialog, setShowAdminManagementDialog] = useState(false);
@@ -600,11 +604,39 @@ export default function MusicPlayer() {
     }
   };
 
+  const ensureFirebaseAdminSession = useCallback(async () => {
+    if (!auth) {
+      throw new Error('Firebase Auth가 초기화되지 않았습니다.');
+    }
+
+    if (auth.currentUser) {
+      return auth.currentUser;
+    }
+
+    if (!FIREBASE_ADMIN_EMAIL || !FIREBASE_ADMIN_PASSWORD) {
+      throw new Error('Firebase 관리자 계정 환경변수가 설정되지 않았습니다.');
+    }
+
+    return signInWithEmailAndPassword(auth, FIREBASE_ADMIN_EMAIL, FIREBASE_ADMIN_PASSWORD);
+  }, []);
+
   // Admin login handler
-  const handleAdminLogin = () => {
+  const handleAdminLogin = async () => {
+    if (isAdminAuthenticating) return;
+
     console.log('🔐 [Admin] 로그인 시도:', adminPassword === ADMIN_PASSWORD ? '성공' : '실패');
     
-    if (adminPassword === ADMIN_PASSWORD) {
+    if (adminPassword !== ADMIN_PASSWORD) {
+      toast.error('비밀번호가 올바르지 않습니다.');
+      setAdminPassword('');
+      return;
+    }
+
+    setIsAdminAuthenticating(true);
+    
+    try {
+      await ensureFirebaseAdminSession();
+
       console.log('🔐 [Admin] 관리자 상태 설정 중...');
       setIsAdmin(true);
       setShowAdminDialog(false);
@@ -612,6 +644,8 @@ export default function MusicPlayer() {
       
       if (rememberAdmin) {
         localStorage.setItem('symusic-admin', 'true');
+      } else {
+        localStorage.removeItem('symusic-admin');
       }
       
       toast.success('관리자로 로그인되었습니다.');
@@ -621,9 +655,12 @@ export default function MusicPlayer() {
         setShowAdminManagementDialog(true);
       });
       
-    } else {
-      toast.error('비밀번호가 올바르지 않습니다.');
-      setAdminPassword('');
+    } catch (error: any) {
+      console.error('❌ [Admin] Firebase 인증 실패:', error);
+      const message = error?.message || 'Firebase 관리자 인증에 실패했습니다.';
+      toast.error(message);
+    } finally {
+      setIsAdminAuthenticating(false);
     }
   };
 
@@ -794,8 +831,16 @@ export default function MusicPlayer() {
   useEffect(() => {
     const savedAdmin = localStorage.getItem('symusic-admin');
     if (savedAdmin === 'true') {
-      setIsAdmin(true);
       setRememberAdmin(true);
+      ensureFirebaseAdminSession()
+        .then(() => {
+          setIsAdmin(true);
+          toast.success('Firebase 관리자 세션이 복구되었습니다.');
+        })
+        .catch(error => {
+          console.error('❌ [Admin] 저장된 세션 복구 실패:', error);
+          localStorage.removeItem('symusic-admin');
+        });
     }
     
     // ✅ async 함수를 제대로 처리
@@ -813,7 +858,7 @@ export default function MusicPlayer() {
         cleanup();
       }
     };
-  }, []);
+  }, [ensureFirebaseAdminSession]);
 
   // Update shuffled indices when songs or category changes
   useEffect(() => {
@@ -1198,6 +1243,7 @@ export default function MusicPlayer() {
                   onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
                   className="bg-slate-700 border-slate-600 text-white"
                   placeholder="관리자 비밀번호를 입력하세요"
+                  disabled={isAdminAuthenticating}
                 />
               </div>
               <div className="flex items-center space-x-2">
@@ -1213,13 +1259,25 @@ export default function MusicPlayer() {
                 </Label>
               </div>
               <div className="flex space-x-2">
-                <Button onClick={handleAdminLogin} className="flex-1">
-                  확인
+                <Button 
+                  onClick={handleAdminLogin} 
+                  className="flex-1"
+                  disabled={isAdminAuthenticating}
+                >
+                  {isAdminAuthenticating ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      확인 중...
+                    </>
+                  ) : (
+                    '확인'
+                  )}
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setShowAdminDialog(false)}
                   className="flex-1"
+                  disabled={isAdminAuthenticating}
                 >
                   취소
                 </Button>
