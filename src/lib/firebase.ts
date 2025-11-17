@@ -44,3 +44,37 @@ if (!db) {
 
 export { db };
 export default app;
+```
+
+4. 아래에 **Commit message** 입력: `Fix: Update Firebase config to real project`
+5. **Commit changes** 버튼 클릭
+
+---
+
+### **Step 3: Vercel 배포 확인**
+
+1. Vercel 대시보드 접속: https://vercel.com
+2. **symusic 프로젝트** 선택
+3. **Deployments** 탭에서 새 배포가 시작되는지 확인
+4. **배포 완료 대기** (1-2분)
+
+---
+
+### **Step 4: 완전한 캐시 삭제**
+
+배포 완료 후:
+
+1. **사이트 열기**
+2. **개발자 도구 열기** (F12)
+3. **Application 탭** 클릭
+4. 왼쪽에서 **Storage** 섹션 찾기
+5. **Clear site data** 버튼 클릭
+6. **페이지 완전 새로고침** (Ctrl+Shift+R)
+
+---
+
+### **Step 5: 확인**
+
+Console에서 다음이 보여야 합니다:
+```
+🔥 [Firebase] Config 준비 완료: symusic-7f651  ← ✅
