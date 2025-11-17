@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '@/lib/firebase';
 import { 
   collection, 
@@ -10,7 +10,7 @@ import {
   orderBy,
   updateDoc 
 } from 'firebase/firestore';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -123,10 +123,6 @@ const R2_CONFIG = {
   publicUrl: 'https://pub-0e706e4324b149e9a79e2be1ad1de135.r2.dev'
 };
 
-const ADMIN_PASSWORD = '5155';
-const FIREBASE_ADMIN_EMAIL = import.meta.env.VITE_FIREBASE_ADMIN_EMAIL || '';
-const FIREBASE_ADMIN_PASSWORD = import.meta.env.VITE_FIREBASE_ADMIN_PASSWORD || '';
-
 export default function MusicPlayer() {
   // State
   const [songs, setSongs] = useState<Song[]>([]);
@@ -153,6 +149,7 @@ export default function MusicPlayer() {
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
+  const [adminEmail, setAdminEmail] = useState('');
   const [adminPassword, setAdminPassword] = useState('');
   const [rememberAdmin, setRememberAdmin] = useState(false);
   const [isAdminAuthenticating, setIsAdminAuthenticating] = useState(false);
@@ -604,38 +601,19 @@ export default function MusicPlayer() {
     }
   };
 
-  const ensureFirebaseAdminSession = useCallback(async () => {
-    if (!auth) {
-      throw new Error('Firebase Auth가 초기화되지 않았습니다.');
-    }
-
-    if (auth.currentUser) {
-      return auth.currentUser;
-    }
-
-    if (!FIREBASE_ADMIN_EMAIL || !FIREBASE_ADMIN_PASSWORD) {
-      throw new Error('Firebase 관리자 계정 환경변수가 설정되지 않았습니다.');
-    }
-
-    return signInWithEmailAndPassword(auth, FIREBASE_ADMIN_EMAIL, FIREBASE_ADMIN_PASSWORD);
-  }, []);
-
   // Admin login handler
   const handleAdminLogin = async () => {
     if (isAdminAuthenticating) return;
 
-    console.log('🔐 [Admin] 로그인 시도:', adminPassword === ADMIN_PASSWORD ? '성공' : '실패');
-    
-    if (adminPassword !== ADMIN_PASSWORD) {
-      toast.error('비밀번호가 올바르지 않습니다.');
-      setAdminPassword('');
+    if (!adminEmail || !adminPassword) {
+      toast.error('이메일과 비밀번호를 모두 입력하세요.');
       return;
     }
 
     setIsAdminAuthenticating(true);
     
     try {
-      await ensureFirebaseAdminSession();
+      await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
 
       console.log('🔐 [Admin] 관리자 상태 설정 중...');
       setIsAdmin(true);
@@ -643,11 +621,9 @@ export default function MusicPlayer() {
       setAdminPassword('');
       
       if (rememberAdmin) {
-        localStorage.setItem('symusic-admin', 'true');
-      } else {
-        localStorage.removeItem('symusic-admin');
+        localStorage.setItem('symusic-admin-email', adminEmail);
       }
-      
+
       toast.success('관리자로 로그인되었습니다.');
       
       requestAnimationFrame(() => {
@@ -829,18 +805,10 @@ export default function MusicPlayer() {
 
   // ✅ 수정된 부분: Initialize on mount
   useEffect(() => {
-    const savedAdmin = localStorage.getItem('symusic-admin');
-    if (savedAdmin === 'true') {
+    const savedEmail = localStorage.getItem('symusic-admin-email');
+    if (savedEmail) {
+      setAdminEmail(savedEmail);
       setRememberAdmin(true);
-      ensureFirebaseAdminSession()
-        .then(() => {
-          setIsAdmin(true);
-          toast.success('Firebase 관리자 세션이 복구되었습니다.');
-        })
-        .catch(error => {
-          console.error('❌ [Admin] 저장된 세션 복구 실패:', error);
-          localStorage.removeItem('symusic-admin');
-        });
     }
     
     // ✅ async 함수를 제대로 처리
@@ -858,7 +826,23 @@ export default function MusicPlayer() {
         cleanup();
       }
     };
-  }, [ensureFirebaseAdminSession]);
+  }, []);
+
+  useEffect(() => {
+    if (!auth) return;
+    
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        console.log('🔐 [Admin] Firebase 세션 활성화:', user.email);
+        setIsAdmin(true);
+      } else {
+        console.log('🔐 [Admin] Firebase 세션 해제');
+        setIsAdmin(false);
+      }
+    });
+    
+    return () => unsubscribe();
+  }, []);
 
   // Update shuffled indices when songs or category changes
   useEffect(() => {
@@ -1234,6 +1218,19 @@ export default function MusicPlayer() {
             </DialogHeader>
             <div className="space-y-4">
               <div>
+                <Label htmlFor="admin-email" className="text-white">관리자 이메일</Label>
+                <Input
+                  id="admin-email"
+                  type="email"
+                  value={adminEmail}
+                  onChange={(e) => setAdminEmail(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
+                  className="bg-slate-700 border-slate-600 text-white"
+                  placeholder="이메일을 입력하세요"
+                  disabled={isAdminAuthenticating}
+                />
+              </div>
+              <div>
                 <Label htmlFor="admin-password" className="text-white">비밀번호</Label>
                 <Input
                   id="admin-password"
@@ -1242,7 +1239,7 @@ export default function MusicPlayer() {
                   onChange={(e) => setAdminPassword(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleAdminLogin()}
                   className="bg-slate-700 border-slate-600 text-white"
-                  placeholder="관리자 비밀번호를 입력하세요"
+                  placeholder="비밀번호를 입력하세요"
                   disabled={isAdminAuthenticating}
                 />
               </div>
@@ -1251,11 +1248,18 @@ export default function MusicPlayer() {
                   type="checkbox"
                   id="remember-admin"
                   checked={rememberAdmin}
-                  onChange={(e) => setRememberAdmin(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setRememberAdmin(checked);
+                    if (!checked) {
+                      localStorage.removeItem('symusic-admin-email');
+                    }
+                  }}
                   className="rounded"
+                  disabled={isAdminAuthenticating}
                 />
                 <Label htmlFor="remember-admin" className="text-sm text-gray-300">
-                  이 기기에서 저장
+                  이 기기에 이메일 저장
                 </Label>
               </div>
               <div className="flex space-x-2">
