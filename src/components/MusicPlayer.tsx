@@ -18,7 +18,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { 
@@ -87,34 +86,6 @@ const DEFAULT_CATEGORIES = [
   { name: '기타' }
 ];
 
-// Default song - 기본 설치 곡 (항상 설치되어야 함)
-const DEFAULT_SONG: Omit<Song, 'id'> = {
-  title: '그 손이 일하시네',
-  category: '금철',
-  date: '2025-10-13',
-  description: '역대하24:17-27',
-  audioUrl: 'https://pub-0e706e4324b149e9a79e2be1ad1de135.r2.dev/%EA%B7%B8%20%EC%86%90%EC%9D%B4%20%EC%9D%BC%ED%95%98%EC%8B%9C%EB%84%A4.mp3',
-  lyrics: `보이는 건 사람의 손
-보이지 않게 일하신 손
-오늘도 내 하루 속에
-사랑의 외침 들리네
-
-그분의 손이 일하시네
-그분의 손이 붙드시네
-돌아오라 부르시네
-그 사랑의 손이 나를
-
-내 힘 아닌 주의 손
-내 뜻 아닌 주의 길
-전능하신 그 손 의지하며
-오늘 주께 응답하리
-
-그분의 손이 일하시네
-그분의 손이 붙드시네
-오늘도 내 삶 속에서
-그분의 사랑 외치시네`,
-  created_at: '2025-10-13T00:00:00.000Z'
-};
 
 // R2 Storage Configuration
 const R2_CONFIG = {
@@ -135,7 +106,6 @@ export default function MusicPlayer() {
   const [loading, setLoading] = useState(true);
   const [isAddingSong, setIsAddingSong] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [defaultSongInstalled, setDefaultSongInstalled] = useState(false);
   const [showContent, setShowContent] = useState(false);
   const [activeContentTab, setActiveContentTab] = useState('playlist');
   const [currentTime, setCurrentTime] = useState(0);
@@ -250,38 +220,12 @@ export default function MusicPlayer() {
     }
   };
 
-  // Force install default song immediately
-  const forceInstallDefaultSong = () => {
-    console.log('🎵 [ForceInstall] 기본 곡 강제 설치 시작...');
-    
-    const defaultSongWithId = {
-      ...DEFAULT_SONG,
-      id: `default-song-${Date.now()}`
-    };
-    
-    setSongs(prevSongs => {
-      const exists = prevSongs.some(song => song.title === DEFAULT_SONG.title);
-      if (!exists) {
-        const newSongs = [defaultSongWithId, ...prevSongs];
-        localStorage.setItem('symusic-songs', JSON.stringify(newSongs));
-        console.log('✅ [ForceInstall] 기본 곡 UI에 추가됨');
-        return newSongs;
-      }
-      return prevSongs;
-    });
-    
-    setDefaultSongInstalled(true);
-    toast.success('🎵 기본 곡 "그 손이 일하시네"가 설치되었습니다');
-  };
-
   // Initialize data
   const initializeData = async () => {
     console.log('🎵 [MusicPlayer] 초기화 시작');
     
     try {
       setLoading(true);
-      
-      forceInstallDefaultSong();
       
       if (!db) {
         console.warn('⚠️ [MusicPlayer] Firestore가 없음 - 오프라인 모드로 전환');
@@ -361,31 +305,7 @@ export default function MusicPlayer() {
             ...doc.data()
           } as Song));
           
-          const defaultExists = songsData.some(song => song.title === DEFAULT_SONG.title);
-          
-          if (!defaultExists && !defaultSongInstalled) {
-            try {
-              await addDoc(collection(db, 'songs'), DEFAULT_SONG);
-            } catch (error) {
-              console.error('❌ [DefaultSong] 추가 실패:', error);
-            }
-          } else {
-            setSongs(prevSongs => {
-              const localDefaultExists = prevSongs.some(song => song.title === DEFAULT_SONG.title);
-              if (localDefaultExists) {
-                const combined = [...prevSongs];
-                songsData.forEach(firebaseSong => {
-                  if (!combined.some(localSong => localSong.title === firebaseSong.title)) {
-                    combined.push(firebaseSong);
-                  }
-                });
-                return combined;
-              } else {
-                return songsData;
-              }
-            });
-          }
-          
+          setSongs(songsData);
           localStorage.setItem('symusic-songs', JSON.stringify(songsData));
         },
         (error) => {
@@ -569,11 +489,6 @@ export default function MusicPlayer() {
     }
 
     const songToDelete = songs.find(song => song.id === songId);
-    
-    if (songToDelete && songToDelete.title === DEFAULT_SONG.title) {
-      toast.error('기본 곡은 삭제할 수 없습니다.');
-      return;
-    }
 
     try {
       if (songToDelete && songs.indexOf(songToDelete) === currentSongIndex) {
@@ -612,8 +527,32 @@ export default function MusicPlayer() {
 
     setIsAdminAuthenticating(true);
     
+    console.log('🔐 [Admin] 로그인 시도 시작');
+    console.log('🔐 [Admin] 입력된 이메일:', adminEmail);
+    console.log('🔐 [Admin] Auth 객체 존재 여부:', !!auth);
+    console.log('🔐 [Admin] Auth 객체 상세:', auth ? {
+      app: auth.app?.name,
+      currentUser: auth.currentUser?.email || 'null',
+      config: {
+        apiKey: auth.app?.options?.apiKey ? '설정됨' : '없음',
+        authDomain: auth.app?.options?.authDomain || '없음',
+        projectId: auth.app?.options?.projectId || '없음'
+      }
+    } : 'Auth 객체가 null입니다');
+    
     try {
-      await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+      if (!auth) {
+        throw new Error('Firebase Auth가 초기화되지 않았습니다. Firebase 설정을 확인하세요.');
+      }
+
+      console.log('🔐 [Admin] signInWithEmailAndPassword 호출 시작...');
+      const userCredential = await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+      console.log('✅ [Admin] Firebase 인증 성공!');
+      console.log('✅ [Admin] 사용자 정보:', {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        emailVerified: userCredential.user.emailVerified
+      });
 
       console.log('🔐 [Admin] 관리자 상태 설정 중...');
       setIsAdmin(true);
@@ -622,6 +561,7 @@ export default function MusicPlayer() {
       
       if (rememberAdmin) {
         localStorage.setItem('symusic-admin-email', adminEmail);
+        console.log('🔐 [Admin] 이메일을 로컬 스토리지에 저장함');
       }
 
       toast.success('관리자로 로그인되었습니다.');
@@ -632,11 +572,45 @@ export default function MusicPlayer() {
       });
       
     } catch (error: any) {
-      console.error('❌ [Admin] Firebase 인증 실패:', error);
+      console.error('❌ [Admin] Firebase 인증 실패 - 상세 오류 정보:');
+      console.error('❌ [Admin] 오류 타입:', error?.constructor?.name || typeof error);
+      console.error('❌ [Admin] 오류 코드:', error?.code || '코드 없음');
+      console.error('❌ [Admin] 오류 메시지:', error?.message || '메시지 없음');
+      console.error('❌ [Admin] 전체 오류 객체:', error);
+      
+      if (error?.code) {
+        console.error('❌ [Admin] Firebase 오류 코드 분석:');
+        switch (error.code) {
+          case 'auth/api-key-not-valid':
+            console.error('❌ [Admin] API 키가 유효하지 않습니다.');
+            console.error('❌ [Admin] Firebase Console에서 API 키를 확인하세요.');
+            console.error('❌ [Admin] 현재 사용 중인 API 키:', auth?.app?.options?.apiKey ? '설정됨' : '없음');
+            break;
+          case 'auth/invalid-email':
+            console.error('❌ [Admin] 이메일 형식이 올바르지 않습니다.');
+            break;
+          case 'auth/user-disabled':
+            console.error('❌ [Admin] 해당 사용자 계정이 비활성화되었습니다.');
+            break;
+          case 'auth/user-not-found':
+            console.error('❌ [Admin] 해당 이메일로 등록된 사용자가 없습니다.');
+            break;
+          case 'auth/wrong-password':
+            console.error('❌ [Admin] 비밀번호가 올바르지 않습니다.');
+            break;
+          case 'auth/network-request-failed':
+            console.error('❌ [Admin] 네트워크 요청 실패. 인터넷 연결을 확인하세요.');
+            break;
+          default:
+            console.error('❌ [Admin] 알 수 없는 Firebase 인증 오류:', error.code);
+        }
+      }
+      
       const message = error?.message || 'Firebase 관리자 인증에 실패했습니다.';
       toast.error(message);
     } finally {
       setIsAdminAuthenticating(false);
+      console.log('🔐 [Admin] 로그인 프로세스 종료');
     }
   };
 
@@ -1497,20 +1471,14 @@ export default function MusicPlayer() {
                     ) : (
                       <div className="max-h-96 overflow-y-auto space-y-2">
                         {songs.map((song) => {
-                          const isDefaultSong = song.title === DEFAULT_SONG.title;
                           return (
                             <div
                               key={song.id}
                               className="p-3 bg-slate-700/50 rounded-lg flex items-center justify-between"
                             >
                               <div className="flex-1 min-w-0">
-                                <h4 className="font-medium text-white truncate flex items-center space-x-2">
-                                  <span>{song.title}</span>
-                                  {isDefaultSong && (
-                                    <Badge variant="outline" className="text-xs text-green-400 border-green-400">
-                                      기본곡
-                                    </Badge>
-                                  )}
+                                <h4 className="font-medium text-white truncate">
+                                  {song.title}
                                 </h4>
                                 <p className="text-xs text-gray-400">{song.category}</p>
                               </div>
@@ -1528,16 +1496,11 @@ export default function MusicPlayer() {
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => {
-                                    if (isDefaultSong) {
-                                      toast.error('기본 곡은 삭제할 수 없습니다.');
-                                      return;
-                                    }
                                     if (confirm(`정말로 "${song.title}" 곡을 삭제하시겠습니까?`)) {
                                       handleDeleteSong(song.id);
                                     }
                                   }}
-                                  className={`${isDefaultSong ? 'text-gray-600 cursor-not-allowed' : 'text-red-400 hover:text-red-300'} p-1`}
-                                  disabled={isDefaultSong}
+                                  className="text-red-400 hover:text-red-300 p-1"
                                 >
                                   <Trash2 className="h-3 w-3" />
                                 </Button>

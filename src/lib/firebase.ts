@@ -6,12 +6,12 @@ import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDx15L9nIaNbG0dnXDTiQIHGtiJ-Qn0G9w",
+  apiKey: "AIzaSyDx15L0nraNbGDdnXDTiQIHGtiJ-Qn0G9w",
   authDomain: "symusic-7f651.firebaseapp.com",
   projectId: "symusic-7f651",
   storageBucket: "symusic-7f651.firebasestorage.app",
   messagingSenderId: "396203280257",
-  appId: "1:396203280257:web:4d83b47410d7967726a80"
+  appId: "1:396203280257:web:4d83b47410d79677260a80"
 };
 
 console.log('🔥 [Firebase] Config 준비 완료 (v3):', firebaseConfig.projectId);
@@ -34,6 +34,12 @@ try {
 
   auth = getAuth(app);
   console.log('✅ [Firebase] Auth 인스턴스 생성 완료 (v3)');
+  console.log('✅ [Firebase] Auth 설정 확인:', {
+    apiKey: firebaseConfig.apiKey ? `${firebaseConfig.apiKey.substring(0, 10)}...` : '없음',
+    authDomain: firebaseConfig.authDomain,
+    projectId: firebaseConfig.projectId,
+    appName: app.name
+  });
 } catch (error) {
   console.error('❌ [Firebase] 초기화 실패:', error);
   throw error;
