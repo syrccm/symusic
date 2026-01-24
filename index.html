@@ -2,7 +2,7 @@
 <html lang="ko">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="https://public-frontend-cos.metadl.com/mgx/img/favicon.png" />
+    <link rel="icon" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SY Music - 수영로말씀적용찬양</title>
     <meta
@@ -13,12 +13,33 @@
     <meta property="og:title" content="SY Music - 수영로말씀적용찬양 음악플레이어" />
     <meta
       property="og:description"
-      content=""
+      content="수영로교회 말씀적용찬양 음악플레이어"
     />
     <meta property="og:type" content="website" />
+
+    <!-- PWA 설정 -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#8b5cf6">
+    
+    <!-- iOS 지원 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="SY Music">
+    <link rel="apple-touch-icon" href="/icon-192.png">
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker 등록 -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => console.log('SW 등록 성공:', reg.scope))
+            .catch((err) => console.log('SW 등록 실패:', err));
+        });
+      }
+    </script>
   </body>
 </html>
