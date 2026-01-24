@@ -1,0 +1,43 @@
+<!-- ============================================
+     PWA 설정 - index.html의 <head> 안에 추가하세요
+     ============================================ -->
+
+<!-- PWA Manifest -->
+<link rel="manifest" href="/manifest.json">
+
+<!-- iOS 지원 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SY Music">
+<link rel="apple-touch-icon" href="/icon-192.png">
+
+<!-- 테마 색상 -->
+<meta name="theme-color" content="#8b5cf6">
+
+<!-- ============================================
+     Service Worker 등록 - </body> 바로 앞에 추가하세요
+     ============================================ -->
+
+<script>
+  // Service Worker 등록
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/sw.js')
+        .then((registration) => {
+          console.log('SW 등록 성공:', registration.scope);
+        })
+        .catch((error) => {
+          console.log('SW 등록 실패:', error);
+        });
+    });
+  }
+
+  // PWA 설치 프롬프트 (선택사항 - 웹에서 설치 유도)
+  let deferredPrompt;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    // 여기서 "앱 설치" 버튼을 표시할 수 있습니다
+    console.log('PWA 설치 가능');
+  });
+</script>
