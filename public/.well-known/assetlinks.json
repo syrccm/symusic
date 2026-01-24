@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "win.symusic.twa",
+      "sha256_cert_fingerprints": [
+        "여기에_SHA256_인증서_지문을_넣으세요"
+      ]
+    }
+  }
+]
