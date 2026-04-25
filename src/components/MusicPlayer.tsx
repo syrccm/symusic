@@ -946,19 +946,21 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             </div>
             
             <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1 text-xs">
-                {isOfflineMode ? (
-                  <>
-                    <WifiOff className="h-3 w-3 text-orange-400" />
-                    <span className="text-orange-400 hidden sm:inline">오프라인</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-3 w-3 text-green-400" />
-                    <span className="text-green-400 hidden sm:inline">연결됨</span>
-                  </>
-                )}
-              </div>
+              {isAdminRoute && (
+                <div className="flex items-center space-x-1 text-xs">
+                  {isOfflineMode ? (
+                    <>
+                      <WifiOff className="h-3 w-3 text-orange-400" />
+                      <span className="text-orange-400 hidden sm:inline">오프라인</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-3 w-3 text-green-400" />
+                      <span className="text-green-400 hidden sm:inline">연결됨</span>
+                    </>
+                  )}
+                </div>
+              )}
               
               {isAdminRoute && (
                 <>
@@ -1173,15 +1175,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             </Card>
           </div>
 
-          <div className="flex-shrink-0 px-4 pb-4">
-            <Card className="bg-slate-800/50 border-slate-700 h-48">
+          <div className="flex-1 min-h-0 px-4 pb-4">
+            <Card className="bg-slate-800/50 border-slate-700 h-full flex flex-col">
               <CardHeader className="p-3 pb-2 flex-shrink-0">
                 <CardTitle className="text-sm text-white flex items-center space-x-2">
                   <Scroll className="h-4 w-4" />
                   <span>가사</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-3 pt-0 h-36">
+              <CardContent className="p-3 pt-0 flex-1 min-h-0 overflow-hidden">
                 <div className="h-full overflow-y-auto bg-slate-700/30 rounded-lg p-3">
                   {currentSong && currentSong.lyrics ? (
                     <div className="space-y-3">
