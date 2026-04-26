@@ -1,16 +1,12 @@
-// 관리자 설정 및 GitHub 토큰 관리
+// 관리자 GitHub 토큰 관리
+// 관리자 인증은 Firebase Auth(signInWithEmailAndPassword)만 사용합니다.
 
 interface AdminConfig {
-  password: string;
   githubToken?: string;
   enableGitHubSync: boolean;
 }
 
-// 관리자 설정 (실제 배포 시 환경변수로 관리)
 export const ADMIN_CONFIG: AdminConfig = {
-  password: 'dudghs91!!@@',
-  // GitHub Personal Access Token (관리자가 설정)
-  // 권한: repo (전체 저장소 접근) 또는 public_repo (공개 저장소만)
   githubToken: process.env.REACT_APP_GITHUB_TOKEN || '',
   enableGitHubSync: true
 };

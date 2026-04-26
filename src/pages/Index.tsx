@@ -1,5 +1,9 @@
 import MusicPlayer from '@/components/MusicPlayer';
 
-export default function Index() {
-  return <MusicPlayer />;
+interface IndexProps {
+  isAdminRoute?: boolean;
+}
+
+export default function Index({ isAdminRoute = false }: IndexProps) {
+  return <MusicPlayer isAdminRoute={isAdminRoute} />;
 }

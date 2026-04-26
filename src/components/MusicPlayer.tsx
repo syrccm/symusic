@@ -10,7 +10,7 @@ import {
   orderBy,
   updateDoc 
 } from 'firebase/firestore';
-import { signInWithEmailAndPassword, onAuthStateChanged } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -50,7 +50,8 @@ import {
   Scroll,
   Repeat,
   Repeat1,
-  Shuffle
+  Shuffle,
+  LogOut
 } from 'lucide-react';
 
 // Types
@@ -94,7 +95,11 @@ const R2_CONFIG = {
   publicUrl: 'https://pub-0e706e4324b149e9a79e2be1ad1de135.r2.dev'
 };
 
-export default function MusicPlayer() {
+interface MusicPlayerProps {
+  isAdminRoute?: boolean;
+}
+
+export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) {
   // State
   const [songs, setSongs] = useState<Song[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -617,13 +622,28 @@ export default function MusicPlayer() {
   // Admin management access handler
   const handleAdminManagementAccess = () => {
     console.log('🔐 [Admin] 관리 접근 시도, isAdmin:', isAdmin);
-    
+
     if (!isAdmin) {
       console.log('🔐 [Admin] 비밀번호 입력 창 표시');
       setShowAdminDialog(true);
     } else {
       console.log('🔐 [Admin] 바로 관리 창 열기');
       setShowAdminManagementDialog(true);
+    }
+  };
+
+  // Admin logout handler
+  const handleAdminLogout = async () => {
+    try {
+      await signOut(auth);
+      setShowAdminManagementDialog(false);
+      setShowAdminDialog(false);
+      setAdminPassword('');
+      // onAuthStateChanged 콜백이 setIsAdmin(false) 처리
+      toast.success('로그아웃되었습니다.');
+    } catch (error: any) {
+      console.error('❌ [Admin] 로그아웃 오류:', error);
+      toast.error('로그아웃 중 오류가 발생했습니다.');
     }
   };
 
@@ -800,21 +820,31 @@ export default function MusicPlayer() {
     };
   }, []);
 
+  // /0691 라우트일 때만 Firebase Auth 세션을 관리자 모드로 동기화.
+  // 일반 라우트에서는 관리자 상태가 절대 켜지지 않도록 보장.
   useEffect(() => {
+    if (!isAdminRoute) {
+      setIsAdmin(false);
+      setShowAdminDialog(false);
+      setShowAdminManagementDialog(false);
+      return;
+    }
     if (!auth) return;
-    
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         console.log('🔐 [Admin] Firebase 세션 활성화:', user.email);
         setIsAdmin(true);
+        setShowAdminDialog(false);
       } else {
         console.log('🔐 [Admin] Firebase 세션 해제');
         setIsAdmin(false);
+        setShowAdminDialog(true); // /0691 진입 시 로그인 모달 자동 오픈
       }
     });
-    
+
     return () => unsubscribe();
-  }, []);
+  }, [isAdminRoute]);
 
   // Update shuffled indices when songs or category changes
   useEffect(() => {
@@ -914,28 +944,47 @@ export default function MusicPlayer() {
             </div>
             
             <div className="flex items-center space-x-2">
-              <div className="flex items-center space-x-1 text-xs">
-                {isOfflineMode ? (
-                  <>
-                    <WifiOff className="h-3 w-3 text-orange-400" />
-                    <span className="text-orange-400 hidden sm:inline">오프라인</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-3 w-3 text-green-400" />
-                    <span className="text-green-400 hidden sm:inline">연결됨</span>
-                  </>
-                )}
-              </div>
+              {isAdminRoute && (
+                <div className="flex items-center space-x-1 text-xs">
+                  {isOfflineMode ? (
+                    <>
+                      <WifiOff className="h-3 w-3 text-orange-400" />
+                      <span className="text-orange-400 hidden sm:inline">오프라인</span>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-3 w-3 text-green-400" />
+                      <span className="text-green-400 hidden sm:inline">연결됨</span>
+                    </>
+                  )}
+                </div>
+              )}
               
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-purple-400 hover:text-purple-300 p-2"
-                onClick={handleAdminManagementAccess}
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
+              {isAdminRoute && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-purple-400 hover:text-purple-300 p-2"
+                    onClick={handleAdminManagementAccess}
+                    title="관리자 메뉴"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                  {isAdmin && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-red-400 hover:text-red-300 p-2"
+                      onClick={handleAdminLogout}
+                      title="로그아웃"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      <span className="hidden sm:inline ml-1 text-xs">로그아웃</span>
+                    </Button>
+                  )}
+                </>
+              )}
             </div>
           </div>
 
@@ -1124,16 +1173,16 @@ export default function MusicPlayer() {
             </Card>
           </div>
 
-          <div className="px-4 pb-4">
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardHeader className="p-3 pb-2">
+          <div className="flex-1 min-h-0 px-4 pb-4">
+            <Card className="bg-slate-800/50 border-slate-700 h-full flex flex-col">
+              <CardHeader className="p-3 pb-2 flex-shrink-0">
                 <CardTitle className="text-sm text-white flex items-center space-x-2">
                   <Scroll className="h-4 w-4" />
                   <span>가사</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <div className="bg-slate-700/30 rounded-lg p-3">
+              <CardContent className="p-3 pt-0 flex-1 min-h-0 overflow-hidden">
+                <div className="h-full overflow-y-auto bg-slate-700/30 rounded-lg p-3">
                   {currentSong && currentSong.lyrics ? (
                     <div className="space-y-3">
                       <div className="text-center border-b border-slate-600 pb-2">
@@ -1181,6 +1230,7 @@ export default function MusicPlayer() {
           </div>
         </div>
 
+        {isAdminRoute && (
         <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
           <DialogContent className="bg-slate-800 border-slate-700 mx-4">
             <DialogHeader>
@@ -1259,7 +1309,9 @@ export default function MusicPlayer() {
             </div>
           </DialogContent>
         </Dialog>
+        )}
 
+        {isAdminRoute && (
         <Dialog open={showAdminManagementDialog} onOpenChange={setShowAdminManagementDialog}>
           <DialogContent className="bg-slate-800 border-slate-700 mx-4 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
@@ -1512,9 +1564,10 @@ export default function MusicPlayer() {
             </Tabs>
           </DialogContent>
         </Dialog>
+        )}
 
-        <audio 
-          ref={audioRef} 
+        <audio
+          ref={audioRef}
           crossOrigin="anonymous"
           preload="metadata"
         />
