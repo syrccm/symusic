@@ -797,7 +797,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
   };
 
-  // ✅ 수정된 부분: Initialize on mount
+  // Initialize on mount
   useEffect(() => {
     const savedEmail = localStorage.getItem('symusic-admin-email');
     if (savedEmail) {
@@ -805,7 +805,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       setRememberAdmin(true);
     }
     
-    // ✅ async 함수를 제대로 처리
     let cleanup: (() => void) | undefined;
     
     const init = async () => {
@@ -814,7 +813,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     
     init();
     
-    // ✅ cleanup 함수 반환
     return () => {
       if (cleanup && typeof cleanup === 'function') {
         cleanup();
@@ -931,7 +929,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <div className="flex flex-col h-screen max-w-md mx-auto">
+      <div className="flex flex-col min-h-screen max-w-md mx-auto">
         
         <div className="flex-shrink-0 p-4 pb-2">
           <div className="flex items-center justify-between">
@@ -1075,7 +1073,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           </Card>
         </div>
 
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex flex-col">
           
           <div className="flex-shrink-0 px-4 pb-2">
             <Card className="bg-slate-800/50 border-slate-700">
@@ -1212,19 +1210,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       )}
                     </div>
                   ) : (
-                    <div className="h-full flex items-center justify-center">
-                      <div className="text-center space-y-2">
-                        <Scroll className="h-8 w-8 text-gray-600 mx-auto" />
-                        <div>
-                          <p className="text-gray-400 text-sm">
-                            {currentSong ? '이 곡에는 가사가 없습니다' : '곡을 선택하면 가사가 표시됩니다'}
+                    <div className="py-8 text-center space-y-2">
+                      <Scroll className="h-8 w-8 text-gray-600 mx-auto" />
+                      <div>
+                        <p className="text-gray-400 text-sm">
+                          {currentSong ? '이 곡에는 가사가 없습니다' : '곡을 선택하면 가사가 표시됩니다'}
+                        </p>
+                        {currentSong && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            관리자가 가사를 추가할 수 있습니다
                           </p>
-                          {currentSong && (
-                            <p className="text-xs text-gray-500 mt-1">
-                              관리자가 가사를 추가할 수 있습니다
-                            </p>
-                          )}
-                        </div>
+                        )}
                       </div>
                     </div>
                   )}
@@ -1579,6 +1575,3 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     </div>
   );
 }
-
-
-

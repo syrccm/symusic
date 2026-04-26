@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<title>카포 도우미</title>
+
+<!-- iOS 홈 화면 아이콘 및 PWA 설정 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="카포">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1a1612">
+<meta name="format-detection" content="telephone=no">
+
+<!-- 인라인 SVG 아이콘 (외부 파일 불필요, 완전 오프라인) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a1612'/><text x='90' y='105' text-anchor='middle' dominant-baseline='central' font-size='100' fill='%23d4a574' font-family='serif' font-weight='bold'>♪</text><text x='90' y='158' text-anchor='middle' font-size='22' fill='%23f4ecd8' font-family='sans-serif' font-weight='700' letter-spacing='3'>CAPO</text></svg>">
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a1612'/><text x='90' y='95' text-anchor='middle' dominant-baseline='central' font-size='100' fill='%23d4a574' font-family='serif' font-weight='bold'>♪</text></svg>">
+
+<style>
+  :root {
+    --bg: #1a1612;
+    --bg-soft: #252019;
+    --bg-card: #2d2720;
+    --ink: #f4ecd8;
+    --ink-soft: #bfb39a;
+    --ink-dim: #7a7060;
+    --accent: #d4a574;
+    --accent-hot: #e89b4a;
+    --border: #3d362c;
+    --easy: #9bc29b;
+    --medium: #d4a574;
+    --hard: #c27a7a;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html, body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  body {
+    background:
+      radial-gradient(ellipse at top left, rgba(212, 165, 116, 0.08), transparent 50%),
+      radial-gradient(ellipse at bottom right, rgba(143, 179, 160, 0.06), transparent 50%),
+      var(--bg);
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1rem 1rem 2rem;
+  }
+
+  /* 컴팩트 헤더 */
+  .topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.5rem 0 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .topbar-title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  .topbar-icon {
+    font-size: 1.8rem;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .topbar-title h1 {
+    font-family: "Apple SD Gothic Neo", "Nanum Myeongjo", serif;
+    font-size: 1.3rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .topbar-title h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+
+  .help-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+    padding: 0.4rem 0.7rem;
+    font-size: 0.85rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .help-btn:active {
+    background: var(--bg-card);
+  }
+
+  /* 입력 섹션 */
+  .input-section {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .input-label {
+    display: block;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+
+  .key-selector {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.75rem;
+  }
+
+  .key-btn {
+    background: var(--bg-card);
+    color: var(--ink);
+    border: 1px solid var(--border);
+    padding: 0.55rem 0.9rem;
+    font-family: "Apple SD Gothic Neo", "Nanum Myeongjo", serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border-radius: 6px;
+    min-width: 2.8rem;
+    position: relative;
+  }
+
+  .key-btn:active {
+    background: var(--border);
+  }
+
+  .key-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+  }
+
+  .key-btn.flat-key::after {
+    content: "●";
+    position: absolute;
+    top: 2px;
+    right: 5px;
+    font-size: 0.4rem;
+    color: var(--accent-hot);
+  }
+
+  .key-btn.flat-key.active::after {
+    color: var(--bg);
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    padding-top: 0.7rem;
+    border-top: 1px dashed var(--border);
+    flex-wrap: wrap;
+  }
+
+  .mode-toggle label {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+  }
+
+  .mode-toggle input[type="radio"] {
+    accent-color: var(--accent);
+  }
+
+  .custom-chord-input {
+    display: none;
+    margin-top: 0.75rem;
+    padding-top: 0.75rem;
+    border-top: 1px dashed var(--border);
+  }
+
+  .custom-chord-input.active { display: block; }
+
+  .custom-chord-input input {
+    width: 100%;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 0.65rem 0.9rem;
+    font-family: "Apple SD Gothic Neo", serif;
+    font-size: 1rem;
+    border-radius: 6px;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .custom-chord-input input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .custom-chord-input .hint {
+    font-size: 0.75rem;
+    color: var(--ink-dim);
+    margin-top: 0.4rem;
+    font-family: "SF Mono", monospace;
+  }
+
+  /* 카포 카드 */
+  .section-label {
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--ink-soft);
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+    display: block;
+  }
+
+  .capo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 0.6rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .capo-card {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 0.8rem 0.9rem;
+    position: relative;
+    transition: all 0.15s ease;
+    cursor: pointer;
+  }
+
+  .capo-card:active {
+    transform: scale(0.97);
+  }
+
+  .capo-card.recommended {
+    border-color: var(--easy);
+    background: linear-gradient(135deg, rgba(155, 194, 155, 0.1), var(--bg-card));
+  }
+
+  .capo-card.recommended::before {
+    content: "추천";
+    position: absolute;
+    top: -8px;
+    right: 10px;
+    background: var(--easy);
+    color: var(--bg);
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  .capo-card.selected {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(212, 165, 116, 0.3);
+  }
+
+  .capo-position {
+    display: flex;
+    align-items: baseline;
+    gap: 0.4rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .capo-fret-num {
+    font-family: "Apple SD Gothic Neo", "Nanum Myeongjo", serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .capo-fret-label {
+    font-family: "SF Mono", monospace;
+    font-size: 0.65rem;
+    color: var(--ink-dim);
+    letter-spacing: 0.15em;
+  }
+
+  .play-as {
+    font-family: "Apple SD Gothic Neo", "Nanum Myeongjo", serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0.3rem 0;
+  }
+
+  .play-as .as-label {
+    font-size: 0.7rem;
+    color: var(--ink-dim);
+    font-family: "SF Mono", monospace;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-bottom: 2px;
+    font-weight: 400;
+  }
+
+  .difficulty-bar {
+    display: flex;
+    gap: 2px;
+    margin-top: 0.5rem;
+  }
+
+  .diff-seg {
+    height: 4px;
+    flex: 1;
+    background: var(--border);
+    border-radius: 2px;
+  }
+
+  .diff-seg.active-easy { background: var(--easy); }
+  .diff-seg.active-medium { background: var(--medium); }
+  .diff-seg.active-hard { background: var(--hard); }
+
+  .diff-label {
+    font-size: 0.68rem;
+    font-family: "SF Mono", monospace;
+    color: var(--ink-dim);
+    margin-top: 3px;
+    letter-spacing: 0.08em;
+  }
+
+  /* 코드 변환표 */
+  .chord-table-section {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.9rem 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .chord-table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+
+  .selected-fret-info {
+    font-family: "Apple SD Gothic Neo", serif;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .selected-fret-info strong {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .chord-map {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 0.4rem;
+  }
+
+  .chord-row {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 0.55rem 0.4rem;
+    text-align: center;
+  }
+
+  .chord-original {
+    font-family: "Apple SD Gothic Neo", serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--ink-soft);
+    text-decoration: line-through;
+    text-decoration-color: var(--ink-dim);
+  }
+
+  .chord-arrow {
+    color: var(--accent);
+    font-size: 0.65rem;
+    margin: 0.1rem 0;
+  }
+
+  .chord-play {
+    font-family: "Apple SD Gothic Neo", serif;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  /* 도움말 모달 */
+  .modal-backdrop {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+
+  .modal-backdrop.active {
+    display: flex;
+  }
+
+  .modal {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    padding: 1.25rem;
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  .modal h2 {
+    font-family: "Apple SD Gothic Neo", serif;
+    font-size: 1.15rem;
+    margin-bottom: 0.6rem;
+    color: var(--accent);
+  }
+
+  .modal h2:not(:first-child) {
+    margin-top: 1rem;
+  }
+
+  .modal p {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+  }
+
+  .modal p strong {
+    color: var(--ink);
+  }
+
+  .modal-close {
+    display: block;
+    margin: 1.25rem auto 0;
+    background: var(--accent);
+    color: var(--bg);
+    border: none;
+    padding: 0.6rem 1.5rem;
+    border-radius: 6px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.9rem;
+  }
+
+  /* 탭 네비게이션 */
+  .tab-nav {
+    display: flex;
+    gap: 0.3rem;
+    margin-bottom: 1rem;
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.25rem;
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--ink-soft);
+    padding: 0.6rem 0.5rem;
+    font-family: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+  }
+
+  .tab-btn.active {
+    background: var(--accent);
+    color: var(--bg);
+  }
+
+  .tab-btn:not(.active):active {
+    background: var(--bg-card);
+  }
+
+  .tab-content {
+    display: none;
+  }
+
+  .tab-content.active {
+    display: block;
+  }
+
+  /* 조옮김 스텝퍼 */
+  .transpose-stepper {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .stepper-display {
+    text-align: center;
+    margin-bottom: 0.8rem;
+  }
+
+  .stepper-label {
+    font-family: "SF Mono", monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.15em;
+    color: var(--ink-dim);
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+
+  .stepper-value {
+    font-family: "Apple SD Gothic Neo", serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--accent);
+    line-height: 1;
+  }
+
+  .stepper-value .sign {
+    color: var(--ink-soft);
+    font-size: 1.5rem;
+  }
+
+  .stepper-value .unit {
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    font-weight: 400;
+    margin-left: 0.3rem;
+  }
+
+  .stepper-keys {
+    font-family: "Apple SD Gothic Neo", serif;
+    font-size: 1.1rem;
+    color: var(--ink-soft);
+    margin-top: 0.4rem;
+  }
+
+  .stepper-keys strong {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .stepper-keys .arrow {
+    color: var(--ink-dim);
+    margin: 0 0.4rem;
+  }
+
+  .stepper-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto 1fr 1fr;
+    gap: 0.4rem;
+    align-items: stretch;
+  }
+
+  .step-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--ink);
+    padding: 0.7rem 0.3rem;
+    font-family: "Apple SD Gothic Neo", serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.1s ease;
+  }
+
+  .step-btn:active {
+    transform: scale(0.95);
+    background: var(--border);
+  }
+
+  .step-btn.plus {
+    color: var(--easy);
+  }
+
+  .step-btn.minus {
+    color: var(--hard);
+  }
+
+  .step-btn-small {
+    font-size: 0.8rem;
+  }
+
+  .step-reset {
+    background: transparent;
+    border: 1px dashed var(--border);
+    color: var(--ink-dim);
+    padding: 0.7rem 0.5rem;
+    font-family: inherit;
+    font-size: 0.75rem;
+    cursor: pointer;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+  }
+
+  .step-reset:active {
+    background: var(--bg-card);
+  }
+
+  /* 아이패드 세로 모드 */
+  @media (min-width: 601px) and (max-width: 1024px) {
+    .container { padding: 1rem 1.25rem 2.5rem; }
+    .capo-grid { grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+  }
+
+  /* 작은 화면 */
+  @media (max-width: 420px) {
+    .container { padding: 0.75rem 0.75rem 2rem; }
+    .topbar-title h1 { font-size: 1.1rem; }
+    .capo-grid { grid-template-columns: repeat(2, 1fr); }
+    .chord-map { grid-template-columns: repeat(auto-fill, minmax(70px, 1fr)); }
+    .key-btn { padding: 0.5rem 0.7rem; font-size: 0.9rem; min-width: 2.5rem; }
+    .step-btn { font-size: 0.85rem; padding: 0.6rem 0.2rem; }
+    .step-btn-small { font-size: 0.7rem; }
+    .tab-btn { font-size: 0.82rem; padding: 0.55rem 0.3rem; }
+    .stepper-value { font-size: 1.7rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- 상단바 아래에 제목 변경 -->
+  <div class="topbar">
+    <div class="topbar-title">
+      <span class="topbar-icon">♪</span>
+      <h1>기타 <em>도우미</em></h1>
+    </div>
+    <button class="help-btn" onclick="toggleHelp()">? 사용법</button>
+  </div>
+
+  <!-- 입력 섹션 (공통) -->
+  <section class="input-section">
+    <label class="input-label">원곡 키</label>
+    <div class="key-selector" id="keySelector"></div>
+
+    <div class="mode-toggle">
+      <label><input type="radio" name="mode" value="major" checked> 메이저</label>
+      <label><input type="radio" name="mode" value="minor"> 마이너</label>
+      <label><input type="radio" name="mode" value="custom"> 직접 입력</label>
+    </div>
+
+    <div class="custom-chord-input" id="customInput">
+      <input type="text" id="customChordField" placeholder="예: Eb Bb Cm Ab F Gm">
+      <div class="hint">공백으로 구분해서 입력하세요</div>
+    </div>
+  </section>
+
+  <!-- 탭 네비게이션 -->
+  <div class="tab-nav">
+    <button class="tab-btn active" data-tab="capo" onclick="switchTab('capo')">🎸 카포 변환</button>
+    <button class="tab-btn" data-tab="transpose" onclick="switchTab('transpose')">🔄 조옮김</button>
+  </div>
+
+  <!-- 탭 1: 카포 변환 -->
+  <div class="tab-content active" id="tab-capo">
+    <section>
+      <span class="section-label">카포 위치 선택</span>
+      <div class="capo-grid" id="capoGrid"></div>
+    </section>
+
+    <section class="chord-table-section">
+      <div class="chord-table-header">
+        <div class="selected-fret-info" id="selectedFretInfo">카포 3프렛</div>
+      </div>
+      <div class="chord-map" id="chordMap"></div>
+    </section>
+  </div>
+
+  <!-- 탭 2: 조옮김 (Transpose) -->
+  <div class="tab-content" id="tab-transpose">
+    <div class="transpose-stepper">
+      <div class="stepper-display">
+        <div class="stepper-label">현재 이조값</div>
+        <div class="stepper-value" id="transposeValue">
+          <span class="sign">±</span>0<span class="unit">반음</span>
+        </div>
+        <div class="stepper-keys" id="transposeKeys">
+          <strong>Eb</strong><span class="arrow">→</span><strong>Eb</strong>
+        </div>
+      </div>
+
+      <div class="stepper-controls">
+        <button class="step-btn minus" onclick="adjustTranspose(-2)">−2<br><span class="step-btn-small">온음↓</span></button>
+        <button class="step-btn minus" onclick="adjustTranspose(-1)">−1<br><span class="step-btn-small">반음↓</span></button>
+        <button class="step-reset" onclick="resetTranspose()">초기화</button>
+        <button class="step-btn plus" onclick="adjustTranspose(1)">+1<br><span class="step-btn-small">반음↑</span></button>
+        <button class="step-btn plus" onclick="adjustTranspose(2)">+2<br><span class="step-btn-small">온음↑</span></button>
+      </div>
+    </div>
+
+    <section class="chord-table-section">
+      <div class="chord-table-header">
+        <div class="selected-fret-info" id="transposeInfo">변환된 코드</div>
+      </div>
+      <div class="chord-map" id="transposeMap"></div>
+    </section>
+  </div>
+
+</div>
+
+<!-- 도움말 모달 -->
+<div class="modal-backdrop" id="helpModal" onclick="if(event.target===this) toggleHelp()">
+  <div class="modal">
+    <h2>🎸 카포 변환</h2>
+    <p>카포를 N프렛에 끼우면 실제 소리가 N반음 높아집니다. 따라서 원곡 키보다 N반음 <strong>낮은 키의 쉬운 코드</strong>로 연주하면 실제로는 원곡 키로 울립니다.</p>
+    <p><strong>예시:</strong> Eb 키 찬양곡에서 카포 3프렛 → C키 코드(C, F, G, Am…)로 연주하면 실제로는 Eb 키</p>
+
+    <h2>🔄 조옮김</h2>
+    <p>곡 전체의 키를 올리거나 내리고 싶을 때 사용합니다. 반음(+1/-1) 또는 온음(+2/-2) 단위로 모든 코드를 한꺼번에 변환해 보여줍니다.</p>
+    <p><strong>예시:</strong> 원곡 G키가 너무 낮아 A키로 올리려면 +2(온음↑) 선택</p>
+
+    <h2>난이도 기준 (카포)</h2>
+    <p><strong>쉬움:</strong> G, C, D, A, E (바레 없는 오픈 코드)</p>
+    <p><strong>보통:</strong> F, Bm 등 (일부 바레 코드)</p>
+    <p><strong>어려움:</strong> Eb, Bb, Ab 등 (플랫 계열)</p>
+
+    <h2>사용 팁</h2>
+    <p>· 플랫(♭) 키는 버튼에 주황 점으로 표시됩니다</p>
+    <p>· "추천" 뱃지는 가장 쉬운 카포 위치입니다</p>
+    <p>· "직접 입력"으로 다이아토닉 외 코드도 변환 가능</p>
+
+    <button class="modal-close" onclick="toggleHelp()">닫기</button>
+  </div>
+</div>
+
+<script>
+// 음악 이론 데이터
+const NOTES_SHARP = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+const NOTES_FLAT  = ['C', 'Db', 'D', 'Eb', 'E', 'F', 'Gb', 'G', 'Ab', 'A', 'Bb', 'B'];
+const MAJOR_DEGREES = [0, 2, 4, 5, 7, 9];
+const MAJOR_QUALITY = ['', 'm', 'm', '', '', 'm'];
+const MINOR_DEGREES = [0, 3, 5, 7, 8, 10];
+const MINOR_QUALITY = ['m', '', 'm', 'm', '', ''];
+const ALL_MAJOR_KEYS = ['C', 'C#', 'D', 'Eb', 'E', 'F', 'F#', 'G', 'Ab', 'A', 'Bb', 'B'];
+const ALL_MINOR_KEYS = ['Am', 'A#m', 'Bm', 'Cm', 'C#m', 'Dm', 'D#m', 'Em', 'Fm', 'F#m', 'Gm', 'G#m'];
+const FLAT_KEYS = ['F', 'Bb', 'Eb', 'Ab', 'Db', 'Gb', 'Dm', 'Gm', 'Cm', 'Fm', 'Bbm', 'Ebm'];
+
+// 유틸리티
+function noteToIndex(note) {
+  let root;
+  if (note.length > 1 && (note[1] === '#' || note[1] === 'b')) {
+    root = note.substring(0, 2);
+  } else {
+    root = note.substring(0, 1);
+  }
+  const sharpIdx = NOTES_SHARP.indexOf(root);
+  if (sharpIdx >= 0) return sharpIdx;
+  const flatIdx = NOTES_FLAT.indexOf(root);
+  if (flatIdx >= 0) return flatIdx;
+  return -1;
+}
+
+function getChordSuffix(chord) {
+  let rootLen = 1;
+  if (chord.length > 1 && (chord[1] === '#' || chord[1] === 'b')) {
+    rootLen = 2;
+  }
+  return chord.substring(rootLen);
+}
+
+function transposeChord(chord, semitones, useFlat = false) {
+  const rootIdx = noteToIndex(chord);
+  if (rootIdx < 0) return chord;
+  const suffix = getChordSuffix(chord);
+  const newIdx = ((rootIdx + semitones) % 12 + 12) % 12;
+  const newRoot = useFlat ? NOTES_FLAT[newIdx] : NOTES_SHARP[newIdx];
+  return newRoot + suffix;
+}
+
+function keyUsesFlat(keyName) {
+  return FLAT_KEYS.includes(keyName);
+}
+
+function getDiatonicChords(keyRoot, isMinor) {
+  const keyIdx = noteToIndex(keyRoot);
+  const degrees = isMinor ? MINOR_DEGREES : MAJOR_DEGREES;
+  const qualities = isMinor ? MINOR_QUALITY : MAJOR_QUALITY;
+  const useFlat = keyUsesFlat(keyRoot) || (isMinor && keyUsesFlat(keyRoot + 'm'));
+  return degrees.map((deg, i) => {
+    const chordIdx = (keyIdx + deg) % 12;
+    const root = useFlat ? NOTES_FLAT[chordIdx] : NOTES_SHARP[chordIdx];
+    return root + qualities[i];
+  });
+}
+
+function evaluatePlayKey(playKeyRoot, isMinor) {
+  const easyMajors = ['C', 'G', 'D', 'A', 'E'];
+  const easyMinors = ['A', 'E', 'D'];
+  const mediumMajors = ['F'];
+  const mediumMinors = ['B'];
+  const targetList = isMinor ? easyMinors : easyMajors;
+  const mediumList = isMinor ? mediumMinors : mediumMajors;
+  if (targetList.includes(playKeyRoot)) return { level: 'easy', label: '쉬움' };
+  if (mediumList.includes(playKeyRoot)) return { level: 'medium', label: '보통' };
+  return { level: 'hard', label: '어려움' };
+}
+
+function getPlayKeyForCapo(originKeyRoot, capoFret, isMinor) {
+  const originIdx = noteToIndex(originKeyRoot);
+  const playIdx = ((originIdx - capoFret) % 12 + 12) % 12;
+  return NOTES_SHARP[playIdx];
+}
+
+// 상태
+let state = {
+  originKey: 'Eb',
+  isMinor: false,
+  mode: 'major',
+  customChords: [],
+  selectedFret: 3,
+  transposeSemitones: 0,
+  activeTab: 'capo'
+};
+
+// 렌더링
+function renderKeySelector() {
+  const container = document.getElementById('keySelector');
+  container.innerHTML = '';
+  const keys = state.isMinor ? ALL_MINOR_KEYS : ALL_MAJOR_KEYS;
+  const displayKeys = keys.map(k => {
+    if (state.isMinor) {
+      const root = k.replace('m', '');
+      const rootIdx = noteToIndex(root);
+      if (['A#', 'D#', 'G#'].includes(root)) return NOTES_FLAT[rootIdx] + 'm';
+      return k;
+    } else {
+      const rootIdx = noteToIndex(k);
+      if (['A#', 'D#', 'G#', 'C#'].includes(k)) return NOTES_FLAT[rootIdx];
+      return k;
+    }
+  });
+  displayKeys.forEach(key => {
+    const btn = document.createElement('button');
+    btn.className = 'key-btn';
+    btn.textContent = key;
+    if (key.includes('b')) btn.classList.add('flat-key');
+    const keyRoot = state.isMinor ? key.replace('m', '') : key;
+    if (keyRoot === state.originKey) btn.classList.add('active');
+    btn.addEventListener('click', () => {
+      state.originKey = keyRoot;
+      renderAll();
+    });
+    container.appendChild(btn);
+  });
+}
+
+function renderCapoCards() {
+  const container = document.getElementById('capoGrid');
+  container.innerHTML = '';
+  const options = [];
+  for (let fret = 0; fret <= 7; fret++) {
+    const playKeyRoot = getPlayKeyForCapo(state.originKey, fret, state.isMinor);
+    const difficulty = evaluatePlayKey(playKeyRoot, state.isMinor);
+    options.push({ fret, playKeyRoot, difficulty });
+  }
+  options.sort((a, b) => {
+    if (a.fret === 0) return -1;
+    if (b.fret === 0) return 1;
+    const order = { easy: 0, medium: 1, hard: 2 };
+    return order[a.difficulty.level] - order[b.difficulty.level] || a.fret - b.fret;
+  });
+  const hasEasy = options.some(o => o.difficulty.level === 'easy' && o.fret > 0);
+  const displayOptions = options.filter(o => {
+    if (o.fret === 0) return true;
+    if (hasEasy) return o.difficulty.level !== 'hard';
+    return true;
+  });
+  const firstEasy = displayOptions.find(o => o.difficulty.level === 'easy' && o.fret > 0);
+
+  // 선택된 프렛이 없으면 추천으로 설정
+  if (!displayOptions.some(o => o.fret === state.selectedFret)) {
+    state.selectedFret = firstEasy ? firstEasy.fret : 0;
+  }
+
+  displayOptions.forEach((opt) => {
+    const card = document.createElement('div');
+    card.className = 'capo-card';
+    if (firstEasy && firstEasy.fret === opt.fret) card.classList.add('recommended');
+    if (opt.fret === state.selectedFret) card.classList.add('selected');
+    const playKeyDisplay = opt.playKeyRoot + (state.isMinor ? 'm' : '');
+    const diffBars = [];
+    if (opt.difficulty.level === 'easy') diffBars.push('active-easy', 'active-easy', 'active-easy');
+    else if (opt.difficulty.level === 'medium') diffBars.push('active-medium', 'active-medium', '');
+    else diffBars.push('active-hard', '', '');
+
+    card.innerHTML = `
+      <div class="capo-position">
+        <span class="capo-fret-num">${opt.fret === 0 ? '—' : opt.fret}</span>
+        <span class="capo-fret-label">${opt.fret === 0 ? 'NO CAPO' : 'FRET'}</span>
+      </div>
+      <div class="play-as">
+        <span class="as-label">연주 →</span>
+        ${playKeyDisplay}
+      </div>
+      <div class="difficulty-bar">
+        <div class="diff-seg ${diffBars[0]}"></div>
+        <div class="diff-seg ${diffBars[1]}"></div>
+        <div class="diff-seg ${diffBars[2]}"></div>
+      </div>
+      <div class="diff-label">${opt.difficulty.label}</div>
+    `;
+    card.addEventListener('click', () => {
+      state.selectedFret = opt.fret;
+      renderCapoCards();
+      renderChordTable();
+    });
+    container.appendChild(card);
+  });
+}
+
+function renderChordTable() {
+  const container = document.getElementById('chordMap');
+  container.innerHTML = '';
+  let originalChords;
+  if (state.mode === 'custom' && state.customChords.length > 0) {
+    originalChords = state.customChords;
+  } else {
+    originalChords = getDiatonicChords(state.originKey, state.isMinor);
+  }
+  const fret = state.selectedFret;
+  const playKeyRoot = getPlayKeyForCapo(state.originKey, fret, state.isMinor);
+  const useFlat = ['F', 'Bb', 'Eb'].includes(playKeyRoot);
+
+  document.getElementById('selectedFretInfo').innerHTML = fret === 0
+    ? `카포 <strong>없이</strong> · 원곡 그대로`
+    : `카포 <strong>${fret}프렛</strong> → <strong>${playKeyRoot}${state.isMinor ? 'm' : ''}</strong>로 연주`;
+
+  originalChords.forEach(chord => {
+    const playChord = transposeChord(chord, -fret, useFlat);
+    const row = document.createElement('div');
+    row.className = 'chord-row';
+    row.innerHTML = `
+      <div class="chord-original">${chord}</div>
+      <div class="chord-arrow">▼</div>
+      <div class="chord-play">${playChord}</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function renderTransposePanel() {
+  // 현재 키와 이조된 키 계산
+  const originIdx = noteToIndex(state.originKey);
+  const semitones = state.transposeSemitones;
+  const newIdx = ((originIdx + semitones) % 12 + 12) % 12;
+
+  // 이조된 키는 플랫/샵 표기를 키에 따라 결정
+  // 기본적으로 플랫 계열 키면 플랫 표기, 아니면 샵 표기
+  const useFlat = keyUsesFlat(state.originKey) || [1, 3, 8, 10].includes(newIdx);
+  const newKeyRoot = useFlat ? NOTES_FLAT[newIdx] : NOTES_SHARP[newIdx];
+
+  // 표시 업데이트
+  const sign = semitones > 0 ? '+' : (semitones < 0 ? '−' : '±');
+  const absValue = Math.abs(semitones);
+  document.getElementById('transposeValue').innerHTML =
+    `<span class="sign">${sign}</span>${absValue}<span class="unit">반음</span>`;
+
+  const originDisplay = state.originKey + (state.isMinor ? 'm' : '');
+  const newDisplay = newKeyRoot + (state.isMinor ? 'm' : '');
+  document.getElementById('transposeKeys').innerHTML =
+    `<strong>${originDisplay}</strong><span class="arrow">→</span><strong>${newDisplay}</strong>`;
+
+  // 변환 정보 텍스트
+  let infoText;
+  if (semitones === 0) {
+    infoText = `원곡 그대로 · 변환 없음`;
+  } else {
+    const direction = semitones > 0 ? '↑' : '↓';
+    infoText = `<strong>${originDisplay}</strong> → <strong>${newDisplay}</strong> (${absValue}반음 ${direction})`;
+  }
+  document.getElementById('transposeInfo').innerHTML = infoText;
+
+  // 코드 변환표 렌더링
+  const container = document.getElementById('transposeMap');
+  container.innerHTML = '';
+
+  let originalChords;
+  if (state.mode === 'custom' && state.customChords.length > 0) {
+    originalChords = state.customChords;
+  } else {
+    originalChords = getDiatonicChords(state.originKey, state.isMinor);
+  }
+
+  originalChords.forEach(chord => {
+    const newChord = transposeChord(chord, semitones, useFlat);
+    const row = document.createElement('div');
+    row.className = 'chord-row';
+
+    if (semitones === 0) {
+      row.innerHTML = `
+        <div class="chord-play">${chord}</div>
+      `;
+    } else {
+      row.innerHTML = `
+        <div class="chord-original">${chord}</div>
+        <div class="chord-arrow">▼</div>
+        <div class="chord-play">${newChord}</div>
+      `;
+    }
+    container.appendChild(row);
+  });
+}
+
+function adjustTranspose(delta) {
+  state.transposeSemitones += delta;
+  // -11 ~ +11 범위로 제한 (한 옥타브 내)
+  if (state.transposeSemitones > 11) state.transposeSemitones -= 12;
+  if (state.transposeSemitones < -11) state.transposeSemitones += 12;
+  renderTransposePanel();
+}
+
+function resetTranspose() {
+  state.transposeSemitones = 0;
+  renderTransposePanel();
+}
+
+function switchTab(tabName) {
+  state.activeTab = tabName;
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.tab === tabName);
+  });
+  document.querySelectorAll('.tab-content').forEach(content => {
+    content.classList.toggle('active', content.id === `tab-${tabName}`);
+  });
+}
+
+function renderAll() {
+  renderKeySelector();
+  renderCapoCards();
+  renderChordTable();
+  renderTransposePanel();
+}
+
+// 이벤트
+document.querySelectorAll('input[name="mode"]').forEach(radio => {
+  radio.addEventListener('change', (e) => {
+    state.mode = e.target.value;
+    const customInput = document.getElementById('customInput');
+    if (state.mode === 'custom') customInput.classList.add('active');
+    else customInput.classList.remove('active');
+    if (state.mode === 'minor') { state.isMinor = true; state.originKey = 'C'; }
+    else if (state.mode === 'major') { state.isMinor = false; state.originKey = 'Eb'; }
+    renderAll();
+  });
+});
+
+document.getElementById('customChordField').addEventListener('input', (e) => {
+  const raw = e.target.value.trim();
+  state.customChords = raw.split(/\s+/).filter(c => c.length > 0);
+  renderChordTable();
+  renderTransposePanel();
+});
+
+function toggleHelp() {
+  document.getElementById('helpModal').classList.toggle('active');
+}
+
+renderAll();
+</script>
+</body>
+</html>
