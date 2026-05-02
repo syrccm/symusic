@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "echo 'Lint check skipped'",
+    "build": "tsc -b && vite build",
+    "lint": "eslint src --ext .ts,.tsx",
     "preview": "vite preview"
   },
   "dependencies": {

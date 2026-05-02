@@ -17,39 +17,27 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { 
-  Play, 
-  Pause, 
-  SkipBack, 
-  SkipForward, 
-  Volume2, 
-  VolumeX, 
-  Music, 
-  Plus, 
-  Settings, 
+import {
+  Play,
+  Pause,
+  SkipBack,
+  SkipForward,
+  Music,
+  Settings,
   Trash2,
   Edit,
-  Shield,
   CheckCircle,
-  AlertCircle,
   Loader2,
-  Upload,
-  FileAudio,
   Link,
   WifiOff,
-  ChevronUp,
-  ChevronDown,
   List,
-  Heart,
   Save,
   X,
-  FileText,
   Scroll,
   Repeat,
-  Repeat1,
   Shuffle,
   LogOut
 } from 'lucide-react';
@@ -102,17 +90,13 @@ interface MusicPlayerProps {
 export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) {
   // State
   const [songs, setSongs] = useState<Song[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [_categories, setCategories] = useState<Category[]>([]);
   const [currentCategory, setCurrentCategory] = useState('전체');
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [volume, setVolume] = useState(70);
-  const [isMuted, setIsMuted] = useState(false);
   const [loading, setLoading] = useState(true);
   const [isAddingSong, setIsAddingSong] = useState(false);
   const [isOfflineMode, setIsOfflineMode] = useState(false);
-  const [showContent, setShowContent] = useState(false);
-  const [activeContentTab, setActiveContentTab] = useState('playlist');
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   
@@ -328,7 +312,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       
     } catch (error) {
       console.error('❌ [MusicPlayer] 치명적 오류:', error);
-      toast.error('데이터 초기화 중 오류가 발생했습니다: ' + error.message);
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error('데이터 초기화 중 오류가 발생했습니다: ' + message);
       
       setIsOfflineMode(true);
       const defaultCats = DEFAULT_CATEGORIES.map((cat, index) => ({
@@ -770,31 +755,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
-  };
-
-  // Volume control
-  const handleVolumeChange = (newVolume: number) => {
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume / 100;
-    }
-    if (newVolume === 0) {
-      setIsMuted(true);
-    } else if (isMuted) {
-      setIsMuted(false);
-    }
-  };
-
-  const toggleMute = () => {
-    if (audioRef.current) {
-      if (isMuted) {
-        audioRef.current.volume = volume / 100;
-        setIsMuted(false);
-      } else {
-        audioRef.current.volume = 0;
-        setIsMuted(true);
-      }
-    }
   };
 
   // Initialize on mount

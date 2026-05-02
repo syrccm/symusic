@@ -3,3 +3,24 @@ dist
 .DS_Store
 Thumbs.db
 
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Editor / IDE state
+.vscode
+.idea
+.claude
+*.swp
+*.swo
+
+# Vercel
+.vercel
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript build info
+*.tsbuildinfo
