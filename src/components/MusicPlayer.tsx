@@ -20,6 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
+import { useFavorites } from '@/hooks/useFavorites';
 import {
   Play,
   Pause,
@@ -39,7 +40,9 @@ import {
   Scroll,
   Repeat,
   Shuffle,
-  LogOut
+  LogOut,
+  Star,
+  ArrowLeft
 } from 'lucide-react';
 
 // Types
@@ -104,6 +107,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('all');
   const [isShuffleEnabled, setIsShuffleEnabled] = useState(false);
   const [shuffledIndices, setShuffledIndices] = useState<number[]>([]);
+
+  // Favorites
+  const { favorites, isFavorite, toggleFavorite, isFavoritesMode, setIsFavoritesMode } = useFavorites();
   
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
@@ -647,8 +653,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Get filtered songs
   const getFilteredSongs = () => {
-    return currentCategory === '전체' 
-      ? songs 
+    if (isFavoritesMode) {
+      return songs.filter(song => favorites.includes(song.id));
+    }
+    return currentCategory === '전체'
+      ? songs
       : songs.filter(song => song.category === currentCategory);
   };
 
@@ -698,6 +707,43 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     } else {
       toast.error('오디오 파일이 없습니다.');
     }
+  };
+
+  // Enter favorites mode and play the first favorite
+  const playFavorites = () => {
+    if (favorites.length === 0) {
+      toast('즐겨찾기한 곡이 없어요. 곡 옆 ⭐ 버튼으로 추가해보세요!');
+      return;
+    }
+
+    const favoriteSongs = songs.filter(song => favorites.includes(song.id));
+    if (favoriteSongs.length === 0) {
+      toast('즐겨찾기한 곡을 찾을 수 없어요.');
+      return;
+    }
+
+    setIsFavoritesMode(true);
+    toast(`즐겨찾기 ${favoriteSongs.length}곡 재생을 시작합니다 ✨`);
+
+    const firstSong = favoriteSongs[0];
+    setCurrentSongIndex(songs.indexOf(firstSong));
+
+    if (firstSong.audioUrl && audioRef.current) {
+      audioRef.current.src = firstSong.audioUrl;
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+      }).catch(error => {
+        console.error('Playback failed:', error);
+        toast.error(`오디오 재생에 실패했습니다: ${firstSong.title}`);
+      });
+    } else {
+      toast.error('오디오 파일이 없습니다.');
+    }
+  };
+
+  // Exit favorites mode and return to normal browsing
+  const exitFavoritesMode = () => {
+    setIsFavoritesMode(false);
   };
 
   // Toggle play/pause
@@ -806,12 +852,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     return () => unsubscribe();
   }, [isAdminRoute]);
 
-  // Update shuffled indices when songs or category changes
+  // Update shuffled indices when songs, category, or favorites mode changes
   useEffect(() => {
     if (isShuffleEnabled) {
       setShuffledIndices(generateShuffledIndices());
     }
-  }, [songs, currentCategory, isShuffleEnabled]);
+  }, [songs, currentCategory, isShuffleEnabled, isFavoritesMode, favorites]);
 
   // Audio event handlers
   useEffect(() => {
@@ -948,29 +994,54 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             </div>
           </div>
 
-          <div className="mt-3">
-            <Select value={currentCategory} onValueChange={setCurrentCategory}>
-              <SelectTrigger className="w-full bg-slate-800/50 border-purple-400 text-white h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="전체" className="text-white hover:bg-purple-600/20">
-                  🎵 전체
-                </SelectItem>
-                <SelectItem value="금철" className="text-white hover:bg-purple-600/20">
-                  🌙 금철
-                </SelectItem>
-                <SelectItem value="주일" className="text-white hover:bg-purple-600/20">
-                  ⛪ 주일
-                </SelectItem>
-                <SelectItem value="QT" className="text-white hover:bg-purple-600/20">
-                  📖 QT
-                </SelectItem>
-                <SelectItem value="기타" className="text-white hover:bg-purple-600/20">
-                  🎼 기타
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="mt-3 space-y-2">
+            {isFavoritesMode ? (
+              <Button
+                onClick={exitFavoritesMode}
+                variant="outline"
+                className="w-full h-12 bg-slate-800/50 border border-purple-400 text-white hover:bg-purple-900/40 hover:text-white justify-start"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                전체 목록으로
+                <span className="ml-auto text-xs text-purple-200/90 flex items-center">
+                  <Star className="h-3 w-3 mr-1 fill-pink-400 text-pink-400" />
+                  즐겨찾기 {favorites.length}곡
+                </span>
+              </Button>
+            ) : (
+              <>
+                <Select value={currentCategory} onValueChange={setCurrentCategory}>
+                  <SelectTrigger className="w-full bg-slate-800/50 border-purple-400 text-white h-12">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="전체" className="text-white hover:bg-purple-600/20">
+                      🎵 전체
+                    </SelectItem>
+                    <SelectItem value="금철" className="text-white hover:bg-purple-600/20">
+                      🌙 금철
+                    </SelectItem>
+                    <SelectItem value="주일" className="text-white hover:bg-purple-600/20">
+                      ⛪ 주일
+                    </SelectItem>
+                    <SelectItem value="QT" className="text-white hover:bg-purple-600/20">
+                      📖 QT
+                    </SelectItem>
+                    <SelectItem value="기타" className="text-white hover:bg-purple-600/20">
+                      🎼 기타
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  onClick={playFavorites}
+                  variant="outline"
+                  className="w-full h-10 bg-slate-800/50 border border-purple-400/40 text-white hover:bg-purple-900/40 hover:text-white hover:border-purple-400/60 justify-start"
+                >
+                  <Star className="h-4 w-4 mr-2 fill-pink-400 text-pink-400" />
+                  즐겨찾기 재생 ({favorites.length})
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
@@ -988,9 +1059,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <div className="text-center py-3">
                     <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
                     <p className="text-gray-400 text-xs">
-                      {currentCategory === '전체' 
-                        ? '기본 곡을 설치하는 중입니다...' 
-                        : `${currentCategory} 카테고리에 곡이 없습니다`
+                      {isFavoritesMode
+                        ? '즐겨찾기한 곡이 없어요'
+                        : currentCategory === '전체'
+                          ? '기본 곡을 설치하는 중입니다...'
+                          : `${currentCategory} 카테고리에 곡이 없습니다`
                       }
                     </p>
                   </div>
@@ -1022,6 +1095,24 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                 </div>
                               )}
                             </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                toggleFavorite(song.id);
+                              }}
+                              className="flex-shrink-0 p-1 -m-1 rounded hover:bg-slate-600/40 transition-colors"
+                              aria-label={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
+                              title={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
+                            >
+                              <Star
+                                className={`h-3.5 w-3.5 ${
+                                  isFavorite(song.id)
+                                    ? 'fill-pink-400 text-pink-400'
+                                    : 'text-gray-500 hover:fill-pink-400 hover:text-pink-400'
+                                }`}
+                              />
+                            </button>
                           </div>
                         </div>
                       );
