@@ -21,6 +21,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
+import { AboutModal } from '@/components/AboutModal';
 import {
   Play,
   Pause,
@@ -42,7 +43,8 @@ import {
   Shuffle,
   LogOut,
   Star,
-  ArrowLeft
+  ArrowLeft,
+  Info
 } from 'lucide-react';
 
 // Types
@@ -110,6 +112,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Favorites
   const { favorites, isFavorite, toggleFavorite, isFavoritesMode, setIsFavoritesMode } = useFavorites();
+
+  // About modal
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
   
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
@@ -950,6 +955,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             </div>
             
             <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 p-2 min-w-[44px] min-h-[44px] rounded-full"
+                onClick={() => setIsAboutOpen(true)}
+                aria-label="개발자 정보 열기"
+                title="개발자 정보"
+              >
+                <Info className="w-6 h-6" strokeWidth={2.5} />
+              </Button>
+
               {isAdminRoute && (
                 <div className="flex items-center space-x-1 text-xs">
                   {isOfflineMode ? (
@@ -1623,6 +1639,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           preload="metadata"
         />
       </div>
+
+      <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} songs={songs} />
     </div>
   );
 }
