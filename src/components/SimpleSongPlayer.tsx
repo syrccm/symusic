@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowRight, Loader2, Music, Pause, Play, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -12,26 +12,6 @@ const NOT_FOUND_GRACE_MS = 3000;
 
 const PLAY_STORE_URL =
   'https://play.google.com/store/apps/details?id=win.symusic.www.twa&pcampaignid=web_share';
-const HOMEPAGE_URL = 'https://www.symusic.win';
-
-interface AppCta {
-  label: string;
-  url: string;
-}
-
-function detectAppCta(): AppCta {
-  if (typeof navigator === 'undefined') {
-    return { label: '홈페이지 둘러보기', url: HOMEPAGE_URL };
-  }
-  const ua = navigator.userAgent;
-  if (/Android/.test(ua)) {
-    return { label: 'Google Play에서 받기', url: PLAY_STORE_URL };
-  }
-  if (/iPad|iPhone|iPod/.test(ua)) {
-    return { label: 'Safari에서 방문하기', url: HOMEPAGE_URL };
-  }
-  return { label: '홈페이지 둘러보기', url: HOMEPAGE_URL };
-}
 
 function formatTime(time: number) {
   if (isNaN(time)) return '0:00';
@@ -47,7 +27,6 @@ export default function SimpleSongPlayer() {
   const { shareSong } = useShare();
 
   const audioRef = useRef<HTMLAudioElement>(null);
-  const appCta = useMemo(() => detectAppCta(), []);
   const [song, setSong] = useState<Song | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -272,19 +251,24 @@ export default function SimpleSongPlayer() {
           </CardContent>
         </Card>
 
-        <div className="mt-4 rounded-xl border border-purple-500/30 bg-gradient-to-br from-purple-900/30 to-pink-900/20 p-4 text-center">
-          <p className="text-sm text-purple-100 leading-relaxed mb-3">
+        <div className="mt-4 rounded-2xl border-2 border-purple-300/40 bg-gradient-to-br from-purple-600/80 to-pink-600/70 p-6 text-center shadow-xl shadow-purple-500/40">
+          <p className="text-base text-white leading-relaxed mb-4">
             💜 말씀의 은혜, 찬양으로 일주일 내내<br />
-            SY Music 앱에서 다운받고 누리세요
+            '수영로말씀적용찬양' 앱에서 다운받고 누리세요
           </p>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => window.open(appCta.url, '_blank', 'noopener,noreferrer')}
-            className="border-purple-400/60 bg-slate-900/40 text-purple-100 hover:bg-purple-400/10 hover:text-white"
+          <a
+            href={PLAY_STORE_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block hover:opacity-90 transition-opacity"
+            aria-label="Google Play에서 수영로말씀적용찬양 앱 받기"
           >
-            {appCta.label}
-          </Button>
+            <img
+              src="/google-play-badge-ko.png"
+              alt="Google Play에서 받기"
+              className="h-16 mx-auto"
+            />
+          </a>
         </div>
 
         <button
