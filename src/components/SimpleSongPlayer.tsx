@@ -56,28 +56,22 @@ export default function SimpleSongPlayer() {
     return () => window.clearTimeout(timer);
   }, [songId, songs, song]);
 
-  // song 결정되면 자동 재생 시도, 차단 시 모달
+  // song 결정되면: audio.src 설정 + 이벤트 listener 등록 + 자동 재생 시도
+  // (이전 빈 deps useEffect는 loading 화면 첫 렌더 시점에 audioRef가 null이라
+  //  listener 등록이 영구 실패했음 — 정상 화면이 렌더된 시점에 등록되도록 통합)
   useEffect(() => {
     if (!song?.audioUrl) return;
     const audio = audioRef.current;
     if (!audio) return;
 
     audio.src = song.audioUrl;
-    const playPromise = audio.play();
-    if (playPromise && typeof playPromise.then === 'function') {
-      playPromise
-        .then(() => setIsPlaying(true))
-        .catch(() => setPromptingPlay(true));
-    }
-  }, [song]);
-
-  // audio 이벤트 (단순 플레이어이므로 ended에서 자동 다음 곡 없음)
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const handleLoadedMetadata = () => setDuration(audio.duration);
+    const handleDuration = () => {
+      if (!isNaN(audio.duration) && isFinite(audio.duration)) {
+        setDuration(audio.duration);
+      }
+    };
     const handleEnded = () => setIsPlaying(false);
     const handleError = () => {
       setIsPlaying(false);
@@ -85,17 +79,26 @@ export default function SimpleSongPlayer() {
     };
 
     audio.addEventListener('timeupdate', handleTimeUpdate);
-    audio.addEventListener('loadedmetadata', handleLoadedMetadata);
+    audio.addEventListener('loadedmetadata', handleDuration);
+    audio.addEventListener('durationchange', handleDuration);
     audio.addEventListener('ended', handleEnded);
     audio.addEventListener('error', handleError);
 
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise
+        .then(() => setIsPlaying(true))
+        .catch(() => setPromptingPlay(true));
+    }
+
     return () => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
-      audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
+      audio.removeEventListener('loadedmetadata', handleDuration);
+      audio.removeEventListener('durationchange', handleDuration);
       audio.removeEventListener('ended', handleEnded);
       audio.removeEventListener('error', handleError);
     };
-  }, []);
+  }, [song]);
 
   const togglePlay = () => {
     const audio = audioRef.current;
@@ -273,14 +276,6 @@ export default function SimpleSongPlayer() {
             />
           </a>
         </div>
-
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="mt-3 text-center text-xs text-purple-300/70 hover:text-purple-200 transition-colors py-2"
-        >
-          더 많은 찬양 보기 →
-        </button>
 
         <audio ref={audioRef} loop crossOrigin="anonymous" preload="metadata" />
       </div>
