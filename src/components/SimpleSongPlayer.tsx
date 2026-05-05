@@ -262,7 +262,7 @@ export default function SimpleSongPlayer() {
             💜 말씀의 은혜,<br />
             찬양으로 일주일 내내<br />
             <br />
-            '수영로말씀적용찬양' 앱에서<br />
+            '<span className="font-bold text-yellow-200">수영로말씀적용찬양</span>' 앱에서<br />
             다운받고 누리세요
           </p>
           <a
