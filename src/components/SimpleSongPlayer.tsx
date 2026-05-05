@@ -35,12 +35,15 @@ export default function SimpleSongPlayer() {
   const [promptingPlay, setPromptingPlay] = useState(false);
 
   // 곡 검색 — songs 도착 후 매칭, grace 윈도우 후에도 없으면 notFound
+  // 한 번 매칭되면 onSnapshot 재호출(캐시→서버)로 songs가 새 참조로 바뀌어도
+  // song을 재설정하지 않음 (재설정하면 audio.src가 다시 세팅되어 재생이 처음부터 시작됨)
   useEffect(() => {
     if (!songId) {
       setNotFound(true);
       return;
     }
     if (songs.length === 0) return;
+    if (song && song.id === songId) return;
 
     const target = songs.find((s) => s.id === songId);
     if (target) {
@@ -51,7 +54,7 @@ export default function SimpleSongPlayer() {
 
     const timer = window.setTimeout(() => setNotFound(true), NOT_FOUND_GRACE_MS);
     return () => window.clearTimeout(timer);
-  }, [songId, songs]);
+  }, [songId, songs, song]);
 
   // song 결정되면 자동 재생 시도, 차단 시 모달
   useEffect(() => {
@@ -279,7 +282,7 @@ export default function SimpleSongPlayer() {
           더 많은 찬양 보기 →
         </button>
 
-        <audio ref={audioRef} crossOrigin="anonymous" preload="metadata" />
+        <audio ref={audioRef} loop crossOrigin="anonymous" preload="metadata" />
       </div>
 
       {promptingPlay && (
