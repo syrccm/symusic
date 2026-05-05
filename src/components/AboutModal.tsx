@@ -65,10 +65,10 @@ export function AboutModal({ open, onOpenChange, songs }: AboutModalProps) {
             <span aria-hidden>📖</span>
             <span>만들게 된 이야기</span>
           </h3>
-          <div className="text-sm leading-relaxed text-gray-200 text-left space-y-3">
+          <div className="text-sm font-extralight leading-relaxed text-gray-200 text-left space-y-3">
             <p>
-              주일 설교의 은혜가 한 주간 삶 속에 머물기를 바라며, 말씀과 찬양을 함께 묵상할 수 있는
-              공간을 만들었습니다.
+              금요철야 및 주일 설교의 은혜가 한 주간 삶 속에 머물기를 바라며, 말씀과 찬양을 함께
+              묵상할 수 있는 공간을 만들었습니다.
             </p>
             <p>설교노트만으로는 닿지 못했던 자리에 이 앱이 작은 다리가 되길 바랍니다.</p>
           </div>
@@ -79,7 +79,7 @@ export function AboutModal({ open, onOpenChange, songs }: AboutModalProps) {
             <span aria-hidden>📊</span>
             <span>현재 상황</span>
           </h3>
-          <ul className="text-sm space-y-2 text-gray-200 text-left list-none">
+          <ul className="text-sm font-extralight space-y-2 text-gray-200 text-left list-none">
             <li>🎵 등록된 찬양: {songs.length}곡</li>
             <li>📅 최근 업데이트: {pickLatestDate(songs)}</li>
             <li>✨ 최신 기능: 즐겨찾기 (2026.5.4 추가)</li>
@@ -102,7 +102,7 @@ export function AboutModal({ open, onOpenChange, songs }: AboutModalProps) {
         </Button>
 
         <div className="text-center pt-2 border-t border-purple-500/20">
-          <p className="text-sm font-bold text-pink-400 mt-3">수영로교회 41교구 성도</p>
+          <p className="text-sm text-pink-400 mt-3">수영로교회 41교구 성도</p>
           <p className="text-sm text-gray-300 mt-1">삶으로 드리고 싶은 예배자</p>
         </div>
 
