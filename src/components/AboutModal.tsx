@@ -76,6 +76,40 @@ export function AboutModal({ open, onOpenChange, songs }: AboutModalProps) {
 
         <section className="space-y-2">
           <h3 className="text-sm font-semibold text-pink-400 flex items-center gap-2">
+            <span aria-hidden>📖</span>
+            <span>본 찬양곡에 대하여</span>
+          </h3>
+          <div className="text-sm font-extralight leading-relaxed text-gray-200 text-left">
+            <p>
+              본 찬양곡은 수영로교회 설교 말씀에서 받은 은혜를 가사로 표현하고, AI 음원 제작
+              도구를 활용하여 음원을 완성하였습니다.
+            </p>
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <h3 className="text-sm font-semibold text-pink-400 flex items-center gap-2">
+            <span aria-hidden>🎼</span>
+            <span>악보 안내</span>
+          </h3>
+          <div className="text-sm font-extralight leading-relaxed text-gray-200 text-left space-y-3">
+            <p>
+              현재 모든 곡은 음원으로만 감상하실 수 있으며, 악보는 아직 제작되지 않았습니다.
+            </p>
+            <p>
+              지금은 제 능력으로 엄두를 내지 못하고 있어, 악보 제작에 재능을 가지신 분의 도움을
+              기다리고 있습니다.
+            </p>
+            <p>
+              도움 주시는 분들의 손길로 악보가 만들어지면, 앱 내에서 해당 곡의 악보를 다운로드
+              받으실 수 있도록 업데이트하겠습니다.
+            </p>
+            <p>작은 도움이라도 진심으로 감사드립니다 💜</p>
+          </div>
+        </section>
+
+        <section className="space-y-2">
+          <h3 className="text-sm font-semibold text-pink-400 flex items-center gap-2">
             <span aria-hidden>📊</span>
             <span>현재 상황</span>
           </h3>
@@ -85,6 +119,14 @@ export function AboutModal({ open, onOpenChange, songs }: AboutModalProps) {
             <li>✨ 최신 기능: 즐겨찾기 (2026.5.4 추가)</li>
           </ul>
         </section>
+
+        <div className="rounded-xl border border-purple-400/40 bg-gradient-to-br from-purple-900/40 to-pink-900/30 p-4 text-center">
+          <p className="text-sm leading-relaxed text-purple-100">
+            말씀이 찬양이 되어 일상에 흐르길,
+            <br />
+            공동체와 함께 이 앱이 자라가길 소망합니다.
+          </p>
+        </div>
 
         <Button
           onClick={handleFeedbackClick}
