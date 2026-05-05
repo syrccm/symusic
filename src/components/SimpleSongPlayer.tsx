@@ -201,13 +201,29 @@ export default function SimpleSongPlayer() {
 
             <div className="text-center space-y-2 pb-4 border-b border-slate-700">
               <p className="text-xs text-purple-300">🎁 찬양 선물이 도착했어요</p>
-              <h2 className="text-xl font-bold text-white break-words">{song.title}</h2>
-              {song.description && (
-                <p className="text-sm text-purple-200/80">{song.description}</p>
-              )}
+              <div className="text-sm space-y-1">
+                {(() => {
+                  const labels = ['제목', '본문', '설교자', '구분', '날짜'];
+                  const parts: string[] = [];
+                  if (song.title?.trim()) parts.push(song.title.trim());
+                  if (song.description) {
+                    song.description
+                      .split('|')
+                      .map((s) => s.trim())
+                      .filter((s) => s.length > 0)
+                      .forEach((p) => parts.push(p));
+                  }
+                  return parts.map((part, idx) => (
+                    <p key={idx}>
+                      {labels[idx] && <span className="text-gray-400">{labels[idx]}: </span>}
+                      <span className="text-gray-200">{part}</span>
+                    </p>
+                  ));
+                })()}
+              </div>
             </div>
 
-            <div className="flex-1 min-h-[140px] max-h-[40vh] overflow-y-auto bg-slate-700/30 rounded-lg p-4">
+            <div className="min-h-[140px] bg-slate-700/30 rounded-lg p-4">
               {song.lyrics ? (
                 <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm">
                   {song.lyrics}
@@ -259,8 +275,11 @@ export default function SimpleSongPlayer() {
 
         <div className="mt-4 rounded-2xl border-2 border-purple-300/40 bg-gradient-to-br from-purple-600/80 to-pink-600/70 p-6 text-center shadow-xl shadow-purple-500/40">
           <p className="text-base text-white leading-relaxed mb-4">
-            💜 말씀의 은혜, 찬양으로 일주일 내내<br />
-            '수영로말씀적용찬양' 앱에서 다운받고 누리세요
+            💜 말씀의 은혜,<br />
+            찬양으로 일주일 내내<br />
+            <br />
+            '<span className="font-bold text-yellow-200">수영로말씀적용찬양</span>' 앱에서<br />
+            다운받고 누리세요
           </p>
           <a
             href={PLAY_STORE_URL}
