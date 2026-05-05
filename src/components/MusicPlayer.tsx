@@ -1,14 +1,14 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { db, auth } from '@/lib/firebase';
-import { 
-  collection, 
-  addDoc, 
-  deleteDoc, 
-  doc, 
-  onSnapshot, 
-  query, 
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  doc,
+  onSnapshot,
+  query,
   orderBy,
-  updateDoc 
+  updateDoc
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -22,9 +22,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useShare } from '@/hooks/useShare';
-import { useDeepLink } from '@/hooks/useDeepLink';
+import { useSongs, type Song } from '@/hooks/useSongs';
 import { AboutModal } from '@/components/AboutModal';
-import { PlayPromptModal } from '@/components/PlayPromptModal';
 import {
   Play,
   Pause,
@@ -52,21 +51,6 @@ import {
 } from 'lucide-react';
 
 // Types
-interface Song {
-  id: string;
-  title: string;
-  category: string;
-  date?: string;
-  description?: string;
-  audioUrl?: string;
-  sermon?: string;
-  musicVideo?: string;
-  lyrics?: string;
-  youtubeUrl?: string;
-  duration?: string;
-  created_at: string;
-}
-
 interface Category {
   id: string;
   name: string;
@@ -97,15 +81,15 @@ interface MusicPlayerProps {
 }
 
 export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) {
+  // Songs (Firestore + LS 캐시) — 훅으로 추출
+  const { songs, loading, isOfflineMode, setSongsLocal } = useSongs();
+
   // State
-  const [songs, setSongs] = useState<Song[]>([]);
   const [_categories, setCategories] = useState<Category[]>([]);
   const [currentCategory, setCurrentCategory] = useState('전체');
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [isAddingSong, setIsAddingSong] = useState(false);
-  const [isOfflineMode, setIsOfflineMode] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   
@@ -119,9 +103,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Share
   const { shareSong } = useShare();
-
-  // Deep link 자동재생 차단 시 표시할 풀스크린 ▶ 모달
-  const [promptingSong, setPromptingSong] = useState<Song | null>(null);
 
   // About modal
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -230,25 +211,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
   };
 
-  // Initialize data
-  const initializeData = async () => {
-    console.log('🎵 [MusicPlayer] 초기화 시작');
-    
+  // Initialize categories (songs는 useSongs 훅이 처리)
+  const initializeCategories = async (): Promise<(() => void) | undefined> => {
     try {
-      setLoading(true);
-      
       if (!db) {
-        console.warn('⚠️ [MusicPlayer] Firestore가 없음 - 오프라인 모드로 전환');
-        setIsOfflineMode(true);
-        
-        const savedSongs = localStorage.getItem('symusic-songs');
         const savedCategories = localStorage.getItem('symusic-categories');
-        
-        if (savedSongs) {
-          const parsedSongs = JSON.parse(savedSongs);
-          setSongs(parsedSongs);
-        }
-        
         if (savedCategories) {
           setCategories(JSON.parse(savedCategories));
         } else {
@@ -260,25 +227,20 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           setCategories(defaultCats);
           localStorage.setItem('symusic-categories', JSON.stringify(defaultCats));
         }
-        
-        toast.info('🔌 오프라인 모드로 실행 중입니다');
-        return;
+        return undefined;
       }
 
-      console.log('📡 [MusicPlayer] Firestore 리스너 설정 중...');
-      setIsOfflineMode(false);
-
       const categoriesQuery = query(
-        collection(db, 'categories'), 
+        collection(db, 'categories'),
         orderBy('created_at', 'desc')
       );
-      
-      const unsubscribeCategories = onSnapshot(
+
+      const unsubscribe = onSnapshot(
         categoriesQuery,
         async (snapshot) => {
-          const categoriesData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
+          const categoriesData = snapshot.docs.map((d) => ({
+            id: d.id,
+            ...d.data()
           } as Category));
 
           if (categoriesData.length === 0) {
@@ -302,49 +264,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         }
       );
 
-      const songsQuery = query(
-        collection(db, 'songs'), 
-        orderBy('created_at', 'desc')
-      );
-      
-      const unsubscribeSongs = onSnapshot(
-        songsQuery,
-        async (snapshot) => {
-          const songsData = snapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-          } as Song));
-          
-          setSongs(songsData);
-          localStorage.setItem('symusic-songs', JSON.stringify(songsData));
-        },
-        (error) => {
-          console.error('❌ [Songs] 스냅샷 오류:', error);
-          toast.error('곡 목록 로드 중 오류가 발생했습니다: ' + error.message);
-        }
-      );
-
-      toast.success('🎵 음악 플레이어가 준비되었습니다! (Firebase 연결됨)');
-
-      return () => {
-        unsubscribeCategories();
-        unsubscribeSongs();
-      };
-      
+      return unsubscribe;
     } catch (error) {
-      console.error('❌ [MusicPlayer] 치명적 오류:', error);
-      const message = error instanceof Error ? error.message : String(error);
-      toast.error('데이터 초기화 중 오류가 발생했습니다: ' + message);
-      
-      setIsOfflineMode(true);
+      console.error('❌ [Categories] 초기화 오류:', error);
       const defaultCats = DEFAULT_CATEGORIES.map((cat, index) => ({
         id: `local-${index}`,
         name: cat.name,
         created_at: new Date().toISOString()
       }));
       setCategories(defaultCats);
-    } finally {
-      setLoading(false);
+      return undefined;
     }
   };
 
@@ -392,12 +321,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         const newSongWithId = {
           ...songData,
           id: `local-${Date.now()}`
-        };
-        
-        const updatedSongs = [newSongWithId, ...songs];
-        setSongs(updatedSongs);
-        localStorage.setItem('symusic-songs', JSON.stringify(updatedSongs));
-        
+        } as Song;
+
+        setSongsLocal((prev) => [newSongWithId, ...prev]);
+
         toast.success(`새 곡이 추가되었습니다: ${newSong.title} (오프라인)`);
       } else {
         if (!db) {
@@ -471,12 +398,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       }
 
       if (isOfflineMode || !db) {
-        const updatedSongs = songs.map(song => 
-          song.id === editingSong.id ? { ...song, ...updatedData } : song
+        setSongsLocal((prev) =>
+          prev.map((s) => (s.id === editingSong.id ? { ...s, ...updatedData } : s))
         );
-        setSongs(updatedSongs);
-        localStorage.setItem('symusic-songs', JSON.stringify(updatedSongs));
-        
+
         toast.success(`곡이 수정되었습니다: ${editSongData.title} (오프라인)`);
       } else {
         await updateDoc(doc(db, 'songs', editingSong.id), updatedData);
@@ -511,10 +436,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       }
       
       if (isOfflineMode || !db) {
-        const updatedSongs = songs.filter(song => song.id !== songId);
-        setSongs(updatedSongs);
-        localStorage.setItem('symusic-songs', JSON.stringify(updatedSongs));
-        
+        setSongsLocal((prev) => prev.filter((s) => s.id !== songId));
+
         toast.success(`"${songToDelete?.title}" 곡이 삭제되었습니다. (오프라인)`);
       } else {
         await deleteDoc(doc(db, 'songs', songId));
@@ -818,78 +741,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setCurrentTime(newTime);
   };
 
-  // Deep link handler — 공유 링크로 들어왔을 때 곡 자동 선택 + 재생 시도
-  // 자동재생 차단 시 PlayPromptModal로 한 번 탭하여 재생 유도
-  const handleDeepLinkSong = useCallback((song: Song) => {
-    console.log('[DeepLink] handleDeepLinkSong invoked for:', song.id, song.title);
-    setIsFavoritesMode(false);
-    setCurrentCategory('전체');
-
-    const songIndex = songs.indexOf(song);
-    if (songIndex >= 0) {
-      setCurrentSongIndex(songIndex);
-    }
-
-    const audio = audioRef.current;
-    if (!audio || !song.audioUrl) {
-      console.error('[DeepLink] Cannot play — audioRef:', !!audio, 'audioUrl:', song.audioUrl);
-      toast.error('오디오 파일이 없습니다.');
-      return;
-    }
-
-    audio.src = song.audioUrl;
-    const playPromise = audio.play();
-    if (playPromise && typeof playPromise.then === 'function') {
-      playPromise.then(() => {
-        console.log('[DeepLink] Autoplay succeeded');
-        setIsPlaying(true);
-        toast.success(`공유 받은 곡 재생 중: ${song.title}`);
-      }).catch((err) => {
-        // 브라우저 자동재생 정책으로 차단됨 → 풀스크린 ▶ 모달로 한 번 탭하여 재생 유도
-        console.warn('[DeepLink] Autoplay blocked, showing modal:', err?.name, err?.message);
-        setPromptingSong(song);
-      });
-    }
-  }, [songs, setIsFavoritesMode]);
-
-  const handleDeepLinkMissing = useCallback((songId: string) => {
-    console.warn(
-      '[DeepLink] Song not found in Firestore. Requested ID:', songId,
-      '\n  Total songs loaded:', songs.length,
-      '\n  Available IDs:', songs.map((s) => s.id)
-    );
-    toast('공유 받은 곡을 찾을 수 없어요');
-  }, [songs]);
-
-  useDeepLink<Song>({
-    songs,
-    onSongFound: handleDeepLinkSong,
-    onSongMissing: handleDeepLinkMissing,
-  });
-
-  // PlayPromptModal — 사용자 제스처로 직접 재생 시도
-  const handlePlayPromptConfirm = useCallback(() => {
-    const audio = audioRef.current;
-    const song = promptingSong;
-    if (!audio || !song) {
-      setPromptingSong(null);
-      return;
-    }
-
-    audio.play().then(() => {
-      setIsPlaying(true);
-      setPromptingSong(null);
-      toast.success(`재생 중: ${song.title}`);
-    }).catch((err) => {
-      console.error('Manual play failed:', err);
-      toast.error('재생에 실패했습니다. 다시 시도해주세요.');
-    });
-  }, [promptingSong]);
-
-  const handlePlayPromptCancel = useCallback(() => {
-    setPromptingSong(null);
-  }, []);
-
   // Initialize on mount
   useEffect(() => {
     const savedEmail = localStorage.getItem('symusic-admin-email');
@@ -899,13 +750,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
     
     let cleanup: (() => void) | undefined;
-    
+
     const init = async () => {
-      cleanup = await initializeData();
+      cleanup = await initializeCategories();
     };
-    
+
     init();
-    
+
     return () => {
       if (cleanup && typeof cleanup === 'function') {
         cleanup();
@@ -1757,14 +1608,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       </div>
 
       <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} songs={songs} />
-
-      {promptingSong && (
-        <PlayPromptModal
-          songTitle={promptingSong.title}
-          onPlay={handlePlayPromptConfirm}
-          onCancel={handlePlayPromptCancel}
-        />
-      )}
     </div>
   );
 }
