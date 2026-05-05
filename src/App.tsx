@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
+import SimpleSongPlayer from './components/SimpleSongPlayer';
 
 const queryClient = new QueryClient();
 
@@ -14,7 +15,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/song/:songId" element={<Index />} />
+          <Route path="/song/:songId" element={<SimpleSongPlayer />} />
           <Route path="/0691" element={<Index isAdminRoute />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
