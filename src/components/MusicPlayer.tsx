@@ -821,6 +821,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // Deep link handler — 공유 링크로 들어왔을 때 곡 자동 선택 + 재생 시도
   // 자동재생 차단 시 PlayPromptModal로 한 번 탭하여 재생 유도
   const handleDeepLinkSong = useCallback((song: Song) => {
+    console.log('[DeepLink] handleDeepLinkSong invoked for:', song.id, song.title);
     setIsFavoritesMode(false);
     setCurrentCategory('전체');
 
@@ -831,6 +832,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
     const audio = audioRef.current;
     if (!audio || !song.audioUrl) {
+      console.error('[DeepLink] Cannot play — audioRef:', !!audio, 'audioUrl:', song.audioUrl);
       toast.error('오디오 파일이 없습니다.');
       return;
     }
@@ -839,19 +841,25 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === 'function') {
       playPromise.then(() => {
+        console.log('[DeepLink] Autoplay succeeded');
         setIsPlaying(true);
         toast.success(`공유 받은 곡 재생 중: ${song.title}`);
-      }).catch(() => {
+      }).catch((err) => {
         // 브라우저 자동재생 정책으로 차단됨 → 풀스크린 ▶ 모달로 한 번 탭하여 재생 유도
+        console.warn('[DeepLink] Autoplay blocked, showing modal:', err?.name, err?.message);
         setPromptingSong(song);
       });
     }
   }, [songs, setIsFavoritesMode]);
 
   const handleDeepLinkMissing = useCallback((songId: string) => {
-    console.warn('[DeepLink] Song not found:', songId);
+    console.warn(
+      '[DeepLink] Song not found in Firestore. Requested ID:', songId,
+      '\n  Total songs loaded:', songs.length,
+      '\n  Available IDs:', songs.map((s) => s.id)
+    );
     toast('공유 받은 곡을 찾을 수 없어요');
-  }, []);
+  }, [songs]);
 
   useDeepLink<Song>({
     songs,
