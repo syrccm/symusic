@@ -207,7 +207,7 @@ export default function SimpleSongPlayer() {
               )}
             </div>
 
-            <div className="flex-1 min-h-[140px] max-h-[40vh] overflow-y-auto bg-slate-700/30 rounded-lg p-4">
+            <div className="min-h-[140px] bg-slate-700/30 rounded-lg p-4">
               {song.lyrics ? (
                 <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm">
                   {song.lyrics}
@@ -259,8 +259,11 @@ export default function SimpleSongPlayer() {
 
         <div className="mt-4 rounded-2xl border-2 border-purple-300/40 bg-gradient-to-br from-purple-600/80 to-pink-600/70 p-6 text-center shadow-xl shadow-purple-500/40">
           <p className="text-base text-white leading-relaxed mb-4">
-            💜 말씀의 은혜, 찬양으로 일주일 내내<br />
-            '수영로말씀적용찬양' 앱에서 다운받고 누리세요
+            💜 말씀의 은혜,<br />
+            찬양으로 일주일 내내<br />
+            <br />
+            '수영로말씀적용찬양' 앱에서<br />
+            다운받고 누리세요
           </p>
           <a
             href={PLAY_STORE_URL}
