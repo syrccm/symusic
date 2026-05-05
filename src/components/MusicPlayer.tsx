@@ -1197,12 +1197,25 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <div className="h-full overflow-y-auto bg-slate-700/30 rounded-lg p-3">
                   {currentSong && currentSong.lyrics ? (
                     <div className="space-y-3">
-                      <div className="text-center border-b border-slate-600 pb-2">
-                        <h3 className="text-sm font-semibold text-white">{currentSong.title}</h3>
-                        <p className="text-purple-300 text-xs">{currentSong.category}</p>
-                        {currentSong.description && (
-                          <p className="text-gray-400 text-xs mt-1">{currentSong.description}</p>
-                        )}
+                      <div className="text-center border-b border-slate-600 pb-2 text-sm space-y-1">
+                        {(() => {
+                          const labels = ['제목', '본문', '설교자', '구분', '날짜'];
+                          const parts: string[] = [];
+                          if (currentSong.title?.trim()) parts.push(currentSong.title.trim());
+                          if (currentSong.description) {
+                            currentSong.description
+                              .split('|')
+                              .map((s) => s.trim())
+                              .filter((s) => s.length > 0)
+                              .forEach((p) => parts.push(p));
+                          }
+                          return parts.map((part, idx) => (
+                            <p key={idx}>
+                              {labels[idx] && <span className="text-gray-400">{labels[idx]}: </span>}
+                              <span className="text-gray-200">{part}</span>
+                            </p>
+                          ));
+                        })()}
                       </div>
                       <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm">
                         {currentSong.lyrics}
