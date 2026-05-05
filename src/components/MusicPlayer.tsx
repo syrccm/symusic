@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { db, auth } from '@/lib/firebase';
 import { 
   collection, 
@@ -21,6 +21,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useShare } from '@/hooks/useShare';
+import { useDeepLink } from '@/hooks/useDeepLink';
 import { AboutModal } from '@/components/AboutModal';
 import {
   Play,
@@ -44,7 +46,8 @@ import {
   LogOut,
   Star,
   ArrowLeft,
-  Info
+  Info,
+  Share2
 } from 'lucide-react';
 
 // Types
@@ -112,6 +115,22 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Favorites
   const { favorites, isFavorite, toggleFavorite, isFavoritesMode, setIsFavoritesMode } = useFavorites();
+
+  // Share
+  const { shareSong } = useShare();
+
+  // Deep link 강조 (자동재생 실패 시 ▶️ 버튼 강조)
+  const [highlightedSongId, setHighlightedSongId] = useState<string | null>(null);
+  const highlightTimeoutRef = useRef<number | null>(null);
+  const songListRef = useRef<HTMLDivElement>(null);
+
+  const clearHighlight = useCallback(() => {
+    if (highlightTimeoutRef.current !== null) {
+      window.clearTimeout(highlightTimeoutRef.current);
+      highlightTimeoutRef.current = null;
+    }
+    setHighlightedSongId(null);
+  }, []);
 
   // About modal
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -694,12 +713,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Play song
   const playSong = (index: number) => {
+    clearHighlight();
     const filteredSongs = getFilteredSongs();
     if (index < 0 || index >= filteredSongs.length) return;
-    
+
     const song = filteredSongs[index];
     setCurrentSongIndex(songs.indexOf(song));
-    
+
     if (song.audioUrl && audioRef.current) {
       audioRef.current.src = song.audioUrl;
       audioRef.current.play().then(() => {
@@ -753,8 +773,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Toggle play/pause
   const togglePlay = () => {
+    clearHighlight();
     if (!audioRef.current) return;
-    
+
     if (isPlaying) {
       audioRef.current.pause();
       setIsPlaying(false);
@@ -807,6 +828,71 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   };
+
+  // Deep link handler — 공유 링크로 들어왔을 때 곡 자동 선택 + 재생 시도
+  const handleDeepLinkSong = useCallback((song: Song) => {
+    setIsFavoritesMode(false);
+    setCurrentCategory('전체');
+
+    const songIndex = songs.indexOf(song);
+    if (songIndex >= 0) {
+      setCurrentSongIndex(songIndex);
+    }
+
+    const audio = audioRef.current;
+    if (!audio || !song.audioUrl) {
+      toast.error('오디오 파일이 없습니다.');
+      return;
+    }
+
+    audio.src = song.audioUrl;
+    audio.play().then(() => {
+      setIsPlaying(true);
+      toast.success(`공유 받은 곡 재생 중: ${song.title}`);
+    }).catch(() => {
+      // 브라우저 자동재생 정책으로 차단됨 → 곡 강조 + 스크롤
+      setHighlightedSongId(song.id);
+
+      requestAnimationFrame(() => {
+        const list = songListRef.current;
+        if (!list) return;
+        const target = list.querySelector(`[data-song-id="${CSS.escape(song.id)}"]`);
+        if (target instanceof HTMLElement) {
+          target.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      });
+
+      if (highlightTimeoutRef.current !== null) {
+        window.clearTimeout(highlightTimeoutRef.current);
+      }
+      highlightTimeoutRef.current = window.setTimeout(() => {
+        setHighlightedSongId(null);
+        highlightTimeoutRef.current = null;
+      }, 8000);
+
+      toast(`"${song.title}" 곡을 선택했어요. ▶️ 버튼을 눌러주세요`);
+    });
+  }, [songs, setIsFavoritesMode]);
+
+  const handleDeepLinkMissing = useCallback((songId: string) => {
+    console.warn('[DeepLink] Song not found:', songId);
+    toast('공유 받은 곡을 찾을 수 없어요');
+  }, []);
+
+  useDeepLink<Song>({
+    songs,
+    onSongFound: handleDeepLinkSong,
+    onSongMissing: handleDeepLinkMissing,
+  });
+
+  // 컴포넌트 언마운트 시 highlight timeout 정리
+  useEffect(() => {
+    return () => {
+      if (highlightTimeoutRef.current !== null) {
+        window.clearTimeout(highlightTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Initialize on mount
   useEffect(() => {
@@ -1070,7 +1156,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               </CardTitle>
             </CardHeader>
             <CardContent className="p-2 pt-0">
-              <div className="max-h-32 overflow-y-auto">
+              <div ref={songListRef} className="max-h-32 overflow-y-auto">
                 {filteredSongs.length === 0 ? (
                   <div className="text-center py-3">
                     <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
@@ -1087,14 +1173,18 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <div className="space-y-0.5">
                     {filteredSongs.map((song, index) => {
                       const isCurrentSong = songs.indexOf(song) === currentSongIndex;
+                      const isHighlighted = highlightedSongId === song.id;
                       return (
                         <div
                           key={song.id}
+                          data-song-id={song.id}
                           onClick={() => playSong(index)}
                           className={`px-2 py-1 rounded cursor-pointer transition-all text-xs ${
-                            isCurrentSong 
-                              ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30' 
+                            isCurrentSong
+                              ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30'
                               : 'bg-slate-700/30 hover:bg-slate-700/50 active:bg-slate-700/70'
+                          } ${
+                            isHighlighted ? 'ring-2 ring-pink-400/70 ring-offset-1 ring-offset-slate-800 animate-pulse' : ''
                           }`}
                         >
                           <div className="flex items-center space-x-2">
@@ -1111,6 +1201,18 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                 </div>
                               )}
                             </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                shareSong({ id: song.id, title: song.title });
+                              }}
+                              className="flex-shrink-0 p-1 -m-1 rounded hover:bg-slate-600/40 transition-colors"
+                              aria-label={`${song.title} 공유하기`}
+                              title="공유하기"
+                            >
+                              <Share2 className="h-3.5 w-3.5 text-gray-500 hover:text-purple-300" />
+                            </button>
                             <button
                               type="button"
                               onClick={(e) => {
@@ -1195,10 +1297,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         <SkipBack className="h-4 w-4" />
                       </Button>
                       
-                      <Button 
+                      <Button
                         onClick={togglePlay}
                         size="sm"
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-12 h-12 rounded-full"
+                        className={`bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-12 h-12 rounded-full ${
+                          highlightedSongId && currentSong && highlightedSongId === currentSong.id
+                            ? 'ring-4 ring-pink-400/70 shadow-[0_0_24px_rgba(236,72,153,0.7)] animate-pulse'
+                            : ''
+                        }`}
                         disabled={!currentSong.audioUrl}
                       >
                         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
@@ -1262,8 +1368,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm">
                         {currentSong.lyrics}
                       </div>
-                      {currentSong.youtubeUrl && (
-                        <div className="text-center pt-3 border-t border-slate-600">
+                      <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
+                        {currentSong.youtubeUrl && (
                           <Button
                             variant="outline"
                             size="sm"
@@ -1273,8 +1379,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             <Link className="h-3 w-3 mr-1" />
                             말씀 영상 보기
                           </Button>
-                        </div>
-                      )}
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
+                          className="text-purple-300 border-purple-400 hover:bg-purple-400/10 text-xs"
+                        >
+                          <Share2 className="h-3 w-3 mr-1" />
+                          곡 공유하기
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="py-8 text-center space-y-2">
@@ -1284,9 +1399,22 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           {currentSong ? '이 곡에는 가사가 없습니다' : '곡을 선택하면 가사가 표시됩니다'}
                         </p>
                         {currentSong && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            관리자가 가사를 추가할 수 있습니다
-                          </p>
+                          <>
+                            <p className="text-xs text-gray-500 mt-1">
+                              관리자가 가사를 추가할 수 있습니다
+                            </p>
+                            <div className="pt-3">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
+                                className="text-purple-300 border-purple-400 hover:bg-purple-400/10 text-xs"
+                              >
+                                <Share2 className="h-3 w-3 mr-1" />
+                                곡 공유하기
+                              </Button>
+                            </div>
+                          </>
                         )}
                       </div>
                     </div>
