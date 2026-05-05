@@ -201,25 +201,21 @@ export default function SimpleSongPlayer() {
 
             <div className="text-center space-y-2 pb-4 border-b border-slate-700">
               <p className="text-xs text-purple-300">🎁 찬양 선물이 도착했어요</p>
-              <div className="text-sm space-y-1">
-                {(() => {
-                  const labels = ['제목', '본문', '설교자', '구분', '날짜'];
-                  const parts: string[] = [];
-                  if (song.title?.trim()) parts.push(song.title.trim());
-                  if (song.description) {
-                    song.description
-                      .split('|')
-                      .map((s) => s.trim())
-                      .filter((s) => s.length > 0)
-                      .forEach((p) => parts.push(p));
-                  }
-                  return parts.map((part, idx) => (
-                    <p key={idx}>
-                      {labels[idx] && <span className="text-gray-400">{labels[idx]}: </span>}
-                      <span className="text-gray-200">{part}</span>
-                    </p>
-                  ));
-                })()}
+              <div className="text-sm text-left space-y-1">
+                {song.description
+                  ?.split('|')
+                  .map((s) => s.trim())
+                  .filter((s) => s.length > 0)
+                  .map((part, idx) => {
+                    const labels = ['제목', '본문', '설교자', '구분', '날짜'];
+                    const label = labels[idx];
+                    return (
+                      <p key={idx}>
+                        {label && <span className="text-gray-400">{label}: </span>}
+                        <span className="text-gray-200">{part}</span>
+                      </p>
+                    );
+                  }) ?? null}
               </div>
             </div>
 
