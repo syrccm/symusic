@@ -24,6 +24,7 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useShare } from '@/hooks/useShare';
 import { useDeepLink } from '@/hooks/useDeepLink';
 import { AboutModal } from '@/components/AboutModal';
+import { PlayPromptModal } from '@/components/PlayPromptModal';
 import {
   Play,
   Pause,
@@ -119,18 +120,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // Share
   const { shareSong } = useShare();
 
-  // Deep link 강조 (자동재생 실패 시 ▶️ 버튼 강조)
-  const [highlightedSongId, setHighlightedSongId] = useState<string | null>(null);
-  const highlightTimeoutRef = useRef<number | null>(null);
-  const songListRef = useRef<HTMLDivElement>(null);
-
-  const clearHighlight = useCallback(() => {
-    if (highlightTimeoutRef.current !== null) {
-      window.clearTimeout(highlightTimeoutRef.current);
-      highlightTimeoutRef.current = null;
-    }
-    setHighlightedSongId(null);
-  }, []);
+  // Deep link 자동재생 차단 시 표시할 풀스크린 ▶ 모달
+  const [promptingSong, setPromptingSong] = useState<Song | null>(null);
 
   // About modal
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -713,7 +704,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Play song
   const playSong = (index: number) => {
-    clearHighlight();
     const filteredSongs = getFilteredSongs();
     if (index < 0 || index >= filteredSongs.length) return;
 
@@ -773,7 +763,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Toggle play/pause
   const togglePlay = () => {
-    clearHighlight();
     if (!audioRef.current) return;
 
     if (isPlaying) {
@@ -830,6 +819,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   };
 
   // Deep link handler — 공유 링크로 들어왔을 때 곡 자동 선택 + 재생 시도
+  // 자동재생 차단 시 PlayPromptModal로 한 번 탭하여 재생 유도
   const handleDeepLinkSong = useCallback((song: Song) => {
     setIsFavoritesMode(false);
     setCurrentCategory('전체');
@@ -846,32 +836,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
 
     audio.src = song.audioUrl;
-    audio.play().then(() => {
-      setIsPlaying(true);
-      toast.success(`공유 받은 곡 재생 중: ${song.title}`);
-    }).catch(() => {
-      // 브라우저 자동재생 정책으로 차단됨 → 곡 강조 + 스크롤
-      setHighlightedSongId(song.id);
-
-      requestAnimationFrame(() => {
-        const list = songListRef.current;
-        if (!list) return;
-        const target = list.querySelector(`[data-song-id="${CSS.escape(song.id)}"]`);
-        if (target instanceof HTMLElement) {
-          target.scrollIntoView({ block: 'center', behavior: 'smooth' });
-        }
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.then === 'function') {
+      playPromise.then(() => {
+        setIsPlaying(true);
+        toast.success(`공유 받은 곡 재생 중: ${song.title}`);
+      }).catch(() => {
+        // 브라우저 자동재생 정책으로 차단됨 → 풀스크린 ▶ 모달로 한 번 탭하여 재생 유도
+        setPromptingSong(song);
       });
-
-      if (highlightTimeoutRef.current !== null) {
-        window.clearTimeout(highlightTimeoutRef.current);
-      }
-      highlightTimeoutRef.current = window.setTimeout(() => {
-        setHighlightedSongId(null);
-        highlightTimeoutRef.current = null;
-      }, 8000);
-
-      toast(`"${song.title}" 곡을 선택했어요. ▶️ 버튼을 눌러주세요`);
-    });
+    }
   }, [songs, setIsFavoritesMode]);
 
   const handleDeepLinkMissing = useCallback((songId: string) => {
@@ -885,13 +859,27 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     onSongMissing: handleDeepLinkMissing,
   });
 
-  // 컴포넌트 언마운트 시 highlight timeout 정리
-  useEffect(() => {
-    return () => {
-      if (highlightTimeoutRef.current !== null) {
-        window.clearTimeout(highlightTimeoutRef.current);
-      }
-    };
+  // PlayPromptModal — 사용자 제스처로 직접 재생 시도
+  const handlePlayPromptConfirm = useCallback(() => {
+    const audio = audioRef.current;
+    const song = promptingSong;
+    if (!audio || !song) {
+      setPromptingSong(null);
+      return;
+    }
+
+    audio.play().then(() => {
+      setIsPlaying(true);
+      setPromptingSong(null);
+      toast.success(`재생 중: ${song.title}`);
+    }).catch((err) => {
+      console.error('Manual play failed:', err);
+      toast.error('재생에 실패했습니다. 다시 시도해주세요.');
+    });
+  }, [promptingSong]);
+
+  const handlePlayPromptCancel = useCallback(() => {
+    setPromptingSong(null);
   }, []);
 
   // Initialize on mount
@@ -1156,7 +1144,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               </CardTitle>
             </CardHeader>
             <CardContent className="p-2 pt-0">
-              <div ref={songListRef} className="max-h-32 overflow-y-auto">
+              <div className="max-h-32 overflow-y-auto">
                 {filteredSongs.length === 0 ? (
                   <div className="text-center py-3">
                     <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
@@ -1173,18 +1161,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <div className="space-y-0.5">
                     {filteredSongs.map((song, index) => {
                       const isCurrentSong = songs.indexOf(song) === currentSongIndex;
-                      const isHighlighted = highlightedSongId === song.id;
                       return (
                         <div
                           key={song.id}
-                          data-song-id={song.id}
                           onClick={() => playSong(index)}
                           className={`px-2 py-1 rounded cursor-pointer transition-all text-xs ${
                             isCurrentSong
                               ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30'
                               : 'bg-slate-700/30 hover:bg-slate-700/50 active:bg-slate-700/70'
-                          } ${
-                            isHighlighted ? 'ring-2 ring-pink-400/70 ring-offset-1 ring-offset-slate-800 animate-pulse' : ''
                           }`}
                         >
                           <div className="flex items-center space-x-2">
@@ -1300,11 +1284,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       <Button
                         onClick={togglePlay}
                         size="sm"
-                        className={`bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-12 h-12 rounded-full ${
-                          highlightedSongId && currentSong && highlightedSongId === currentSong.id
-                            ? 'ring-4 ring-pink-400/70 shadow-[0_0_24px_rgba(236,72,153,0.7)] animate-pulse'
-                            : ''
-                        }`}
+                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-12 h-12 rounded-full"
                         disabled={!currentSong.audioUrl}
                       >
                         {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
@@ -1769,6 +1749,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       </div>
 
       <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} songs={songs} />
+
+      {promptingSong && (
+        <PlayPromptModal
+          songTitle={promptingSong.title}
+          onPlay={handlePlayPromptConfirm}
+          onCancel={handlePlayPromptCancel}
+        />
+      )}
     </div>
   );
 }
