@@ -265,6 +265,12 @@ export default function SimpleSongPlayer() {
               </div>
             </div>
 
+            {song.title && (
+              <h3 className="text-2xl font-bold text-white text-center">
+                {song.title}
+              </h3>
+            )}
+
             <div className="min-h-[140px] bg-slate-700/30 rounded-lg p-4">
               {song.lyrics ? (
                 <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm">

@@ -1259,6 +1259,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           );
                         })()}
                       </div>
+                      {currentSong.title && (
+                        <h3 className="text-2xl font-bold text-white text-center">
+                          {currentSong.title}
+                        </h3>
+                      )}
                       <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm">
                         {currentSong.lyrics}
                       </div>
