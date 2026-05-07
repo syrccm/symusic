@@ -186,13 +186,13 @@ export default function SimpleSongPlayer() {
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
       <div className="flex flex-col min-h-screen max-w-md mx-auto px-4 py-6">
 
-        <div className="flex items-center space-x-2 mb-6">
-          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
-            <Music className="h-4 w-4 text-white" />
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-14 h-14 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+            <Music className="w-7 h-7 text-white" />
           </div>
           <div>
-            <h1 className="text-sm font-bold">SY Music</h1>
-            <p className="text-[10px] text-purple-300">수영로말씀적용찬양</p>
+            <h1 className="text-xl font-bold text-white">SY Music</h1>
+            <p className="text-sm text-purple-300">수영로말씀적용찬양</p>
           </div>
         </div>
 
@@ -200,7 +200,7 @@ export default function SimpleSongPlayer() {
           <CardContent className="p-6 flex flex-col flex-1 space-y-5">
 
             <div className="text-center space-y-2 pb-4 border-b border-slate-700">
-              <p className="text-xs text-purple-300">🎁 찬양 선물이 도착했어요</p>
+              <p className="text-base font-semibold text-purple-200 mb-2">🎁 찬양 선물이 도착했어요</p>
               <div className="text-xs text-left space-y-1">
                 {(() => {
                   const parts =
