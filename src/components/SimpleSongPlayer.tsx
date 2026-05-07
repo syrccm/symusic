@@ -321,8 +321,8 @@ export default function SimpleSongPlayer() {
           </CardContent>
         </Card>
 
-        <div className="mt-4 rounded-2xl border-2 border-purple-300/40 bg-gradient-to-br from-purple-600/80 to-pink-600/70 p-6 text-center shadow-xl shadow-purple-500/40">
-          <p className="text-base text-white leading-relaxed mb-4">
+        <div className="mt-4 rounded-2xl border border-purple-500/30 bg-gradient-to-b from-purple-900/40 to-slate-900/60 p-5 text-center shadow-lg shadow-purple-900/20">
+          <p className="text-base text-white leading-snug mb-4">
             💜 말씀의 은혜,<br />
             찬양으로 일주일 내내<br />
             <br />
@@ -333,13 +333,13 @@ export default function SimpleSongPlayer() {
             href={PLAY_STORE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block hover:opacity-90 transition-opacity"
+            className="inline-block transition-transform hover:scale-105"
             aria-label="Google Play에서 수영로말씀적용찬양 앱 받기"
           >
             <img
               src="/google-play-badge-ko.png"
-              alt="Google Play에서 받기"
-              className="h-16 mx-auto"
+              alt="Google Play에서 다운로드"
+              className="h-20 mx-auto"
             />
           </a>
         </div>
