@@ -323,11 +323,8 @@ export default function SimpleSongPlayer() {
 
         <div className="mt-4 rounded-2xl border border-purple-500/30 bg-gradient-to-b from-purple-900/40 to-slate-900/60 p-5 text-center shadow-lg shadow-purple-900/20">
           <p className="text-base text-white leading-snug mb-4">
-            💜 말씀의 은혜,<br />
-            찬양으로 일주일 내내<br />
-            <br />
-            '<span className="font-bold text-yellow-200">수영로말씀적용찬양</span>' 앱에서<br />
-            다운받고 누리세요
+            지금 바로 아래 버튼을 클릭하여<br />
+            '<span className="font-bold text-yellow-200">수영로말씀적용찬양</span>' 앱을 설치하세요
           </p>
           <a
             href={PLAY_STORE_URL}
