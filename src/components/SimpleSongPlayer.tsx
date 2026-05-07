@@ -201,21 +201,67 @@ export default function SimpleSongPlayer() {
 
             <div className="text-center space-y-2 pb-4 border-b border-slate-700">
               <p className="text-xs text-purple-300">🎁 찬양 선물이 도착했어요</p>
-              <div className="text-sm text-left space-y-1">
-                {song.description
-                  ?.split('|')
-                  .map((s) => s.trim())
-                  .filter((s) => s.length > 0)
-                  .map((part, idx) => {
-                    const labels = ['제목', '본문', '설교자', '구분', '날짜'];
-                    const label = labels[idx];
-                    return (
-                      <p key={idx}>
-                        {label && <span className="text-gray-400">{label}: </span>}
-                        <span className="text-gray-200">{part}</span>
-                      </p>
-                    );
-                  }) ?? null}
+              <div className="text-xs text-left space-y-1">
+                {(() => {
+                  const parts =
+                    song.description
+                      ?.split('|')
+                      .map((s) => s.trim())
+                      .filter((s) => s.length > 0) ?? [];
+                  return (
+                    <>
+                      {parts[0] && (
+                        <p>
+                          <span className="text-gray-500">· </span>
+                          <span className="text-gray-400">설교제목: </span>
+                          <span className="text-gray-200">{parts[0]}</span>
+                        </p>
+                      )}
+                      {(parts[1] || parts[2]) && (
+                        <p>
+                          {parts[1] && (
+                            <>
+                              <span className="text-gray-500">· </span>
+                              <span className="text-gray-400">설교본문: </span>
+                              <span className="text-gray-200">{parts[1]}</span>
+                            </>
+                          )}
+                          {parts[1] && parts[2] && (
+                            <span className="mx-1 text-gray-500">|</span>
+                          )}
+                          {parts[2] && (
+                            <>
+                              <span className="text-gray-500">· </span>
+                              <span className="text-gray-400">설교자: </span>
+                              <span className="text-gray-200">{parts[2]}</span>
+                            </>
+                          )}
+                        </p>
+                      )}
+                      {(parts[3] || parts[4]) && (
+                        <p>
+                          {parts[3] && (
+                            <>
+                              <span className="text-gray-500">· </span>
+                              <span className="text-gray-400">구분: </span>
+                              <span className="text-gray-200">{parts[3]}</span>
+                            </>
+                          )}
+                          {parts[3] && parts[4] && (
+                            <span className="mx-1 text-gray-500">|</span>
+                          )}
+                          {parts[4] && (
+                            <>
+                              <span className="text-gray-500">· </span>
+                              <span className="text-gray-400">날짜: </span>
+                              <span className="text-gray-200">{parts[4]}</span>
+                            </>
+                          )}
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
             </div>
 
