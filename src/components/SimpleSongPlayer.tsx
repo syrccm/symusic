@@ -313,9 +313,9 @@ export default function SimpleSongPlayer() {
             <Button
               onClick={handleShare}
               variant="outline"
-              className="w-full bg-slate-700/30 border-purple-400/40 text-white hover:bg-purple-400/10"
+              className="w-full rounded-xl bg-purple-700/40 border-purple-400/60 text-white font-semibold transition-all hover:bg-purple-600/50 hover:scale-[1.02]"
             >
-              <Share2 className="h-4 w-4 mr-2" />
+              <Share2 className="h-5 w-5 mr-2" />
               이 찬양 다른 분과 나누기
             </Button>
           </CardContent>
