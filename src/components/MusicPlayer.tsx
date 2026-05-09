@@ -1288,10 +1288,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           onPointerUp={() => setIsSharePressed(false)}
                           onPointerLeave={() => setIsSharePressed(false)}
                           onPointerCancel={() => setIsSharePressed(false)}
-                          className={`border-purple-400 text-xs transition-colors ${
+                          className={`border-purple-400/60 font-semibold text-xs transition-all ${
                             isSharePressed
-                              ? 'text-pink-300 bg-purple-800/40'
-                              : 'text-purple-300 hover:bg-purple-400/10'
+                              ? 'bg-purple-800 text-pink-300 scale-[0.98]'
+                              : 'bg-purple-700/40 text-white hover:bg-purple-600/50'
                           }`}
                         >
                           <Share2 className="h-3 w-3 mr-1" />
@@ -1320,10 +1320,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                 onPointerUp={() => setIsSharePressed(false)}
                                 onPointerLeave={() => setIsSharePressed(false)}
                                 onPointerCancel={() => setIsSharePressed(false)}
-                                className={`border-purple-400 text-xs transition-colors ${
+                                className={`border-purple-400/60 font-semibold text-xs transition-all ${
                                   isSharePressed
-                                    ? 'text-pink-300 bg-purple-800/40'
-                                    : 'text-purple-300 hover:bg-purple-400/10'
+                                    ? 'bg-purple-800 text-pink-300 scale-[0.98]'
+                                    : 'bg-purple-700/40 text-white hover:bg-purple-600/50'
                                 }`}
                               >
                                 <Share2 className="h-3 w-3 mr-1" />
