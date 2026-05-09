@@ -103,6 +103,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Share
   const { shareSong } = useShare();
+  const [isSharePressed, setIsSharePressed] = useState(false);
 
   // About modal
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -1283,7 +1284,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           variant="outline"
                           size="sm"
                           onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
-                          className="text-purple-300 border-purple-400 hover:bg-purple-400/10 text-xs transition-colors active:bg-purple-800/40 active:text-pink-300"
+                          onPointerDown={() => setIsSharePressed(true)}
+                          onPointerUp={() => setIsSharePressed(false)}
+                          onPointerLeave={() => setIsSharePressed(false)}
+                          onPointerCancel={() => setIsSharePressed(false)}
+                          className={`border-purple-400 text-xs transition-colors ${
+                            isSharePressed
+                              ? 'text-pink-300 bg-purple-800/40'
+                              : 'text-purple-300 hover:bg-purple-400/10'
+                          }`}
                         >
                           <Share2 className="h-3 w-3 mr-1" />
                           곡 공유하기
@@ -1307,7 +1316,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                 variant="outline"
                                 size="sm"
                                 onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
-                                className="text-purple-300 border-purple-400 hover:bg-purple-400/10 text-xs transition-colors active:bg-purple-800/40 active:text-pink-300"
+                                onPointerDown={() => setIsSharePressed(true)}
+                                onPointerUp={() => setIsSharePressed(false)}
+                                onPointerLeave={() => setIsSharePressed(false)}
+                                onPointerCancel={() => setIsSharePressed(false)}
+                                className={`border-purple-400 text-xs transition-colors ${
+                                  isSharePressed
+                                    ? 'text-pink-300 bg-purple-800/40'
+                                    : 'text-purple-300 hover:bg-purple-400/10'
+                                }`}
                               >
                                 <Share2 className="h-3 w-3 mr-1" />
                                 곡 공유하기

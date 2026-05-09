@@ -33,6 +33,7 @@ export default function SimpleSongPlayer() {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [promptingPlay, setPromptingPlay] = useState(false);
+  const [isSharePressed, setIsSharePressed] = useState(false);
 
   // 곡 검색 — songs 도착 후 매칭, grace 윈도우 후에도 없으면 notFound
   // 한 번 매칭되면 onSnapshot 재호출(캐시→서버)로 songs가 새 참조로 바뀌어도
@@ -312,8 +313,16 @@ export default function SimpleSongPlayer() {
 
             <Button
               onClick={handleShare}
+              onPointerDown={() => setIsSharePressed(true)}
+              onPointerUp={() => setIsSharePressed(false)}
+              onPointerLeave={() => setIsSharePressed(false)}
+              onPointerCancel={() => setIsSharePressed(false)}
               variant="outline"
-              className="w-full rounded-xl bg-purple-700/40 border-purple-400/60 text-white font-semibold transition-all hover:bg-purple-600/50 hover:scale-[1.02] active:bg-purple-800 active:scale-[0.98] active:text-pink-300"
+              className={`w-full rounded-xl border-purple-400/60 font-semibold transition-all hover:scale-[1.02] ${
+                isSharePressed
+                  ? 'bg-purple-800 text-pink-300 scale-[0.98]'
+                  : 'bg-purple-700/40 text-white hover:bg-purple-600/50'
+              }`}
             >
               <Share2 className="h-5 w-5 mr-2" />
               이 찬양 다른 분과 나누기
