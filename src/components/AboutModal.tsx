@@ -83,7 +83,7 @@ export function AboutModal({ open, onOpenChange, songs }: AboutModalProps) {
           <ul className="text-sm font-extralight space-y-2 text-gray-200 text-left list-none">
             <li>🎵 등록된 찬양: {songs.length}곡</li>
             <li>📅 최근 업데이트: {pickLatestDate(songs)}</li>
-            <li>✨ 최신 기능: 즐겨찾기 (2026.5.4 추가)</li>
+            <li>✨ 최신 기능: 곡 공유 기능 (2026.5.9 추가)</li>
           </ul>
         </section>
 
