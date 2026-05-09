@@ -201,7 +201,7 @@ export default function SimpleSongPlayer() {
 
             <div className="text-center space-y-2 pb-4 border-b border-slate-700">
               <p className="text-base font-semibold text-purple-200 mb-2">🎁 찬양 선물이 도착했어요</p>
-              <div className="text-xs text-left space-y-1">
+              <div className="text-xs text-left space-y-1 break-keep">
                 {(() => {
                   const parts =
                     song.description
@@ -266,14 +266,14 @@ export default function SimpleSongPlayer() {
             </div>
 
             {song.title && (
-              <h3 className="text-2xl font-bold text-white text-center">
+              <h3 className="text-2xl font-bold text-white text-center break-keep">
                 {song.title}
               </h3>
             )}
 
             <div className="min-h-[140px] bg-slate-700/30 rounded-lg p-4">
               {song.lyrics ? (
-                <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm">
+                <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
                   {song.lyrics}
                 </div>
               ) : (
@@ -322,7 +322,7 @@ export default function SimpleSongPlayer() {
         </Card>
 
         <div className="mt-4 rounded-2xl border border-purple-500/30 bg-gradient-to-b from-purple-900/40 to-slate-900/60 p-5 text-center shadow-lg shadow-purple-900/20">
-          <p className="text-base text-white leading-snug mb-4">
+          <p className="text-base text-white leading-snug mb-4 break-keep">
             지금 바로 아래 버튼을 클릭하여<br />
             '<span className="font-bold text-yellow-200">수영로말씀적용찬양</span>' 앱을 설치하세요
           </p>

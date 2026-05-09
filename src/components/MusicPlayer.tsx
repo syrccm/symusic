@@ -1197,7 +1197,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <div className="h-full overflow-y-auto bg-slate-700/30 rounded-lg p-3">
                   {currentSong && currentSong.lyrics ? (
                     <div className="space-y-3">
-                      <div className="text-left border-b border-slate-600 pb-2 text-xs space-y-1">
+                      <div className="text-left border-b border-slate-600 pb-2 text-xs space-y-1 break-keep">
                         {(() => {
                           const parts =
                             currentSong.description
@@ -1260,11 +1260,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         })()}
                       </div>
                       {currentSong.title && (
-                        <h3 className="text-2xl font-bold text-white text-center">
+                        <h3 className="text-2xl font-bold text-white text-center break-keep">
                           {currentSong.title}
                         </h3>
                       )}
-                      <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm">
+                      <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
                         {currentSong.lyrics}
                       </div>
                       <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
