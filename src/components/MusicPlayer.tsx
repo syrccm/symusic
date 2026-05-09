@@ -1283,7 +1283,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           variant="outline"
                           size="sm"
                           onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
-                          className="text-purple-300 border-purple-400 hover:bg-purple-400/10 text-xs"
+                          className="text-purple-300 border-purple-400 hover:bg-purple-400/10 text-xs transition-colors active:bg-purple-800/40 active:text-pink-300"
                         >
                           <Share2 className="h-3 w-3 mr-1" />
                           곡 공유하기
@@ -1307,7 +1307,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                 variant="outline"
                                 size="sm"
                                 onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
-                                className="text-purple-300 border-purple-400 hover:bg-purple-400/10 text-xs"
+                                className="text-purple-300 border-purple-400 hover:bg-purple-400/10 text-xs transition-colors active:bg-purple-800/40 active:text-pink-300"
                               >
                                 <Share2 className="h-3 w-3 mr-1" />
                                 곡 공유하기

@@ -313,7 +313,7 @@ export default function SimpleSongPlayer() {
             <Button
               onClick={handleShare}
               variant="outline"
-              className="w-full rounded-xl bg-purple-700/40 border-purple-400/60 text-white font-semibold transition-all hover:bg-purple-600/50 hover:scale-[1.02]"
+              className="w-full rounded-xl bg-purple-700/40 border-purple-400/60 text-white font-semibold transition-all hover:bg-purple-600/50 hover:scale-[1.02] active:bg-purple-800 active:scale-[0.98] active:text-pink-300"
             >
               <Share2 className="h-5 w-5 mr-2" />
               이 찬양 다른 분과 나누기
