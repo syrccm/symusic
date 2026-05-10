@@ -1280,23 +1280,21 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             말씀 영상 보기
                           </Button>
                         )}
-                        <Button
-                          variant="outline"
-                          size="sm"
+                        <button
                           onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
                           onPointerDown={() => setIsSharePressed(true)}
                           onPointerUp={() => setIsSharePressed(false)}
                           onPointerLeave={() => setIsSharePressed(false)}
                           onPointerCancel={() => setIsSharePressed(false)}
-                          className={`border-purple-400/60 font-semibold text-xs transition-all ${
+                          className={`h-9 px-3 rounded-md border font-semibold text-xs inline-flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
                             isSharePressed
-                              ? 'bg-purple-800 text-pink-300 scale-[0.98]'
-                              : 'bg-purple-700/40 text-white hover:bg-purple-600/50'
+                              ? 'bg-purple-950 text-pink-300 border-pink-400/70 scale-[0.98]'
+                              : 'bg-purple-800 text-white border-purple-400/60 hover:text-pink-300 hover:border-pink-400/70'
                           }`}
                         >
-                          <Share2 className="h-3 w-3 mr-1" />
+                          <Share2 className="h-3 w-3" />
                           곡 공유하기
-                        </Button>
+                        </button>
                       </div>
                     </div>
                   ) : (
@@ -1312,23 +1310,21 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                               관리자가 가사를 추가할 수 있습니다
                             </p>
                             <div className="pt-3">
-                              <Button
-                                variant="outline"
-                                size="sm"
+                              <button
                                 onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
                                 onPointerDown={() => setIsSharePressed(true)}
                                 onPointerUp={() => setIsSharePressed(false)}
                                 onPointerLeave={() => setIsSharePressed(false)}
                                 onPointerCancel={() => setIsSharePressed(false)}
-                                className={`border-purple-400/60 font-semibold text-xs transition-all ${
+                                className={`h-9 px-3 rounded-md border font-semibold text-xs inline-flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
                                   isSharePressed
-                                    ? 'bg-purple-800 text-pink-300 scale-[0.98]'
-                                    : 'bg-purple-700/40 text-white hover:bg-purple-600/50'
+                                    ? 'bg-purple-950 text-pink-300 border-pink-400/70 scale-[0.98]'
+                                    : 'bg-purple-800 text-white border-purple-400/60 hover:text-pink-300 hover:border-pink-400/70'
                                 }`}
                               >
-                                <Share2 className="h-3 w-3 mr-1" />
+                                <Share2 className="h-3 w-3" />
                                 곡 공유하기
-                              </Button>
+                              </button>
                             </div>
                           </>
                         )}

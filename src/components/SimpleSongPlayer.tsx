@@ -311,22 +311,21 @@ export default function SimpleSongPlayer() {
               </Button>
             </div>
 
-            <Button
+            <button
               onClick={handleShare}
               onPointerDown={() => setIsSharePressed(true)}
               onPointerUp={() => setIsSharePressed(false)}
               onPointerLeave={() => setIsSharePressed(false)}
               onPointerCancel={() => setIsSharePressed(false)}
-              variant="outline"
-              className={`w-full rounded-xl border-purple-400/60 font-semibold transition-all hover:scale-[1.02] ${
+              className={`w-full rounded-xl border font-semibold py-3 px-4 inline-flex items-center justify-center gap-2 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
                 isSharePressed
-                  ? 'bg-purple-800 text-pink-300 scale-[0.98]'
-                  : 'bg-purple-700/40 text-white hover:bg-purple-600/50'
+                  ? 'bg-purple-950 text-pink-300 border-pink-400/70 scale-[0.98]'
+                  : 'bg-purple-800 text-white border-purple-400/60 hover:text-pink-300 hover:border-pink-400/70'
               }`}
             >
-              <Share2 className="h-5 w-5 mr-2" />
+              <Share2 className="h-5 w-5" />
               이 찬양 다른 분과 나누기
-            </Button>
+            </button>
           </CardContent>
         </Card>
 
