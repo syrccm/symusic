@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { useSongs, type Song } from '@/hooks/useSongs';
 import { useShare } from '@/hooks/useShare';
 import { PlayPromptModal } from '@/components/PlayPromptModal';
+import { trackInstall, trackShare, trackSongPlay } from '@/utils/analyticsTracker';
 
 const NOT_FOUND_GRACE_MS = 3000;
 
@@ -88,7 +89,12 @@ export default function SimpleSongPlayer() {
     const playPromise = audio.play();
     if (playPromise && typeof playPromise.then === 'function') {
       playPromise
-        .then(() => setIsPlaying(true))
+        .then(() => {
+          setIsPlaying(true);
+          trackSongPlay(song.id).catch((err) =>
+            console.error('[Analytics] trackSongPlay failed:', err),
+          );
+        })
         .catch(() => setPromptingPlay(true));
     }
 
@@ -134,6 +140,11 @@ export default function SimpleSongPlayer() {
     audio.play().then(() => {
       setIsPlaying(true);
       setPromptingPlay(false);
+      if (song) {
+        trackSongPlay(song.id).catch((err) =>
+          console.error('[Analytics] trackSongPlay failed:', err),
+        );
+      }
     }).catch(() => {
       toast.error('재생에 실패했습니다. 다시 시도해주세요.');
     });
@@ -141,7 +152,16 @@ export default function SimpleSongPlayer() {
 
   const handleShare = () => {
     if (!song) return;
+    trackShare(song.id).catch((err) =>
+      console.error('[Analytics] trackShare failed:', err),
+    );
     shareSong({ id: song.id, title: song.title });
+  };
+
+  const handleInstallClick = () => {
+    trackInstall().catch((err) =>
+      console.error('[Analytics] trackInstall failed:', err),
+    );
   };
 
   // 로딩
@@ -338,6 +358,7 @@ export default function SimpleSongPlayer() {
             href={PLAY_STORE_URL}
             target="_blank"
             rel="noopener noreferrer"
+            onClick={handleInstallClick}
             className="inline-block transition-transform hover:scale-105"
             aria-label="Google Play에서 수영로말씀적용찬양 앱 받기"
           >

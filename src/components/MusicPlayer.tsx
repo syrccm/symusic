@@ -24,6 +24,8 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useShare } from '@/hooks/useShare';
 import { useSongs, type Song } from '@/hooks/useSongs';
 import { AboutModal } from '@/components/AboutModal';
+import { AnalyticsDialog } from '@/components/AnalyticsDialog';
+import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import {
   Play,
   Pause,
@@ -33,7 +35,6 @@ import {
   Settings,
   Trash2,
   Edit,
-  CheckCircle,
   Loader2,
   Link,
   WifiOff,
@@ -47,7 +48,8 @@ import {
   Star,
   ArrowLeft,
   Info,
-  Share2
+  Share2,
+  BarChart3
 } from 'lucide-react';
 
 // Types
@@ -107,7 +109,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // About modal
   const [isAboutOpen, setIsAboutOpen] = useState(false);
-  
+
+  // Analytics dialog (관리자 모드 전용)
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAdminDialog, setShowAdminDialog] = useState(false);
@@ -639,6 +644,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       audioRef.current.play().then(() => {
         setIsPlaying(true);
         toast.success(`재생 중: ${song.title}`);
+        trackSongPlay(song.id).catch((err) =>
+          console.error('[Analytics] trackSongPlay failed:', err),
+        );
       }).catch(error => {
         console.error('Playback failed:', error);
         toast.error(`오디오 재생에 실패했습니다: ${song.title}`);
@@ -646,6 +654,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     } else {
       toast.error('오디오 파일이 없습니다.');
     }
+  };
+
+  const handleShareClick = (song: { id: string; title: string }) => {
+    trackShare(song.id).catch((err) =>
+      console.error('[Analytics] trackShare failed:', err),
+    );
+    shareSong(song);
   };
 
   // Enter favorites mode and play the first favorite
@@ -671,6 +686,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       audioRef.current.src = firstSong.audioUrl;
       audioRef.current.play().then(() => {
         setIsPlaying(true);
+        trackSongPlay(firstSong.id).catch((err) =>
+          console.error('[Analytics] trackSongPlay failed:', err),
+        );
       }).catch(error => {
         console.error('Playback failed:', error);
         toast.error(`오디오 재생에 실패했습니다: ${firstSong.title}`);
@@ -900,24 +918,25 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <Info className="w-6 h-6" strokeWidth={2.5} />
               </Button>
 
-              {isAdminRoute && (
+              {isAdminRoute && isOfflineMode && (
                 <div className="flex items-center space-x-1 text-xs">
-                  {isOfflineMode ? (
-                    <>
-                      <WifiOff className="h-3 w-3 text-orange-400" />
-                      <span className="text-orange-400 hidden sm:inline">오프라인</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="h-3 w-3 text-green-400" />
-                      <span className="text-green-400 hidden sm:inline">연결됨</span>
-                    </>
-                  )}
+                  <WifiOff className="h-3 w-3 text-orange-400" />
+                  <span className="text-orange-400 hidden sm:inline">오프라인</span>
                 </div>
               )}
-              
+
               {isAdminRoute && (
                 <>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 p-2"
+                    onClick={() => setIsAnalyticsOpen(true)}
+                    title="사용 통계 보기"
+                    aria-label="사용 통계 보기"
+                  >
+                    <BarChart3 className="h-5 w-5" />
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"
@@ -1049,7 +1068,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                shareSong({ id: song.id, title: song.title });
+                                handleShareClick({ id: song.id, title: song.title });
                               }}
                               className="flex-shrink-0 p-1 -m-1 rounded hover:bg-slate-600/40 transition-colors"
                               aria-label={`${song.title} 공유하기`}
@@ -1281,7 +1300,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           </Button>
                         )}
                         <button
-                          onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
+                          onClick={() => handleShareClick({ id: currentSong.id, title: currentSong.title })}
                           onPointerDown={() => setIsSharePressed(true)}
                           onPointerUp={() => setIsSharePressed(false)}
                           onPointerLeave={() => setIsSharePressed(false)}
@@ -1311,7 +1330,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             </p>
                             <div className="pt-3">
                               <button
-                                onClick={() => shareSong({ id: currentSong.id, title: currentSong.title })}
+                                onClick={() => handleShareClick({ id: currentSong.id, title: currentSong.title })}
                                 onPointerDown={() => setIsSharePressed(true)}
                                 onPointerUp={() => setIsSharePressed(false)}
                                 onPointerLeave={() => setIsSharePressed(false)}
@@ -1681,6 +1700,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       </div>
 
       <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} songs={songs} />
+
+      {isAdminRoute && (
+        <AnalyticsDialog
+          open={isAnalyticsOpen}
+          onOpenChange={setIsAnalyticsOpen}
+          songs={songs}
+        />
+      )}
     </div>
   );
 }
