@@ -1,5 +1,5 @@
 // SY Music Service Worker
-const CACHE_NAME = 'symusic-v1';
+const CACHE_NAME = 'symusic-v2';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -36,18 +36,39 @@ self.addEventListener('activate', (event) => {
   );
 });
 
+// Cache API는 GET 외 메서드를 캐시할 수 없고, Firebase 실시간 트래픽은 캐시 대상이 아님.
+// (이전: 모든 요청을 cache.put하다가 Firestore POST에서 'Request method POST is unsupported' 발생)
+function shouldBypassSW(request) {
+  if (request.method !== 'GET') return true;
+  const url = request.url;
+  return (
+    url.includes('firestore.googleapis.com') ||
+    url.includes('firebaseio.com') ||
+    url.includes('firebaseapp.com') ||
+    url.includes('googleapis.com/identitytoolkit') ||
+    url.includes('securetoken.googleapis.com') ||
+    url.includes('identitytoolkit.googleapis.com')
+  );
+}
+
 // 네트워크 우선, 실패 시 캐시 사용
 self.addEventListener('fetch', (event) => {
+  // 비-GET 또는 Firebase 트래픽은 SW 개입 없이 네트워크로 직행
+  if (shouldBypassSW(event.request)) {
+    return;
+  }
+
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // 성공적인 응답은 캐시에 저장
-        if (response.status === 200) {
+        // basic 응답(같은 출처)이고 200일 때만 캐시
+        if (response.status === 200 && response.type === 'basic') {
           const responseClone = response.clone();
           caches.open(CACHE_NAME)
             .then((cache) => {
               cache.put(event.request, responseClone);
-            });
+            })
+            .catch((err) => console.warn('[SW] cache.put 실패:', err));
         }
         return response;
       })
