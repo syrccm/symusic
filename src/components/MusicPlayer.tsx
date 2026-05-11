@@ -36,7 +36,7 @@ import {
   Trash2,
   Edit,
   Loader2,
-  Link,
+  Youtube,
   WifiOff,
   List,
   Save,
@@ -146,6 +146,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   
   // Audio ref
   const audioRef = useRef<HTMLAudioElement>(null);
+
+  // 현재 재생 곡 행 ref - 곡 변경 시 자동 스크롤 추적용
+  const currentSongRowRef = useRef<HTMLDivElement>(null);
 
   // Helper function to format time
   const formatTime = (time: number) => {
@@ -868,12 +871,23 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Debug: 관리자 상태 변경 감지
   useEffect(() => {
-    console.log('🔐 [Admin] 상태 변경됨:', { 
-      isAdmin, 
-      showAdminDialog, 
-      showAdminManagementDialog 
+    console.log('🔐 [Admin] 상태 변경됨:', {
+      isAdmin,
+      showAdminDialog,
+      showAdminManagementDialog
     });
   }, [isAdmin, showAdminDialog, showAdminManagementDialog]);
+
+  // 현재 재생 곡이 바뀔 때 곡 목록에서 해당 행이 보이도록 자동 스크롤
+  // block: 'nearest' → 이미 화면 안에 보이면 스크롤하지 않음 (사용자 의도 존중)
+  useEffect(() => {
+    if (currentSongIndex < 0) return;
+    currentSongRowRef.current?.scrollIntoView({
+      behavior: 'smooth',
+      block: 'nearest',
+      inline: 'nearest',
+    });
+  }, [currentSongIndex]);
 
   if (loading) {
     return (
@@ -1043,6 +1057,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       return (
                         <div
                           key={song.id}
+                          ref={isCurrentSong ? currentSongRowRef : null}
                           onClick={() => playSong(index)}
                           className={`px-2 py-1 rounded cursor-pointer transition-all text-xs ${
                             isCurrentSong
@@ -1133,9 +1148,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         variant="ghost" 
                         size="sm"
                         onClick={toggleRepeatMode}
-                        className={`p-2 relative ${
-                          repeatMode === 'off' 
-                            ? 'text-gray-500 hover:text-gray-400' 
+                        className={`p-2 relative hover:bg-purple-500/20 ${
+                          repeatMode === 'off'
+                            ? 'text-gray-500 hover:text-gray-400'
                             : 'text-purple-400 hover:text-purple-300'
                         }`}
                       >
@@ -1155,7 +1170,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         variant="ghost" 
                         size="sm"
                         onClick={skipToPrevious}
-                        className="text-white hover:text-purple-300 p-2"
+                        className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
                       >
                         <SkipBack className="h-4 w-4" />
                       </Button>
@@ -1173,7 +1188,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         variant="ghost" 
                         size="sm"
                         onClick={skipToNext}
-                        className="text-white hover:text-purple-300 p-2"
+                        className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
                       >
                         <SkipForward className="h-4 w-4" />
                       </Button>
@@ -1182,9 +1197,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         variant="ghost" 
                         size="sm"
                         onClick={toggleShuffle}
-                        className={`p-2 ${
-                          isShuffleEnabled 
-                            ? 'text-purple-400 hover:text-purple-300' 
+                        className={`p-2 hover:bg-purple-500/20 ${
+                          isShuffleEnabled
+                            ? 'text-purple-400 hover:text-purple-300'
                             : 'text-gray-500 hover:text-gray-400'
                         }`}
                       >
@@ -1290,13 +1305,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
                         {currentSong.youtubeUrl && (
                           <Button
-                            variant="outline"
                             size="sm"
                             onClick={() => window.open(currentSong.youtubeUrl, '_blank')}
-                            className="text-red-400 border-red-400 hover:bg-red-400/10 text-xs"
+                            className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-xs transition-colors duration-200"
                           >
-                            <Link className="h-3 w-3 mr-1" />
-                            말씀 영상 보기
+                            <Youtube className="h-3 w-3 mr-1 text-red-500" />
+                            설교YouTube
                           </Button>
                         )}
                         <button
@@ -1305,14 +1319,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           onPointerUp={() => setIsSharePressed(false)}
                           onPointerLeave={() => setIsSharePressed(false)}
                           onPointerCancel={() => setIsSharePressed(false)}
-                          className={`h-9 px-3 rounded-md border font-semibold text-xs inline-flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                          className={`h-9 px-3 rounded-md font-semibold text-xs inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
                             isSharePressed
-                              ? 'bg-purple-950 text-pink-300 border-pink-400/70 scale-[0.98]'
-                              : 'bg-purple-800 text-white border-purple-400/60 hover:text-pink-300 hover:border-pink-400/70'
+                              ? 'bg-purple-950 text-pink-400 scale-[0.98]'
+                              : 'bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400'
                           }`}
                         >
                           <Share2 className="h-3 w-3" />
-                          곡 공유하기
+                          이 찬양 공유 하기
                         </button>
                       </div>
                     </div>
