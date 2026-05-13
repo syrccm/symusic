@@ -919,7 +919,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <p className="text-xs text-purple-300">수영로말씀적용찬양</p>
               </div>
             </div>
-            
+
             <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
@@ -931,51 +931,50 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               >
                 <Info className="w-6 h-6" strokeWidth={2.5} />
               </Button>
+            </div>
+          </div>
 
-              {isAdminRoute && isOfflineMode && (
-                <div className="flex items-center space-x-1 text-xs">
+          {isAdminRoute && (
+            <div className="mt-2 flex items-center justify-end space-x-2">
+              {isOfflineMode && (
+                <div className="flex items-center space-x-1 text-xs mr-1">
                   <WifiOff className="h-3 w-3 text-orange-400" />
                   <span className="text-orange-400 hidden sm:inline">오프라인</span>
                 </div>
               )}
-
-              {isAdminRoute && (
-                <>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 p-2"
-                    onClick={() => setIsAnalyticsOpen(true)}
-                    title="사용 통계 보기"
-                    aria-label="사용 통계 보기"
-                  >
-                    <BarChart3 className="h-5 w-5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-purple-400 hover:text-purple-300 p-2"
-                    onClick={handleAdminManagementAccess}
-                    title="관리자 메뉴"
-                  >
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                  {isAdmin && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-red-400 hover:text-red-300 p-2"
-                      onClick={handleAdminLogout}
-                      title="로그아웃"
-                    >
-                      <LogOut className="h-4 w-4" />
-                      <span className="hidden sm:inline ml-1 text-xs">로그아웃</span>
-                    </Button>
-                  )}
-                </>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 p-2"
+                onClick={() => setIsAnalyticsOpen(true)}
+                title="사용 통계 보기"
+                aria-label="사용 통계 보기"
+              >
+                <BarChart3 className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-purple-400 hover:text-purple-300 p-2"
+                onClick={handleAdminManagementAccess}
+                title="관리자 메뉴"
+              >
+                <Settings className="h-4 w-4" />
+              </Button>
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-red-400 hover:text-red-300 p-2"
+                  onClick={handleAdminLogout}
+                  title="로그아웃"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span className="hidden sm:inline ml-1 text-xs">로그아웃</span>
+                </Button>
               )}
             </div>
-          </div>
+          )}
 
           <div className="mt-3 space-y-2">
             {isFavoritesMode ? (
