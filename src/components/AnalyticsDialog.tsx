@@ -68,9 +68,11 @@ export function AnalyticsDialog({ open, onOpenChange, songs }: AnalyticsDialogPr
 
   const { date: today, month } = getCurrentDateKeys();
   const totalVisits = stats?.total_visits ?? 0;
-  const totalUnique = stats?.total_unique_visitors ?? 0;
   const monthVisits = stats?.monthly?.[month]?.visits ?? 0;
   const todayVisits = stats?.daily?.[today]?.visits ?? 0;
+  const totalUnique = stats?.total_unique_visitors ?? 0;
+  const monthUnique = stats?.monthly?.[month]?.unique_visitors ?? 0;
+  const todayUnique = stats?.daily?.[today]?.unique_visitors ?? 0;
   const totalShares = stats?.total_shares ?? 0;
   const totalInstalls = stats?.total_installs ?? 0;
   const totalSongPlays = stats?.total_song_plays ?? 0;
@@ -118,11 +120,22 @@ export function AnalyticsDialog({ open, onOpenChange, songs }: AnalyticsDialogPr
 
         {!loading && !error && (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2">
-              <StatCard label="전체 접속" value={totalVisits} unit="회" />
-              <StatCard label="이번 달" value={monthVisits} unit="회" />
-              <StatCard label="오늘" value={todayVisits} unit="회" />
-              <StatCard label="고유 방문자" value={totalUnique} unit="명" />
+            <div>
+              <h3 className="text-xs font-semibold text-purple-300 mb-1.5 px-0.5">접속 횟수</h3>
+              <div className="grid grid-cols-3 gap-2">
+                <StatCard label="전체" value={totalVisits} unit="회" />
+                <StatCard label="이번 달" value={monthVisits} unit="회" />
+                <StatCard label="오늘" value={todayVisits} unit="회" />
+              </div>
+            </div>
+
+            <div>
+              <h3 className="text-xs font-semibold text-purple-300 mb-1.5 px-0.5">고유 방문자</h3>
+              <div className="grid grid-cols-3 gap-2">
+                <StatCard label="전체" value={totalUnique} unit="명" />
+                <StatCard label="이번 달" value={monthUnique} unit="명" />
+                <StatCard label="오늘" value={todayUnique} unit="명" />
+              </div>
             </div>
 
             <div>

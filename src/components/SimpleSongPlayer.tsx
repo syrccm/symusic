@@ -158,10 +158,17 @@ export default function SimpleSongPlayer() {
     shareSong({ id: song.id, title: song.title });
   };
 
-  const handleInstallClick = () => {
-    trackInstall().catch((err) =>
-      console.error('[Analytics] trackInstall failed:', err),
-    );
+  const handleInstallClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    // Race condition 방지: <a target="_blank">로 새 탭이 열리는 사이/Android에서
+    // Play Store 앱 인텐트가 페이지를 인터셉트하면서 Firestore 요청이 취소되어
+    // 카운트가 누락되던 현상 → 추적 완료 후 직접 window.open 한다.
+    e.preventDefault();
+    try {
+      await trackInstall();
+    } catch (err) {
+      console.error('[Analytics] trackInstall failed:', err);
+    }
+    window.open(PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
   };
 
   // 로딩

@@ -5,6 +5,7 @@ const ANALYTICS_COLLECTION = 'analytics';
 const ANALYTICS_DOC = 'stats';
 const VISITOR_ID_KEY = 'symusic-visitor-id';
 const LAST_VISIT_DATE_KEY = 'symusic-last-visit-date';
+const LAST_VISIT_MONTH_KEY = 'symusic-last-visit-month';
 
 export interface AnalyticsBucket {
   visits?: number;
@@ -77,12 +78,16 @@ export async function trackVisit(): Promise<void> {
 
   const lastVisitDate =
     typeof localStorage !== 'undefined' ? localStorage.getItem(LAST_VISIT_DATE_KEY) : null;
+  const lastVisitMonth =
+    typeof localStorage !== 'undefined' ? localStorage.getItem(LAST_VISIT_MONTH_KEY) : null;
   const isEverFirst = lastVisitDate === null;
   const isNewVisitorToday = lastVisitDate !== date;
+  const isNewVisitorThisMonth = lastVisitMonth !== month;
 
-  if (isNewVisitorToday && typeof localStorage !== 'undefined') {
+  if (typeof localStorage !== 'undefined') {
     try {
-      localStorage.setItem(LAST_VISIT_DATE_KEY, date);
+      if (isNewVisitorToday) localStorage.setItem(LAST_VISIT_DATE_KEY, date);
+      if (isNewVisitorThisMonth) localStorage.setItem(LAST_VISIT_MONTH_KEY, month);
     } catch {
       // 무시
     }
@@ -92,6 +97,8 @@ export async function trackVisit(): Promise<void> {
   const monthlyBucket: AnalyticsBucket = { visits: increment(1) as unknown as number };
   if (isNewVisitorToday) {
     dailyBucket.unique_visitors = increment(1) as unknown as number;
+  }
+  if (isNewVisitorThisMonth) {
     monthlyBucket.unique_visitors = increment(1) as unknown as number;
   }
 
