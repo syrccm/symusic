@@ -310,13 +310,15 @@ export function NoticeDialog({
         )}
 
         {(view === 'list' || view === 'detail') && (
-          <Button
-            variant="ghost"
-            onClick={() => onOpenChange(false)}
-            className="w-full bg-slate-700/60 border border-purple-400/40 text-gray-100 hover:bg-slate-600/70 hover:text-pink-300 hover:border-pink-400/60 mt-2 py-2.5 font-medium"
-          >
-            닫기
-          </Button>
+          <div className="sticky bottom-0 -mx-6 -mb-6 px-6 pt-3 pb-4 bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/0">
+            <Button
+              variant="ghost"
+              onClick={() => onOpenChange(false)}
+              className="w-full bg-slate-700/80 border border-purple-400/40 text-gray-100 hover:bg-slate-600/80 hover:text-pink-300 hover:border-pink-400/60 py-2.5 font-medium"
+            >
+              닫기
+            </Button>
+          </div>
         )}
       </DialogContent>
     </Dialog>
