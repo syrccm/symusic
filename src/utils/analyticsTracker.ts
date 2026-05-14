@@ -3,9 +3,11 @@ import { doc, setDoc, increment } from 'firebase/firestore';
 
 const ANALYTICS_COLLECTION = 'analytics';
 const ANALYTICS_DOC = 'stats';
-const VISITOR_ID_KEY = 'symusic-visitor-id';
-const LAST_VISIT_DATE_KEY = 'symusic-last-visit-date';
-const LAST_VISIT_MONTH_KEY = 'symusic-last-visit-month';
+// v2: total/monthly/daily 일관성 재집계를 위해 키 네임스페이스 갱신. 이전 v1 키는 그대로 두어 다음
+// 방문 시 v2 기준 신규 사용자로 카운트되도록 한다.
+const VISITOR_ID_KEY = 'symusic-visitor-id-v2';
+const LAST_VISIT_DATE_KEY = 'symusic-last-visit-date-v2';
+const LAST_VISIT_MONTH_KEY = 'symusic-last-visit-month-v2';
 
 export interface AnalyticsBucket {
   visits?: number;
@@ -56,31 +58,31 @@ function generateUUID(): string {
   });
 }
 
-function getVisitorId(): string {
-  if (typeof localStorage === 'undefined') return generateUUID();
-  let id = localStorage.getItem(VISITOR_ID_KEY);
-  if (!id) {
-    id = generateUUID();
-    try {
-      localStorage.setItem(VISITOR_ID_KEY, id);
-    } catch {
-      // LS 사용 불가 — 무시
-    }
+function getVisitorId(): { id: string; isNew: boolean } {
+  if (typeof localStorage === 'undefined') return { id: generateUUID(), isNew: true };
+  const existing = localStorage.getItem(VISITOR_ID_KEY);
+  if (existing) return { id: existing, isNew: false };
+  const id = generateUUID();
+  try {
+    localStorage.setItem(VISITOR_ID_KEY, id);
+  } catch {
+    // LS 사용 불가 — 무시
   }
-  return id;
+  return { id, isNew: true };
 }
 
 export async function trackVisit(): Promise<void> {
   if (!db) return;
   const { date, month } = getCurrentDateKeys();
-  // visitorId 보장(없으면 신규 발급)
-  getVisitorId();
+  // visitorId 신규 발급 여부가 곧 "이 디바이스가 처음 방문" 여부. total_unique_visitors는 이걸 기준으로 한다.
+  // (예전엔 lastVisitDate === null로 판정했는데, Firebase 리셋 후 사용자 LS가 그대로면 monthly만 증가하고
+  //  total은 안 증가해 monthly > total 모순이 났다. v2 키와 함께 이 판정도 visitorId 기반으로 바꾼다.)
+  const { isNew: isEverFirst } = getVisitorId();
 
   const lastVisitDate =
     typeof localStorage !== 'undefined' ? localStorage.getItem(LAST_VISIT_DATE_KEY) : null;
   const lastVisitMonth =
     typeof localStorage !== 'undefined' ? localStorage.getItem(LAST_VISIT_MONTH_KEY) : null;
-  const isEverFirst = lastVisitDate === null;
   const isNewVisitorToday = lastVisitDate !== date;
   const isNewVisitorThisMonth = lastVisitMonth !== month;
 
