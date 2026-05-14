@@ -309,7 +309,7 @@ export function NoticeDialog({
           </div>
         )}
 
-        {view === 'list' && (
+        {(view === 'list' || view === 'detail') && (
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
