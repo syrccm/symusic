@@ -23,8 +23,10 @@ import { toast } from 'sonner';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useShare } from '@/hooks/useShare';
 import { useSongs, type Song } from '@/hooks/useSongs';
+import { useNotices } from '@/hooks/useNotices';
 import { AboutModal } from '@/components/AboutModal';
 import { AnalyticsDialog } from '@/components/AnalyticsDialog';
+import { NoticeDialog } from '@/components/NoticeDialog';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import {
   Play,
@@ -109,6 +111,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // About modal
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+
+  // Notice dialog (공지)
+  const [isNoticeOpen, setIsNoticeOpen] = useState(false);
+  const {
+    notices,
+    loading: noticesLoading,
+    unreadCount: noticeUnreadCount,
+    lastReadAt: noticeLastReadAt,
+    markAllRead: markAllNoticesRead,
+  } = useNotices();
 
   // Analytics dialog (관리자 모드 전용)
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
@@ -920,7 +932,24 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsNoticeOpen(true)}
+                aria-label={
+                  noticeUnreadCount > 0
+                    ? `공지 ${noticeUnreadCount}건 (안 읽음)`
+                    : '공지사항 열기'
+                }
+                title="공지사항"
+                className="text-pink-300 hover:text-white hover:bg-transparent px-3 py-2 relative font-semibold transition-colors"
+              >
+                News
+                {noticeUnreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border-2 border-slate-900" />
+                )}
+              </Button>
               <Button
                 variant="ghost"
                 size="sm"
@@ -1713,6 +1742,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       </div>
 
       <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} songs={songs} />
+
+      <NoticeDialog
+        open={isNoticeOpen}
+        onOpenChange={setIsNoticeOpen}
+        notices={notices}
+        loading={noticesLoading}
+        lastReadAt={noticeLastReadAt}
+        onMarkAllRead={markAllNoticesRead}
+        isAdmin={isAdminRoute && isAdmin}
+      />
 
       {isAdminRoute && (
         <AnalyticsDialog

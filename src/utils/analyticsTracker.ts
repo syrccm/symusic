@@ -37,7 +37,7 @@ function getStatsRef() {
   return doc(db, ANALYTICS_COLLECTION, ANALYTICS_DOC);
 }
 
-// KST(UTC+9) 기준 오늘/이번 달 키. 영신님 사용자는 한국 기준이라 UTC가 아닌 KST로 일자 분리.
+// KST(UTC+9) 기준 오늘/이번 달 키. 사용자가 한국 기준이라 UTC가 아닌 KST로 일자 분리.
 export function getCurrentDateKeys(): { date: string; month: string } {
   const now = new Date();
   const kst = new Date(now.getTime() + 9 * 60 * 60 * 1000);
