@@ -49,7 +49,6 @@ import {
   LogOut,
   Star,
   ArrowLeft,
-  Info,
   Share2,
   BarChart3,
   SunMedium,
@@ -952,7 +951,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       <div className="flex flex-col min-h-screen max-w-md mx-auto">
         
         <div className="flex-shrink-0 p-4 pb-2">
-          <div className="flex items-center justify-between gap-1">
+          <div className="flex items-center gap-1">
             <div className="flex items-center gap-2 min-w-0 flex-1">
               <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Music className="h-5 w-5 text-white" />
@@ -961,6 +960,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <h1 className="text-lg font-bold leading-tight">SY Music</h1>
                 <p className="text-xs text-purple-300 truncate">수영로말씀적용찬양</p>
               </div>
+            </div>
+
+            <div className="flex items-center flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
@@ -971,51 +973,52 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     : '공지사항 열기'
                 }
                 title="공지사항"
-                className="text-pink-300 hover:text-white hover:bg-transparent px-2 py-2 relative font-semibold transition-colors flex-shrink-0"
+                className="text-pink-300 hover:text-white hover:bg-transparent px-2 py-2 relative font-semibold transition-colors"
               >
                 News
                 {noticeUnreadCount > 0 && (
                   <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border-2 border-slate-900" />
                 )}
               </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 p-2 rounded-full flex-shrink-0"
-                onClick={() => setIsAboutOpen(true)}
-                aria-label="개발자 정보 열기"
-                title="개발자 정보"
-              >
-                <Info className="w-5 h-5" strokeWidth={2.5} />
-              </Button>
-            </div>
 
-            <div ref={menuRef} className="relative flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsMenuOpen((v) => !v)}
-                aria-label="메뉴 열기"
-                title="메뉴"
-                className="text-pink-300 hover:text-white hover:bg-transparent p-2"
-              >
-                <Menu className="w-6 h-6" strokeWidth={2} />
-              </Button>
+              <div ref={menuRef} className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMenuOpen((v) => !v)}
+                  aria-label="메뉴 열기"
+                  title="메뉴"
+                  className="text-white hover:text-white hover:bg-transparent p-2"
+                >
+                  <Menu className="w-7 h-7" strokeWidth={2.5} />
+                </Button>
 
-              {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg overflow-hidden z-50">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsGitaOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    🎸 기타도우미
-                  </button>
-                </div>
-              )}
+                {isMenuOpen && (
+                  <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg overflow-hidden z-50">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsGitaOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    >
+                      🎸 기타도우미
+                    </button>
+                    <div className="h-px bg-purple-500/30" />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsAboutOpen(true);
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    >
+                      ℹ️ 개발자 정보
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
