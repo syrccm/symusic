@@ -51,7 +51,8 @@ import {
   ArrowLeft,
   Info,
   Share2,
-  BarChart3
+  BarChart3,
+  SunMedium
 } from 'lucide-react';
 
 // Types
@@ -1099,6 +1100,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             </span>
                             <div className="flex-1 min-w-0 flex items-center space-x-1">
                               <span className="text-white truncate text-xs">{song.title}</span>
+                              {index < 2 && (
+                                <SunMedium className="w-4 h-4 text-yellow-400 flex-shrink-0 ml-1 animate-pulse" />
+                              )}
                               {isCurrentSong && (
                                 <div className="flex items-center space-x-0.5">
                                   <div className="w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse"></div>
