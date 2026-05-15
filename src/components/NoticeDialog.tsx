@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
-import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
+import {
+  addDoc,
+  collection,
+  deleteDoc,
+  doc,
+  serverTimestamp,
+  Timestamp,
+  updateDoc,
+} from 'firebase/firestore';
 import {
   Dialog,
   DialogContent,
@@ -11,7 +19,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Newspaper, ArrowLeft, Plus, Loader2, Save, X } from 'lucide-react';
+import {
+  Newspaper,
+  ArrowLeft,
+  Plus,
+  Loader2,
+  Save,
+  X,
+  Pencil,
+  Trash2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { isNoticeUnread, type Notice } from '@/hooks/useNotices';
@@ -58,12 +75,15 @@ export function NoticeDialog({
   const [formTitle, setFormTitle] = useState('');
   const [formContent, setFormContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   // 다이얼로그가 열릴 때 목록 화면으로 초기화 + 읽음 처리
   useEffect(() => {
     if (open) {
       setView('list');
       setSelectedId(null);
+      setEditingId(null);
       onMarkAllRead();
     }
   }, [open, onMarkAllRead]);
@@ -81,12 +101,47 @@ export function NoticeDialog({
   const handleBackToList = () => {
     setView('list');
     setSelectedId(null);
+    setEditingId(null);
+    setFormTitle('');
+    setFormContent('');
   };
 
   const handleOpenForm = () => {
+    setEditingId(null);
     setFormTitle('');
     setFormContent('');
     setView('form');
+  };
+
+  const handleEditNotice = (notice: Notice) => {
+    setEditingId(notice.id);
+    setFormTitle(notice.title);
+    setFormContent(notice.content);
+    setView('form');
+  };
+
+  const handleDeleteNotice = async (notice: Notice) => {
+    if (!db) {
+      toast.error('Firebase 연결이 필요합니다.');
+      return;
+    }
+    const ok = window.confirm(`"${notice.title}"\n\n정말 삭제하시겠습니까?`);
+    if (!ok) return;
+    setDeletingId(notice.id);
+    try {
+      await deleteDoc(doc(db, 'notices', notice.id));
+      toast.success('공지가 삭제되었습니다.');
+      if (selectedId === notice.id) {
+        setSelectedId(null);
+        setView('list');
+      }
+    } catch (error: unknown) {
+      console.error('[Notice] 삭제 실패:', error);
+      const message = error instanceof Error ? error.message : String(error);
+      toast.error('공지 삭제 중 오류가 발생했습니다: ' + message);
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const handleSubmitNotice = async () => {
@@ -100,14 +155,24 @@ export function NoticeDialog({
     }
     setSubmitting(true);
     try {
-      await addDoc(collection(db, 'notices'), {
-        title: formTitle.trim(),
-        content: formContent.trim(),
-        createdAt: serverTimestamp(),
-      });
-      toast.success('공지가 등록되었습니다.');
+      if (editingId) {
+        await updateDoc(doc(db, 'notices', editingId), {
+          title: formTitle.trim(),
+          content: formContent.trim(),
+          updatedAt: serverTimestamp(),
+        });
+        toast.success('공지가 수정되었습니다.');
+      } else {
+        await addDoc(collection(db, 'notices'), {
+          title: formTitle.trim(),
+          content: formContent.trim(),
+          createdAt: serverTimestamp(),
+        });
+        toast.success('공지가 등록되었습니다.');
+      }
       setFormTitle('');
       setFormContent('');
+      setEditingId(null);
       setView('list');
     } catch (error: unknown) {
       console.error('[NoticeForm] 저장 실패:', error);
@@ -134,11 +199,17 @@ export function NoticeDialog({
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2 font-normal">
             <Newspaper className="w-5 h-5 text-pink-300" />
-            {view === 'form' ? '새 공지 작성' : '공지사항'}
+            {view === 'form'
+              ? editingId
+                ? '공지 수정'
+                : '새 공지 작성'
+              : '공지사항'}
           </DialogTitle>
           <DialogDescription className="text-purple-200/80 text-xs font-light">
             {view === 'form'
-              ? '자매님들께 전달할 공지를 작성해주세요'
+              ? editingId
+                ? '공지 내용을 수정해주세요'
+                : '자매님들께 전달할 공지를 작성해주세요'
               : view === 'detail'
               ? '공지 상세'
               : '개발자가 전하는 소식'}
@@ -174,10 +245,18 @@ export function NoticeDialog({
                 {notices.map((notice) => {
                   const unread = isNoticeUnread(notice, lastReadAt);
                   return (
-                    <button
+                    <div
                       key={notice.id}
+                      role="button"
+                      tabIndex={0}
                       onClick={() => handleSelectNotice(notice.id)}
-                      className={`w-full text-left rounded-lg p-3 transition-colors border ${
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          handleSelectNotice(notice.id);
+                        }
+                      }}
+                      className={`w-full text-left rounded-lg p-3 transition-colors border cursor-pointer ${
                         unread
                           ? 'bg-purple-900/50 border-pink-400/50 hover:bg-purple-800/60'
                           : 'bg-slate-800/40 border-slate-700 hover:bg-slate-700/50'
@@ -199,8 +278,39 @@ export function NoticeDialog({
                             {formatKSTDate(notice.createdAt)}
                           </p>
                         </div>
+                        {isAdmin && (
+                          <div className="flex items-center gap-1 flex-shrink-0 -mt-0.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditNotice(notice);
+                              }}
+                              className="p-1.5 rounded-md text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 transition-colors"
+                              aria-label="공지 수정"
+                            >
+                              <Pencil className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteNotice(notice);
+                              }}
+                              disabled={deletingId === notice.id}
+                              className="p-1.5 rounded-md text-purple-300 hover:text-red-300 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                              aria-label="공지 삭제"
+                            >
+                              {deletingId === notice.id ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <Trash2 className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        )}
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
@@ -210,15 +320,45 @@ export function NoticeDialog({
 
         {view === 'detail' && selectedNotice && (
           <div className="space-y-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleBackToList}
-              className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 -ml-2 font-light"
-            >
-              <ArrowLeft className="w-4 h-4 mr-1" />
-              목록으로
-            </Button>
+            <div className="flex items-center justify-between">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToList}
+                className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 -ml-2 font-light"
+              >
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                목록으로
+              </Button>
+
+              {isAdmin && (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleEditNotice(selectedNotice)}
+                    className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 font-light"
+                  >
+                    <Pencil className="w-4 h-4 mr-1" />
+                    수정
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleDeleteNotice(selectedNotice)}
+                    disabled={deletingId === selectedNotice.id}
+                    className="text-purple-300 hover:text-red-300 hover:bg-red-500/10 font-light disabled:opacity-50"
+                  >
+                    {deletingId === selectedNotice.id ? (
+                      <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4 mr-1" />
+                    )}
+                    삭제
+                  </Button>
+                </div>
+              )}
+            </div>
 
             <div className="space-y-2">
               <h2 className="text-xl font-normal bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent break-keep">
@@ -302,7 +442,7 @@ export function NoticeDialog({
                 ) : (
                   <>
                     <Save className="h-4 w-4 mr-2" />
-                    저장
+                    {editingId ? '수정 완료' : '저장'}
                   </>
                 )}
               </Button>
