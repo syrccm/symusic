@@ -52,7 +52,8 @@ import {
   Info,
   Share2,
   BarChart3,
-  SunMedium
+  SunMedium,
+  Menu
 } from 'lucide-react';
 
 // Types
@@ -125,6 +126,35 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Analytics dialog (관리자 모드 전용)
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+
+  // 햄버거 메뉴 + 기타도우미 모달
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isGitaOpen, setIsGitaOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!isMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMenuOpen]);
+
+  // gita.html iframe에서 보내는 close 메시지 수신
+  useEffect(() => {
+    const handleMessage = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      if (e.data === 'close-gita') {
+        setIsGitaOpen(false);
+      }
+    };
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
 
   // Admin state
   const [isAdmin, setIsAdmin] = useState(false);
@@ -922,18 +952,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       <div className="flex flex-col min-h-screen max-w-md mx-auto">
         
         <div className="flex-shrink-0 p-4 pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+          <div className="flex items-center justify-between gap-1">
+            <div className="flex items-center gap-2 min-w-0 flex-1">
+              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Music className="h-5 w-5 text-white" />
               </div>
-              <div>
-                <h1 className="text-lg font-bold">SY Music</h1>
-                <p className="text-xs text-purple-300">수영로말씀적용찬양</p>
+              <div className="min-w-0">
+                <h1 className="text-lg font-bold leading-tight">SY Music</h1>
+                <p className="text-xs text-purple-300 truncate">수영로말씀적용찬양</p>
               </div>
-            </div>
-
-            <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -944,7 +971,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     : '공지사항 열기'
                 }
                 title="공지사항"
-                className="text-pink-300 hover:text-white hover:bg-transparent px-3 py-2 relative font-semibold transition-colors"
+                className="text-pink-300 hover:text-white hover:bg-transparent px-2 py-2 relative font-semibold transition-colors flex-shrink-0"
               >
                 News
                 {noticeUnreadCount > 0 && (
@@ -954,13 +981,41 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               <Button
                 variant="ghost"
                 size="sm"
-                className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 p-2 min-w-[44px] min-h-[44px] rounded-full"
+                className="text-pink-400 hover:text-pink-300 hover:bg-pink-500/10 p-2 rounded-full flex-shrink-0"
                 onClick={() => setIsAboutOpen(true)}
                 aria-label="개발자 정보 열기"
                 title="개발자 정보"
               >
-                <Info className="w-6 h-6" strokeWidth={2.5} />
+                <Info className="w-5 h-5" strokeWidth={2.5} />
               </Button>
+            </div>
+
+            <div ref={menuRef} className="relative flex-shrink-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMenuOpen((v) => !v)}
+                aria-label="메뉴 열기"
+                title="메뉴"
+                className="text-pink-300 hover:text-white hover:bg-transparent p-2"
+              >
+                <Menu className="w-6 h-6" strokeWidth={2} />
+              </Button>
+
+              {isMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg overflow-hidden z-50">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGitaOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                  >
+                    🎸 기타도우미
+                  </button>
+                </div>
+              )}
             </div>
           </div>
 
@@ -1763,6 +1818,25 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           onOpenChange={setIsAnalyticsOpen}
           songs={songs}
         />
+      )}
+
+      {isGitaOpen && (
+        <div className="fixed inset-0 z-[100] bg-slate-900">
+          <button
+            type="button"
+            onClick={() => setIsGitaOpen(false)}
+            aria-label="기타도우미 닫기"
+            title="닫기"
+            className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-slate-800/90 hover:bg-slate-700 text-white flex items-center justify-center shadow-lg border border-purple-500/30"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <iframe
+            src="/gita.html"
+            title="기타도우미"
+            className="w-full h-full border-0"
+          />
+        </div>
       )}
     </div>
   );

@@ -117,6 +117,35 @@
     background: var(--bg-card);
   }
 
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .close-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 1rem;
+    line-height: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s;
+  }
+
+  .close-btn:hover,
+  .close-btn:active {
+    background: var(--bg-card);
+    color: var(--accent);
+  }
+
   /* 입력 섹션 */
   .input-section {
     background: var(--bg-soft);
@@ -671,7 +700,10 @@
       <span class="topbar-icon">♪</span>
       <h1>기타 <em>도우미</em></h1>
     </div>
-    <button class="help-btn" onclick="toggleHelp()">? 사용법</button>
+    <div class="topbar-actions">
+      <button class="help-btn" onclick="toggleHelp()">? 사용법</button>
+      <button class="close-btn" onclick="closeGita()" aria-label="닫기" title="닫기">✕</button>
+    </div>
   </div>
 
   <!-- 입력 섹션 (공통) -->
@@ -1099,6 +1131,20 @@ document.getElementById('customChordField').addEventListener('input', (e) => {
 
 function toggleHelp() {
   document.getElementById('helpModal').classList.toggle('active');
+}
+
+function closeGita() {
+  // iframe으로 임베드된 경우 부모 앱에 신호 → 부모가 팝업 닫음
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage('close-gita', '*');
+  } else {
+    // 단독으로 열린 경우 — 이전 페이지로 복귀, 없으면 메인 앱으로
+    if (history.length > 1) {
+      history.back();
+    } else {
+      window.location.href = '/';
+    }
+  }
 }
 
 renderAll();
