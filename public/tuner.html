@@ -702,6 +702,12 @@ function loop(ts) {
   if (!state.running) return;
   state.rafId = requestAnimationFrame(loop);
 
+  // iframe/탭 전환 등으로 AudioContext가 suspended 되면 무음만 들어와
+  // 화면이 멈춘 듯 보임 → 매 프레임 자동 복구
+  if (state.audioCtx && state.audioCtx.state === "suspended") {
+    state.audioCtx.resume();
+  }
+
   // 피치 감지는 ~22ms 마다 (CPU 절약, 정확도 충분)
   if (ts - state.lastDetect >= 22) {
     state.lastDetect = ts;
