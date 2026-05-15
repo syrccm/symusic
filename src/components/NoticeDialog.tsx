@@ -201,6 +201,9 @@ export function NoticeDialog({
           left: '50%',
           top: '50%',
           transform: 'translate(-50%, -50%)',
+          width: 'calc(100vw - 2rem)',
+          maxWidth: '28rem',
+          overflowX: 'hidden',
         }}
         className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100vw-2rem)] max-w-md bg-gradient-to-b from-purple-900/95 to-slate-900/95 border-purple-500/30 text-gray-200 max-h-[85vh] overflow-y-auto"
       >
