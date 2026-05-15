@@ -246,6 +246,16 @@ export function NoticeDialog({
                 📧 개발자에게 의견 제출하기
               </button>
             </div>
+
+            <div className="pt-2">
+              <Button
+                variant="ghost"
+                onClick={() => onOpenChange(false)}
+                className="w-full bg-slate-700/80 border border-purple-400/40 text-gray-100 hover:bg-slate-600/80 hover:text-pink-300 hover:border-pink-400/60 py-2.5 font-medium"
+              >
+                닫기
+              </Button>
+            </div>
           </div>
         )}
 
@@ -309,17 +319,6 @@ export function NoticeDialog({
           </div>
         )}
 
-        {(view === 'list' || view === 'detail') && (
-          <div className="sticky bottom-0 -mx-6 -mb-6 px-6 pt-3 pb-4 bg-gradient-to-t from-slate-900 via-slate-900/95 to-slate-900/0">
-            <Button
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-              className="w-full bg-slate-700/80 border border-purple-400/40 text-gray-100 hover:bg-slate-600/80 hover:text-pink-300 hover:border-pink-400/60 py-2.5 font-medium"
-            >
-              닫기
-            </Button>
-          </div>
-        )}
       </DialogContent>
     </Dialog>
   );
