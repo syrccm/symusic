@@ -992,7 +992,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   style={{ padding: '8px', lineHeight: 0, height: 'auto' }}
                 >
                   <Menu
-                    style={{ width: '48px', height: '48px' }}
+                    style={{ width: '32px', height: '32px' }}
                     strokeWidth={3}
                     color="white"
                   />
