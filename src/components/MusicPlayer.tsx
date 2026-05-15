@@ -1101,7 +1101,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             <div className="flex-1 min-w-0 flex items-center space-x-1">
                               <span className="text-white truncate text-xs">{song.title}</span>
                               {index < 2 && (
-                                <SunMedium className="w-4 h-4 text-yellow-400 flex-shrink-0 ml-1 animate-pulse" />
+                                <SunMedium className="w-4 h-4 text-pink-400 flex-shrink-0 ml-1 animate-pulse" />
                               )}
                               {isCurrentSong && (
                                 <div className="flex items-center space-x-0.5">
