@@ -988,7 +988,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   onClick={() => setIsMenuOpen((v) => !v)}
                   aria-label="메뉴 열기"
                   title="메뉴"
-                  className="text-white font-bold hover:text-white hover:bg-transparent p-2 border border-white/60 rounded-lg"
+                  className="text-white font-bold hover:text-white hover:bg-transparent p-2"
                 >
                   <Menu className="w-12 h-12" strokeWidth={3} />
                 </Button>
