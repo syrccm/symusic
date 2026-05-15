@@ -132,11 +132,11 @@ export function NoticeDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md mx-4 bg-gradient-to-b from-purple-900/95 to-slate-900/95 border-purple-500/30 text-gray-200 max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-white flex items-center gap-2">
+          <DialogTitle className="text-white flex items-center gap-2 font-normal">
             <Newspaper className="w-5 h-5 text-pink-300" />
             {view === 'form' ? '새 공지 작성' : '공지사항'}
           </DialogTitle>
-          <DialogDescription className="text-purple-200/80 text-xs">
+          <DialogDescription className="text-purple-200/80 text-xs font-light">
             {view === 'form'
               ? '자매님들께 전달할 공지를 작성해주세요'
               : view === 'detail'
@@ -152,7 +152,7 @@ export function NoticeDialog({
                 <Button
                   onClick={handleOpenForm}
                   size="sm"
-                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white"
+                  className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-light"
                 >
                   <Plus className="w-4 h-4 mr-1" />
                   새 공지 작성
@@ -165,7 +165,7 @@ export function NoticeDialog({
                 <Loader2 className="w-6 h-6 animate-spin text-purple-300" />
               </div>
             ) : notices.length === 0 ? (
-              <div className="text-center py-8 text-sm text-gray-400">
+              <div className="text-center py-8 text-sm text-gray-400 font-light">
                 <Newspaper className="w-8 h-8 mx-auto mb-2 text-gray-600" />
                 아직 공지가 없습니다
               </div>
@@ -189,13 +189,13 @@ export function NoticeDialog({
                         )}
                         <div className="flex-1 min-w-0">
                           <p
-                            className={`text-sm font-semibold truncate ${
+                            className={`text-sm font-light truncate ${
                               unread ? 'text-white' : 'text-gray-200'
                             }`}
                           >
                             {notice.title}
                           </p>
-                          <p className="text-xs text-purple-200/70 mt-0.5">
+                          <p className="text-xs text-purple-200/70 mt-0.5 font-light">
                             {formatKSTDate(notice.createdAt)}
                           </p>
                         </div>
@@ -214,34 +214,34 @@ export function NoticeDialog({
               variant="ghost"
               size="sm"
               onClick={handleBackToList}
-              className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 -ml-2"
+              className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 -ml-2 font-light"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
               목록으로
             </Button>
 
             <div className="space-y-2">
-              <h2 className="text-xl font-bold bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent break-keep">
+              <h2 className="text-xl font-normal bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent break-keep">
                 {selectedNotice.title}
               </h2>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 font-light">
                 {formatKSTDate(selectedNotice.createdAt)}
               </p>
             </div>
 
-            <div className="whitespace-pre-line text-sm leading-relaxed text-gray-100 break-keep py-2">
+            <div className="whitespace-pre-line text-sm leading-relaxed text-gray-100 break-keep py-2 font-light">
               {selectedNotice.content}
             </div>
 
             <div className="border-t border-purple-500/30 pt-3 space-y-2">
-              <p className="text-xs text-purple-200/80 leading-relaxed">
+              <p className="text-xs text-purple-200/80 leading-relaxed font-light">
                 💌 이 공지에 의견이나 나누고 싶은 마음이 있으시면
                 <br />
                 아래 버튼으로 의견 보내주세요.
               </p>
               <button
                 onClick={() => handleSendFeedback(selectedNotice)}
-                className="w-full h-11 rounded-md inline-flex items-center justify-center gap-2 font-semibold text-sm bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white border border-pink-400/40 transition-colors"
+                className="w-full h-11 rounded-md inline-flex items-center justify-center gap-2 font-light text-sm bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white border border-pink-400/40 transition-colors"
               >
                 📧 개발자에게 의견 제출하기
               </button>
@@ -251,7 +251,7 @@ export function NoticeDialog({
               <Button
                 variant="ghost"
                 onClick={() => onOpenChange(false)}
-                className="w-full bg-slate-700/80 border border-purple-400/40 text-gray-100 hover:bg-slate-600/80 hover:text-pink-300 hover:border-pink-400/60 py-2.5 font-medium"
+                className="w-full bg-slate-700/80 border border-purple-400/40 text-gray-100 hover:bg-slate-600/80 hover:text-pink-300 hover:border-pink-400/60 py-2.5 font-light"
               >
                 닫기
               </Button>
@@ -262,27 +262,27 @@ export function NoticeDialog({
         {view === 'form' && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="notice-title" className="text-white">
+              <Label htmlFor="notice-title" className="text-white font-normal">
                 제목 *
               </Label>
               <Input
                 id="notice-title"
                 value={formTitle}
                 onChange={(e) => setFormTitle(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white"
+                className="bg-slate-700 border-slate-600 text-white font-light"
                 placeholder="공지 제목을 입력하세요"
                 disabled={submitting}
               />
             </div>
             <div>
-              <Label htmlFor="notice-content" className="text-white">
+              <Label htmlFor="notice-content" className="text-white font-normal">
                 내용 *
               </Label>
               <Textarea
                 id="notice-content"
                 value={formContent}
                 onChange={(e) => setFormContent(e.target.value)}
-                className="bg-slate-700 border-slate-600 text-white"
+                className="bg-slate-700 border-slate-600 text-white font-light"
                 placeholder="공지 내용을 입력하세요"
                 rows={10}
                 disabled={submitting}
@@ -291,7 +291,7 @@ export function NoticeDialog({
             <div className="flex space-x-2">
               <Button
                 onClick={handleSubmitNotice}
-                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600"
+                className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-light"
                 disabled={submitting || !formTitle.trim() || !formContent.trim()}
               >
                 {submitting ? (
@@ -309,7 +309,7 @@ export function NoticeDialog({
               <Button
                 variant="outline"
                 onClick={handleBackToList}
-                className="flex-1"
+                className="flex-1 font-light"
                 disabled={submitting}
               >
                 <X className="h-4 w-4 mr-2" />
