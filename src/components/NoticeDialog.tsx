@@ -203,17 +203,19 @@ export function NoticeDialog({
               ? editingId
                 ? '공지 수정'
                 : '새 공지 작성'
-              : '공지사항'}
+              : '안내드립니다.'}
           </DialogTitle>
-          <DialogDescription className="text-purple-200/80 text-xs font-light">
-            {view === 'form'
-              ? editingId
-                ? '공지 내용을 수정해주세요'
-                : '자매님들께 전달할 공지를 작성해주세요'
-              : view === 'detail'
-              ? '공지 상세'
-              : '개발자가 전하는 소식'}
-          </DialogDescription>
+          {view === 'detail' ? (
+            <DialogDescription className="sr-only">공지 상세</DialogDescription>
+          ) : (
+            <DialogDescription className="text-purple-200/80 text-xs font-light">
+              {view === 'form'
+                ? editingId
+                  ? '공지 내용을 수정해주세요'
+                  : '자매님들께 전달할 공지를 작성해주세요'
+                : '개발자가 전하는 소식'}
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         {view === 'list' && (
