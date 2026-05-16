@@ -196,17 +196,7 @@ export function NoticeDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        style={{
-          position: 'fixed',
-          left: '50%',
-          top: '50%',
-          transform: 'translate(-50%, -50%)',
-          width: 'calc(100vw - 2rem)',
-          maxWidth: '28rem',
-          margin: '0',
-          boxSizing: 'border-box',
-        }}
-        className="bg-gradient-to-b from-purple-900/95 to-slate-900/95 border-purple-500/30 text-gray-200 max-h-[85vh] overflow-y-auto"
+        className="w-[calc(100vw-2rem)] max-w-md mx-auto bg-gradient-to-b from-purple-900/95 to-slate-900/95 border-purple-500/30 text-gray-200 max-h-[85vh] overflow-y-auto"
       >
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2 font-normal">
