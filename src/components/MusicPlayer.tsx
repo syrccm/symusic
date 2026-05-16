@@ -12,6 +12,7 @@ import {
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,8 +52,7 @@ import {
   SunMedium,
   Menu,
   Search,
-  Bell,
-  ChevronDown
+  Bell
 } from 'lucide-react';
 
 // Types
@@ -141,9 +141,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // About modal
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
-  // 하단 탭바 + 전체 플레이어 화면
+  // 하단 탭바
   const [activeTab, setActiveTab] = useState<MainTabKey>('songs');
-  const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
 
   // Notice (공지 탭)
   const {
@@ -921,19 +920,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setIsFavoritesMode(false);
   };
 
-  // 찬양 탭: 곡 선택 → 재생 + 전체 플레이어(전체화면 가사)
-  const handlePickSong = (index: number) => {
-    playSong(index);
-    setIsFullPlayerOpen(true);
-  };
-
-  // 검색 탭: 결과 선택 → 재생 후 찬양 탭으로 이동 (미니 플레이어)
+  // 검색 탭: 결과 선택 → 재생 후 찬양 탭으로 이동
   const handlePickFromSearch = (index: number) => {
     playSong(index);
     setActiveTab('songs');
   };
 
-  // 즐겨찾기 탭: 개별 곡 선택 → 즐겨찾기 모드로 재생 + 전체 플레이어
+  // 즐겨찾기 탭: 개별 곡 선택 → 즐겨찾기 모드로 재생 후 찬양 탭으로 이동
   const playFavoriteSong = (song: Song) => {
     setIsFavoritesMode(true);
     setCurrentSongIndex(songs.indexOf(song));
@@ -954,10 +947,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
 
     setActiveTab('songs');
-    setIsFullPlayerOpen(true);
   };
 
-  // 즐겨찾기 탭: 전체 즐겨찾기 재생 시작 → 찬양 탭 + 전체 플레이어
+  // 즐겨찾기 탭: 전체 즐겨찾기 재생 시작 → 찬양 탭으로 이동
   const handlePlayAllFavorites = () => {
     if (favorites.length === 0) {
       toast('즐겨찾기한 곡이 없어요. 곡 옆 ⭐ 버튼으로 추가해보세요!');
@@ -965,7 +957,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
     playFavorites();
     setActiveTab('songs');
-    setIsFullPlayerOpen(true);
   };
 
   // Toggle play/pause
@@ -1177,10 +1168,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       ?.split('|')
       .map((s) => s.trim())
       .filter((s) => s.length > 0) ?? [];
-
-  const currentSermon = parseSermon(currentSong?.description);
-  const miniSubtitle =
-    currentSermon[2] || currentSong?.category || '수영로말씀적용찬양';
 
   // 곡 목록 한 줄 렌더러 (찬양/검색/즐겨찾기 공통)
   const renderSongList = (
@@ -1427,11 +1414,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         {/* ===== 본문 (탭별 화면) ===== */}
         <main
           className="flex-1 overflow-y-auto"
-          style={{ paddingBottom: currentSong ? 148 : 80 }}
+          style={{ paddingBottom: 72 }}
         >
-          {/* --- 🎵 찬양 탭 --- */}
+          {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 py-4 space-y-2">
               {isFavoritesMode && (
                 <div className="flex items-center justify-between bg-purple-900/40 border border-purple-400/40 rounded-lg px-3 py-2">
                   <span className="text-xs text-purple-100 flex items-center">
@@ -1449,16 +1436,340 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 </div>
               )}
 
-              <div className="flex items-center gap-2 text-sm text-purple-200">
-                <List className="h-4 w-4" />
-                <span>곡 목록 ({filteredSongs.length})</span>
-              </div>
+              {/* 1. 곡 목록 박스 — 고정 높이(5곡), 내부 스크롤 */}
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardHeader className="p-2 pb-1">
+                  <CardTitle className="text-xs text-white flex items-center space-x-1">
+                    <List className="h-3 w-3" />
+                    <span>곡 목록 ({filteredSongs.length})</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-2 pt-0">
+                  <div className="max-h-32 overflow-y-auto">
+                    {filteredSongs.length === 0 ? (
+                      <div className="text-center py-3">
+                        <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
+                        <p className="text-gray-400 text-xs">
+                          {isFavoritesMode
+                            ? '즐겨찾기한 곡이 없어요'
+                            : '검색 결과가 없습니다'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-0.5">
+                        {filteredSongs.map((song, index) => {
+                          const isCurrentSong =
+                            songs.indexOf(song) === currentSongIndex;
+                          return (
+                            <div
+                              key={song.id}
+                              ref={isCurrentSong ? currentSongRowRef : null}
+                              onClick={() => playSong(index)}
+                              className={`px-2 py-1 rounded cursor-pointer transition-all text-xs ${
+                                isCurrentSong
+                                  ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30'
+                                  : 'bg-slate-700/30 hover:bg-slate-700/50 active:bg-slate-700/70'
+                              }`}
+                            >
+                              <div className="flex items-center space-x-2">
+                                <span className="text-gray-400 font-mono w-4 flex-shrink-0 text-xs">
+                                  {index + 1}
+                                </span>
+                                <div className="flex-1 min-w-0 flex items-center space-x-1">
+                                  <span className="text-white truncate text-xs">
+                                    {song.title}
+                                  </span>
+                                  {index < 2 && (
+                                    <SunMedium className="w-4 h-4 text-pink-400 flex-shrink-0 ml-1 animate-pulse" />
+                                  )}
+                                  {isCurrentSong && (
+                                    <div className="flex items-center space-x-0.5">
+                                      <div className="w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse"></div>
+                                      <div className="w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                                      <div className="w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                                    </div>
+                                  )}
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleShareClick({ id: song.id, title: song.title });
+                                  }}
+                                  className="flex-shrink-0 p-1 -m-1 rounded hover:bg-slate-600/40 transition-colors"
+                                  aria-label={`${song.title} 공유하기`}
+                                  title="공유하기"
+                                >
+                                  <Share2 className="h-3.5 w-3.5 text-gray-500 hover:text-purple-300" />
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    toggleFavorite(song.id);
+                                  }}
+                                  className="flex-shrink-0 p-1 -m-1 rounded hover:bg-slate-600/40 transition-colors"
+                                  aria-label={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
+                                  title={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
+                                >
+                                  <Star
+                                    className={`h-3.5 w-3.5 ${
+                                      isFavorite(song.id)
+                                        ? 'fill-pink-400 text-pink-400'
+                                        : 'text-gray-500 hover:fill-pink-400 hover:text-pink-400'
+                                    }`}
+                                  />
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-              {renderSongList(
-                filteredSongs,
-                handlePickSong,
-                isFavoritesMode ? '즐겨찾기한 곡이 없어요' : '곡이 없습니다',
-              )}
+              {/* 2. 플레이어 — 진행바 + 컨트롤 */}
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardContent className="p-3">
+                  {currentSong ? (
+                    <div className="space-y-3">
+                      <div className="space-y-1">
+                        <div
+                          className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
+                          onClick={handleSeek}
+                        >
+                          <div
+                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-100"
+                            style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-gray-400">
+                          <span>{formatTime(currentTime)}</span>
+                          <span>{formatTime(duration)}</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-center space-x-3">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={toggleRepeatMode}
+                          className={`p-2 relative hover:bg-purple-500/20 ${
+                            repeatMode === 'off'
+                              ? 'text-gray-500 hover:text-gray-400'
+                              : 'text-purple-400 hover:text-purple-300'
+                          }`}
+                        >
+                          {repeatMode === 'one' ? (
+                            <div className="relative">
+                              <Repeat className="h-4 w-4" />
+                              <span className="absolute -top-1 -right-1 text-xs font-bold bg-purple-500 text-white rounded-full w-3 h-3 flex items-center justify-center leading-none">
+                                1
+                              </span>
+                            </div>
+                          ) : (
+                            <Repeat className="h-4 w-4" />
+                          )}
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={skipToPrevious}
+                          className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
+                        >
+                          <SkipBack className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          onClick={togglePlay}
+                          size="sm"
+                          className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-12 h-12 rounded-full"
+                          disabled={!currentSong.audioUrl}
+                        >
+                          {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={skipToNext}
+                          className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
+                        >
+                          <SkipForward className="h-4 w-4" />
+                        </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={toggleShuffle}
+                          className={`p-2 hover:bg-purple-500/20 ${
+                            isShuffleEnabled
+                              ? 'text-purple-400 hover:text-purple-300'
+                              : 'text-gray-500 hover:text-gray-400'
+                          }`}
+                        >
+                          <Shuffle className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-4 space-y-2">
+                      <Music className="h-8 w-8 text-gray-600 mx-auto" />
+                      <div>
+                        <p className="text-gray-400 text-sm">재생목록</p>
+                        <p className="text-xs text-gray-500">곡을 선택해주세요</p>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* 3. 가사 영역 — 페이지 스크롤(내부 스크롤 없음) */}
+              <Card className="bg-slate-800/50 border-slate-700">
+                <CardHeader className="p-3 pb-2">
+                  <CardTitle className="text-sm text-white flex items-center space-x-2">
+                    <Scroll className="h-4 w-4" />
+                    <span>가사</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-3 pt-0">
+                  <div className="bg-slate-700/30 rounded-lg p-3">
+                    {currentSong && currentSong.lyrics ? (
+                      <div className="space-y-3">
+                        <div className="text-left border-b border-slate-600 pb-2 text-xs space-y-1 break-keep">
+                          {(() => {
+                            const parts = parseSermon(currentSong.description);
+                            return (
+                              <>
+                                {parts[0] && (
+                                  <p>
+                                    <span className="text-gray-500">· </span>
+                                    <span className="text-gray-400">설교제목: </span>
+                                    <span className="text-gray-200">{parts[0]}</span>
+                                  </p>
+                                )}
+                                {(parts[1] || parts[2]) && (
+                                  <p>
+                                    {parts[1] && (
+                                      <>
+                                        <span className="text-gray-500">· </span>
+                                        <span className="text-gray-400">설교본문: </span>
+                                        <span className="text-gray-200">{parts[1]}</span>
+                                      </>
+                                    )}
+                                    {parts[1] && parts[2] && (
+                                      <span className="mx-1 text-gray-500">|</span>
+                                    )}
+                                    {parts[2] && (
+                                      <>
+                                        <span className="text-gray-500">· </span>
+                                        <span className="text-gray-400">설교자: </span>
+                                        <span className="text-gray-200">{parts[2]}</span>
+                                      </>
+                                    )}
+                                  </p>
+                                )}
+                                {(parts[3] || parts[4]) && (
+                                  <p>
+                                    {parts[3] && (
+                                      <>
+                                        <span className="text-gray-500">· </span>
+                                        <span className="text-gray-400">구분: </span>
+                                        <span className="text-gray-200">{parts[3]}</span>
+                                      </>
+                                    )}
+                                    {parts[3] && parts[4] && (
+                                      <span className="mx-1 text-gray-500">|</span>
+                                    )}
+                                    {parts[4] && (
+                                      <>
+                                        <span className="text-gray-500">· </span>
+                                        <span className="text-gray-400">날짜: </span>
+                                        <span className="text-gray-200">{parts[4]}</span>
+                                      </>
+                                    )}
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
+                        </div>
+                        {currentSong.title && (
+                          <h3 className="text-2xl font-bold text-white text-center break-keep">
+                            {currentSong.title}
+                          </h3>
+                        )}
+                        <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
+                          {currentSong.lyrics}
+                        </div>
+                        <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
+                          {currentSong.youtubeUrl && (
+                            <Button
+                              size="sm"
+                              onClick={() => window.open(currentSong.youtubeUrl, '_blank')}
+                              className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-xs transition-colors duration-200"
+                            >
+                              <Youtube className="h-3 w-3 mr-1 text-red-500" />
+                              설교YouTube
+                            </Button>
+                          )}
+                          <button
+                            onClick={() => handleShareClick({ id: currentSong.id, title: currentSong.title })}
+                            onPointerDown={() => setIsSharePressed(true)}
+                            onPointerUp={() => setIsSharePressed(false)}
+                            onPointerLeave={() => setIsSharePressed(false)}
+                            onPointerCancel={() => setIsSharePressed(false)}
+                            className={`h-9 px-3 rounded-md font-semibold text-xs inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                              isSharePressed
+                                ? 'bg-purple-950 text-pink-400 scale-[0.98]'
+                                : 'bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400'
+                            }`}
+                          >
+                            <Share2 className="h-3 w-3" />
+                            이 찬양 공유 하기
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-8 text-center space-y-2">
+                        <Scroll className="h-8 w-8 text-gray-600 mx-auto" />
+                        <div>
+                          <p className="text-gray-400 text-sm">
+                            {currentSong ? '이 곡에는 가사가 없습니다' : '곡을 선택하면 가사가 표시됩니다'}
+                          </p>
+                          {currentSong && (
+                            <>
+                              <p className="text-xs text-gray-500 mt-1">
+                                관리자가 가사를 추가할 수 있습니다
+                              </p>
+                              <div className="pt-3">
+                                <button
+                                  onClick={() => handleShareClick({ id: currentSong.id, title: currentSong.title })}
+                                  onPointerDown={() => setIsSharePressed(true)}
+                                  onPointerUp={() => setIsSharePressed(false)}
+                                  onPointerLeave={() => setIsSharePressed(false)}
+                                  onPointerCancel={() => setIsSharePressed(false)}
+                                  className={`h-9 px-3 rounded-md border font-semibold text-xs inline-flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                                    isSharePressed
+                                      ? 'bg-purple-950 text-pink-300 border-pink-400/70 scale-[0.98]'
+                                      : 'bg-purple-800 text-white border-purple-400/60 hover:text-pink-300 hover:border-pink-400/70'
+                                  }`}
+                                >
+                                  <Share2 className="h-3 w-3" />
+                                  곡 공유하기
+                                </button>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           )}
 
@@ -1610,59 +1921,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         {/* ===== 미니 플레이어 + 하단 탭바 ===== */}
         <div className="fixed bottom-0 inset-x-0 z-40">
           <div className="max-w-md mx-auto">
-            {currentSong && !isFullPlayerOpen && (
-              <div
-                role="button"
-                tabIndex={0}
-                onClick={() => setIsFullPlayerOpen(true)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    setIsFullPlayerOpen(true);
-                  }
-                }}
-                className="bg-slate-800/90 backdrop-blur border-t border-purple-500/20 px-3 py-2 flex items-center gap-3 cursor-pointer"
-              >
-                <div className="w-9 h-9 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                  <Music className="h-4 w-4 text-white" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-semibold text-white truncate">
-                    {currentSong.title}
-                  </p>
-                  <p className="text-[10px] text-purple-300 truncate">{miniSubtitle}</p>
-                  <div className="mt-1 h-1 bg-slate-600 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-100"
-                      style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
-                    />
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    togglePlay();
-                  }}
-                  className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white"
-                  aria-label={isPlaying ? '일시정지' : '재생'}
-                >
-                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
-                </button>
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    skipToNext();
-                  }}
-                  className="flex-shrink-0 w-9 h-9 rounded-full text-white hover:bg-purple-500/20 flex items-center justify-center"
-                  aria-label="다음 곡"
-                >
-                  <SkipForward className="h-4 w-4" />
-                </button>
-              </div>
-            )}
-
             <nav className="grid grid-cols-4 bg-slate-900/95 backdrop-blur border-t border-purple-500/20">
               {TABS.map((tab) => {
                 const active = activeTab === tab.key;
@@ -1692,210 +1950,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             </nav>
           </div>
         </div>
-
-        {/* ===== 전체 플레이어 오버레이 ===== */}
-        {isFullPlayerOpen && currentSong && (
-          <div className="fixed inset-0 z-[90] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-            <div className="max-w-md mx-auto h-full flex flex-col">
-              <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
-                <button
-                  type="button"
-                  onClick={() => setIsFullPlayerOpen(false)}
-                  aria-label="플레이어 닫기"
-                  title="닫기"
-                  className="w-10 h-10 rounded-full hover:bg-slate-700/60 flex items-center justify-center text-white"
-                >
-                  <ChevronDown className="h-6 w-6" />
-                </button>
-                <span className="text-xs text-purple-300">재생 중</span>
-                <div className="w-10 h-10" />
-              </div>
-
-              <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-6 space-y-5">
-                <div className="text-center pt-2">
-                  <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4">
-                    <Music className="h-12 w-12 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-white break-keep">
-                    {currentSong.title}
-                  </h2>
-                  {currentSermon.length > 0 && (
-                    <div className="mt-2 text-xs text-purple-200/90 space-y-0.5 break-keep">
-                      {currentSermon[0] && (
-                        <p>
-                          <span className="text-gray-400">설교제목: </span>
-                          {currentSermon[0]}
-                        </p>
-                      )}
-                      {(currentSermon[1] || currentSermon[2]) && (
-                        <p>
-                          {currentSermon[1] && (
-                            <>
-                              <span className="text-gray-400">설교본문: </span>
-                              {currentSermon[1]}
-                            </>
-                          )}
-                          {currentSermon[1] && currentSermon[2] && (
-                            <span className="mx-1 text-gray-500">|</span>
-                          )}
-                          {currentSermon[2] && (
-                            <>
-                              <span className="text-gray-400">설교자: </span>
-                              {currentSermon[2]}
-                            </>
-                          )}
-                        </p>
-                      )}
-                      {(currentSermon[3] || currentSermon[4]) && (
-                        <p>
-                          {currentSermon[3] && (
-                            <>
-                              <span className="text-gray-400">구분: </span>
-                              {currentSermon[3]}
-                            </>
-                          )}
-                          {currentSermon[3] && currentSermon[4] && (
-                            <span className="mx-1 text-gray-500">|</span>
-                          )}
-                          {currentSermon[4] && (
-                            <>
-                              <span className="text-gray-400">날짜: </span>
-                              {currentSermon[4]}
-                            </>
-                          )}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-1">
-                  <div
-                    className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
-                    onClick={handleSeek}
-                  >
-                    <div
-                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-100"
-                      style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>{formatTime(currentTime)}</span>
-                    <span>{formatTime(duration)}</span>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleRepeatMode}
-                    className={`p-2 relative hover:bg-purple-500/20 ${
-                      repeatMode === 'off'
-                        ? 'text-gray-500 hover:text-gray-400'
-                        : 'text-purple-400 hover:text-purple-300'
-                    }`}
-                  >
-                    {repeatMode === 'one' ? (
-                      <div className="relative">
-                        <Repeat className="h-5 w-5" />
-                        <span className="absolute -top-1 -right-1 text-xs font-bold bg-purple-500 text-white rounded-full w-3 h-3 flex items-center justify-center leading-none">
-                          1
-                        </span>
-                      </div>
-                    ) : (
-                      <Repeat className="h-5 w-5" />
-                    )}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={skipToPrevious}
-                    className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
-                  >
-                    <SkipBack className="h-6 w-6" />
-                  </Button>
-
-                  <Button
-                    onClick={togglePlay}
-                    size="sm"
-                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-16 h-16 rounded-full"
-                    disabled={!currentSong.audioUrl}
-                  >
-                    {isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1" />}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={skipToNext}
-                    className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
-                  >
-                    <SkipForward className="h-6 w-6" />
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={toggleShuffle}
-                    className={`p-2 hover:bg-purple-500/20 ${
-                      isShuffleEnabled
-                        ? 'text-purple-400 hover:text-purple-300'
-                        : 'text-gray-500 hover:text-gray-400'
-                    }`}
-                  >
-                    <Shuffle className="h-5 w-5" />
-                  </Button>
-                </div>
-
-                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
-                  <div className="flex items-center gap-2 text-sm text-white mb-3">
-                    <Scroll className="h-4 w-4" />
-                    <span>가사</span>
-                  </div>
-                  {currentSong.lyrics ? (
-                    <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
-                      {currentSong.lyrics}
-                    </div>
-                  ) : (
-                    <p className="text-center text-sm text-gray-400 py-6">
-                      이 곡에는 가사가 없습니다
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex items-center justify-center gap-2 flex-wrap pb-2">
-                  {currentSong.youtubeUrl && (
-                    <Button
-                      size="sm"
-                      onClick={() => window.open(currentSong.youtubeUrl, '_blank')}
-                      className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-xs transition-colors duration-200"
-                    >
-                      <Youtube className="h-3 w-3 mr-1 text-red-500" />
-                      설교YouTube
-                    </Button>
-                  )}
-                  <button
-                    onClick={() => handleShareClick({ id: currentSong.id, title: currentSong.title })}
-                    onPointerDown={() => setIsSharePressed(true)}
-                    onPointerUp={() => setIsSharePressed(false)}
-                    onPointerLeave={() => setIsSharePressed(false)}
-                    onPointerCancel={() => setIsSharePressed(false)}
-                    className={`h-9 px-3 rounded-md font-semibold text-xs inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
-                      isSharePressed
-                        ? 'bg-purple-950 text-pink-400 scale-[0.98]'
-                        : 'bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400'
-                    }`}
-                  >
-                    <Share2 className="h-3 w-3" />
-                    이 찬양 공유 하기
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {isAdminRoute && (
         <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
