@@ -388,7 +388,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     const targets = songs.filter(
       (s) =>
         !s.id.startsWith('local-') &&
-        s.tags === undefined &&
+        // tags 필드가 없거나(미생성) 빈 배열(이전 생성 실패)인 곡 모두 재처리
+        (s.tags === undefined || s.tags.length === 0) &&
         !!s.lyrics &&
         s.lyrics.trim().length > 0
     );
