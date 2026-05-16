@@ -35,7 +35,6 @@ export default function SimpleSongPlayer() {
   const [duration, setDuration] = useState(0);
   const [promptingPlay, setPromptingPlay] = useState(false);
   const [isSharePressed, setIsSharePressed] = useState(false);
-  const [isShareBtnPressed, setIsShareBtnPressed] = useState(false);
 
   // 곡 검색 — songs 도착 후 매칭, grace 윈도우 후에도 없으면 notFound
   // 한 번 매칭되면 onSnapshot 재호출(캐시→서버)로 songs가 새 참조로 바뀌어도
@@ -312,34 +311,6 @@ export default function SimpleSongPlayer() {
               )}
             </div>
 
-            <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
-              {song.youtubeUrl && (
-                <Button
-                  size="sm"
-                  onClick={() => window.open(song.youtubeUrl, '_blank')}
-                  className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-xs transition-colors duration-200"
-                >
-                  <Youtube className="h-3 w-3 mr-1 text-red-500" />
-                  설교YouTube
-                </Button>
-              )}
-              <button
-                onClick={handleShare}
-                onPointerDown={() => setIsShareBtnPressed(true)}
-                onPointerUp={() => setIsShareBtnPressed(false)}
-                onPointerLeave={() => setIsShareBtnPressed(false)}
-                onPointerCancel={() => setIsShareBtnPressed(false)}
-                className={`h-9 px-3 rounded-md font-semibold text-xs inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
-                  isShareBtnPressed
-                    ? 'bg-purple-950 text-pink-400 scale-[0.98]'
-                    : 'bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400'
-                }`}
-              >
-                <Share2 className="h-3 w-3" />
-                이 찬양 공유 하기
-              </button>
-            </div>
-
             <div className="space-y-1">
               <div
                 className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
@@ -367,6 +338,15 @@ export default function SimpleSongPlayer() {
               </Button>
             </div>
 
+            {song.youtubeUrl && (
+              <button
+                onClick={() => window.open(song.youtubeUrl, '_blank')}
+                className="w-full rounded-xl border font-semibold py-3 px-4 inline-flex items-center justify-center gap-2 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 bg-purple-800 text-white border-purple-400/60 hover:text-pink-300 hover:border-pink-400/70"
+              >
+                <Youtube className="h-5 w-5 text-red-500" />
+                설교 YouTube 바로가기
+              </button>
+            )}
             <button
               onClick={handleShare}
               onPointerDown={() => setIsSharePressed(true)}
