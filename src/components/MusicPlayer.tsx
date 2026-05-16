@@ -74,6 +74,26 @@ const DEFAULT_CATEGORIES = [
   { name: '기타' }
 ];
 
+// 곡 목록 검색 탭 정의
+const SEARCH_TABS = [
+  { key: 'category', label: '예배별' },
+  { key: 'tags', label: '태그' },
+  { key: 'mood', label: '감정/상황' },
+  { key: 'lyrics', label: '가사검색' },
+] as const;
+
+type SearchTabKey = (typeof SEARCH_TABS)[number]['key'];
+
+// 감정/상황 → 관련 태그 키워드 매핑 (태그에 부분 포함되면 매칭)
+const MOOD_PRESETS: { label: string; keywords: string[] }[] = [
+  { label: '위로가 필요해요', keywords: ['위로', '치유', '소망', '평안', '회복', '쉼'] },
+  { label: '감사한 마음이에요', keywords: ['감사', '은혜', '찬양', '축복', '기쁨'] },
+  { label: '예배드리고 싶어요', keywords: ['예배', '경배', '찬양', '영광', '거룩'] },
+  { label: '새힘이 필요해요', keywords: ['소망', '용기', '힘', '승리', '믿음', '새힘'] },
+  { label: '기도하고 싶어요', keywords: ['기도', '간구', '중보', '간절', '부르짖음'] },
+  { label: '회개하고 싶어요', keywords: ['회개', '용서', '죄', '십자가', '정결', '돌이킴'] },
+];
+
 
 // R2 Storage Configuration
 const R2_CONFIG = {
@@ -93,6 +113,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // State
   const [_categories, setCategories] = useState<Category[]>([]);
   const [currentCategory, setCurrentCategory] = useState('전체');
+  const [searchTab, setSearchTab] = useState<SearchTabKey>('category');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [selectedMood, setSelectedMood] = useState<string | null>(null);
+  const [lyricsQuery, setLyricsQuery] = useState('');
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAddingSong, setIsAddingSong] = useState(false);
@@ -760,6 +784,35 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     if (isFavoritesMode) {
       return songs.filter(song => favorites.includes(song.id));
     }
+
+    if (searchTab === 'tags') {
+      if (selectedTags.length === 0) return songs;
+      // 선택한 태그 중 하나라도 포함하면 노출 (OR)
+      return songs.filter(
+        (s) => Array.isArray(s.tags) && s.tags.some((t) => selectedTags.includes(t))
+      );
+    }
+
+    if (searchTab === 'mood') {
+      if (!selectedMood) return songs;
+      const preset = MOOD_PRESETS.find((m) => m.label === selectedMood);
+      if (!preset) return songs;
+      return songs.filter(
+        (s) =>
+          Array.isArray(s.tags) &&
+          s.tags.some((t) =>
+            preset.keywords.some((k) => t.includes(k) || k.includes(t))
+          )
+      );
+    }
+
+    if (searchTab === 'lyrics') {
+      const q = lyricsQuery.trim().toLowerCase();
+      if (!q) return songs;
+      return songs.filter((s) => (s.lyrics || '').toLowerCase().includes(q));
+    }
+
+    // 예배별 (기본)
     return currentCategory === '전체'
       ? songs
       : songs.filter(song => song.category === currentCategory);
@@ -974,7 +1027,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     if (isShuffleEnabled) {
       setShuffledIndices(generateShuffledIndices());
     }
-  }, [songs, currentCategory, isShuffleEnabled, isFavoritesMode, favorites]);
+  }, [songs, currentCategory, isShuffleEnabled, isFavoritesMode, favorites, searchTab, selectedTags, selectedMood, lyricsQuery]);
 
   // Audio event handlers
   useEffect(() => {
@@ -1060,6 +1113,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   const filteredSongs = getFilteredSongs();
   const currentSong = currentSongIndex >= 0 ? songs[currentSongIndex] : null;
+  // songs 전체에서 사용된 태그 수집 (태그 탭 버튼 목록)
+  const allTags = Array.from(
+    new Set(songs.flatMap((s) => (Array.isArray(s.tags) ? s.tags : [])))
+  ).sort((a, b) => a.localeCompare(b, 'ko'));
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
@@ -1211,28 +1268,117 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               </Button>
             ) : (
               <>
-                <Select value={currentCategory} onValueChange={setCurrentCategory}>
-                  <SelectTrigger className="w-full bg-slate-800/50 border-purple-400 text-white h-12">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="전체" className="text-white hover:bg-purple-600/20">
-                      🎵 전체
-                    </SelectItem>
-                    <SelectItem value="금철" className="text-white hover:bg-purple-600/20">
-                      🌙 금철
-                    </SelectItem>
-                    <SelectItem value="주일" className="text-white hover:bg-purple-600/20">
-                      ⛪ 주일
-                    </SelectItem>
-                    <SelectItem value="QT" className="text-white hover:bg-purple-600/20">
-                      📖 QT
-                    </SelectItem>
-                    <SelectItem value="기타" className="text-white hover:bg-purple-600/20">
-                      🎼 기타
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
+                {/* 검색 탭 바 — 모바일에서 한 줄 4개 */}
+                <div className="grid grid-cols-4 gap-1">
+                  {SEARCH_TABS.map((t) => (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => setSearchTab(t.key)}
+                      className={`h-9 px-1 rounded-md text-[11px] sm:text-xs font-medium transition-colors ${
+                        searchTab === t.key
+                          ? 'bg-purple-600 text-white shadow-sm shadow-purple-900/40'
+                          : 'bg-slate-800/50 text-gray-300 border border-purple-400/30 hover:bg-purple-900/40'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* 탭별 패널 */}
+                <div className="mt-2">
+                  {searchTab === 'category' && (
+                    <Select value={currentCategory} onValueChange={setCurrentCategory}>
+                      <SelectTrigger className="w-full bg-slate-800/50 border-purple-400 text-white h-12">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-700">
+                        <SelectItem value="전체" className="text-white hover:bg-purple-600/20">
+                          🎵 전체
+                        </SelectItem>
+                        <SelectItem value="금철" className="text-white hover:bg-purple-600/20">
+                          🌙 금철
+                        </SelectItem>
+                        <SelectItem value="주일" className="text-white hover:bg-purple-600/20">
+                          ⛪ 주일
+                        </SelectItem>
+                        <SelectItem value="QT" className="text-white hover:bg-purple-600/20">
+                          📖 QT
+                        </SelectItem>
+                        <SelectItem value="기타" className="text-white hover:bg-purple-600/20">
+                          🎼 기타
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+
+                  {searchTab === 'tags' && (
+                    allTags.length === 0 ? (
+                      <p className="text-xs text-gray-400 py-2 px-1">
+                        아직 생성된 태그가 없습니다.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
+                        {allTags.map((tag) => {
+                          const active = selectedTags.includes(tag);
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() =>
+                                setSelectedTags((prev) =>
+                                  prev.includes(tag)
+                                    ? prev.filter((x) => x !== tag)
+                                    : [...prev, tag]
+                                )
+                              }
+                              className={`px-2 py-1 rounded-full text-[11px] transition-colors ${
+                                active
+                                  ? 'bg-purple-600 text-white'
+                                  : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
+                              }`}
+                            >
+                              #{tag}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )
+                  )}
+
+                  {searchTab === 'mood' && (
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {MOOD_PRESETS.map((m) => {
+                        const active = selectedMood === m.label;
+                        return (
+                          <button
+                            key={m.label}
+                            type="button"
+                            onClick={() => setSelectedMood(active ? null : m.label)}
+                            className={`px-2 py-2 rounded-md text-[11px] sm:text-xs transition-colors ${
+                              active
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
+                            }`}
+                          >
+                            {m.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {searchTab === 'lyrics' && (
+                    <Input
+                      value={lyricsQuery}
+                      onChange={(e) => setLyricsQuery(e.target.value)}
+                      placeholder="가사 키워드를 입력하세요"
+                      className="w-full bg-slate-800/50 border-purple-400/40 text-white h-10 text-sm"
+                    />
+                  )}
+                </div>
+
                 <Button
                   onClick={playFavorites}
                   variant="outline"
@@ -1262,9 +1408,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     <p className="text-gray-400 text-xs">
                       {isFavoritesMode
                         ? '즐겨찾기한 곡이 없어요'
-                        : currentCategory === '전체'
+                        : searchTab === 'category' && currentCategory === '전체'
                           ? '기본 곡을 설치하는 중입니다...'
-                          : `${currentCategory} 카테고리에 곡이 없습니다`
+                          : '검색 결과가 없습니다'
                       }
                     </p>
                   </div>
