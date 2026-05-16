@@ -28,6 +28,7 @@ import { AboutModal } from '@/components/AboutModal';
 import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 import { NoticeDialog } from '@/components/NoticeDialog';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
+import { generateAndSaveTags } from '@/lib/autoTags';
 import {
   Play,
   Pause,
@@ -95,6 +96,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAddingSong, setIsAddingSong] = useState(false);
+  const [isBatchTagging, setIsBatchTagging] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   
@@ -331,6 +333,84 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
   };
 
+  // 곡 저장 직후 호출: 가사로 태그를 자동 생성하고 Firestore에 저장.
+  // 로딩/완료/실패 토스트를 표시하며, 실패해도 곡 저장은 그대로 유지된다.
+  const runAutoTagging = async (
+    songId: string,
+    lyrics?: string,
+    title?: string
+  ): Promise<void> => {
+    if (!lyrics || !lyrics.trim()) return;
+    if (isOfflineMode || !db || songId.startsWith('local-')) return;
+
+    const toastId = toast.loading('🏷️ 태그 자동 생성 중...');
+    try {
+      const tags = await generateAndSaveTags(songId, lyrics, title);
+      toast.success(`✅ 태그 생성 완료 (${tags.length}개)`, { id: toastId });
+    } catch (error) {
+      console.error('❌ [AutoTag] 태그 생성 실패:', error);
+      toast.error('⚠️ 태그 생성 실패 (나중에 수동 설정 가능)', { id: toastId });
+    }
+  };
+
+  // 기존 곡 일괄 태그 생성: tags 필드가 없고 가사가 있는 곡만 순차 처리.
+  // API 과부하 방지를 위해 곡 사이 500ms 대기.
+  const handleBatchGenerateTags = async () => {
+    if (!isAdmin) {
+      toast.error('관리자 권한이 필요합니다.');
+      return;
+    }
+    if (isOfflineMode || !db) {
+      toast.error('Firebase 연결이 필요합니다.');
+      return;
+    }
+    if (isBatchTagging) return;
+
+    const targets = songs.filter(
+      (s) =>
+        !s.id.startsWith('local-') &&
+        s.tags === undefined &&
+        !!s.lyrics &&
+        s.lyrics.trim().length > 0
+    );
+
+    if (targets.length === 0) {
+      toast.info('태그를 생성할 곡이 없습니다. (이미 모두 처리됨)');
+      return;
+    }
+
+    setIsBatchTagging(true);
+    const toastId = toast.loading(`태그 일괄 생성 준비 중... (대상 ${targets.length}곡)`);
+    let success = 0;
+    let fail = 0;
+
+    try {
+      for (let i = 0; i < targets.length; i++) {
+        const song = targets[i];
+        toast.loading(
+          `${i + 1}/${targets.length} 곡 처리 중... (${song.title})`,
+          { id: toastId }
+        );
+        try {
+          await generateAndSaveTags(song.id, song.lyrics as string, song.title);
+          success++;
+        } catch (error) {
+          console.error('❌ [BatchTag] 실패:', song.title, error);
+          fail++;
+        }
+        if (i < targets.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+      }
+      toast.success(
+        `✅ 태그 일괄 생성 완료 — 성공 ${success}곡, 실패 ${fail}곡`,
+        { id: toastId }
+      );
+    } finally {
+      setIsBatchTagging(false);
+    }
+  };
+
   // Add song handler
   const handleAddSong = async () => {
     if (!newSong.title || !newSong.category) {
@@ -388,8 +468,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         console.log('📡 [AddSong] Firebase에 저장 시작...');
         const docRef = await addDoc(collection(db, 'songs'), songData);
         console.log('✅ [AddSong] Firebase 저장 성공! 문서 ID:', docRef.id);
-        
+
         toast.success(`새 곡이 추가되었습니다: ${newSong.title}`);
+
+        // 곡 저장 직후 태그 자동 생성 (가사가 있을 때만)
+        await runAutoTagging(docRef.id, songData.lyrics, songData.title);
       }
       
       setNewSong({ 
@@ -460,6 +543,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       } else {
         await updateDoc(doc(db, 'songs', editingSong.id), updatedData);
         toast.success(`곡이 수정되었습니다: ${editSongData.title}`);
+
+        // 수정 시 가사가 있으면 태그 재생성
+        await runAutoTagging(editingSong.id, updatedData.lyrics, updatedData.title);
       }
       
       setEditingSong(null);
@@ -1762,7 +1848,26 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-white mb-4">기존 곡 목록</h3>
+                    <div className="rounded-lg border border-slate-600 bg-slate-700/40 p-3 space-y-2">
+                      <Button
+                        onClick={handleBatchGenerateTags}
+                        disabled={isBatchTagging}
+                        className="w-full bg-gradient-to-r from-amber-500 to-orange-500"
+                      >
+                        {isBatchTagging ? (
+                          <>
+                            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                            태그 생성 중...
+                          </>
+                        ) : (
+                          '🏷️ 전체 곡 태그 일괄 생성'
+                        )}
+                      </Button>
+                      <p className="text-xs text-gray-400">
+                        tags가 없고 가사가 있는 곡만 순차 처리합니다 (곡 사이 0.5초 대기).
+                      </p>
+                    </div>
+                    <h3 className="text-lg font-semibold text-white mb-4 pt-2">기존 곡 목록</h3>
                     {songs.length === 0 ? (
                       <p className="text-gray-400 text-center py-4">곡이 없습니다.</p>
                     ) : (

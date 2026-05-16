@@ -15,6 +15,10 @@ export interface Song {
   lyrics?: string;
   youtubeUrl?: string;
   duration?: string;
+  /** Claude API로 자동 생성된 핵심 주제 태그 */
+  tags?: string[];
+  /** 태그 생성 시각 (ISO 문자열) */
+  tagsGeneratedAt?: string;
   created_at: string;
 }
 
