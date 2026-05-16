@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Loader2, Music, Pause, Play, Share2 } from 'lucide-react';
+import { ArrowRight, Loader2, Music, Pause, Play, Share2, Youtube } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -35,6 +35,7 @@ export default function SimpleSongPlayer() {
   const [duration, setDuration] = useState(0);
   const [promptingPlay, setPromptingPlay] = useState(false);
   const [isSharePressed, setIsSharePressed] = useState(false);
+  const [isShareBtnPressed, setIsShareBtnPressed] = useState(false);
 
   // 곡 검색 — songs 도착 후 매칭, grace 윈도우 후에도 없으면 notFound
   // 한 번 매칭되면 onSnapshot 재호출(캐시→서버)로 songs가 새 참조로 바뀌어도
@@ -309,6 +310,34 @@ export default function SimpleSongPlayer() {
                   가사가 준비되지 않았어요
                 </p>
               )}
+            </div>
+
+            <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
+              {song.youtubeUrl && (
+                <Button
+                  size="sm"
+                  onClick={() => window.open(song.youtubeUrl, '_blank')}
+                  className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-xs transition-colors duration-200"
+                >
+                  <Youtube className="h-3 w-3 mr-1 text-red-500" />
+                  설교YouTube
+                </Button>
+              )}
+              <button
+                onClick={handleShare}
+                onPointerDown={() => setIsShareBtnPressed(true)}
+                onPointerUp={() => setIsShareBtnPressed(false)}
+                onPointerLeave={() => setIsShareBtnPressed(false)}
+                onPointerCancel={() => setIsShareBtnPressed(false)}
+                className={`h-9 px-3 rounded-md font-semibold text-xs inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                  isShareBtnPressed
+                    ? 'bg-purple-950 text-pink-400 scale-[0.98]'
+                    : 'bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400'
+                }`}
+              >
+                <Share2 className="h-3 w-3" />
+                이 찬양 공유 하기
+              </button>
             </div>
 
             <div className="space-y-1">
