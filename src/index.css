@@ -107,7 +107,7 @@
   }
 
   [role="dialog"] {
-    max-width: calc(100vw - 2rem) !important;
+    max-width: min(28rem, calc(100vw - 2rem)) !important;
     overflow-x: hidden !important;
   }
 
