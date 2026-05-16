@@ -340,16 +340,35 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     lyrics?: string,
     title?: string
   ): Promise<void> => {
-    if (!lyrics || !lyrics.trim()) return;
-    if (isOfflineMode || !db || songId.startsWith('local-')) return;
+    console.log('🏷️ [AutoTag] 시작:', {
+      songId,
+      hasLyrics: !!(lyrics && lyrics.trim()),
+      title,
+    });
+
+    if (!lyrics || !lyrics.trim()) {
+      console.log('🏷️ [AutoTag] 가사 없음 — 건너뜀:', songId);
+      return;
+    }
+    if (isOfflineMode || !db || songId.startsWith('local-')) {
+      console.log('🏷️ [AutoTag] 오프라인/로컬 모드 — 건너뜀:', {
+        songId,
+        isOfflineMode,
+        hasDb: !!db,
+      });
+      return;
+    }
 
     const toastId = toast.loading('🏷️ 태그 자동 생성 중...');
     try {
       const tags = await generateAndSaveTags(songId, lyrics, title);
+      console.log('🏷️ [AutoTag] 생성 성공:', { songId, tags });
       toast.success(`✅ 태그 생성 완료 (${tags.length}개)`, { id: toastId });
     } catch (error) {
-      console.error('❌ [AutoTag] 태그 생성 실패:', error);
+      console.error('❌ [AutoTag] 태그 생성 실패:', { songId, error });
       toast.error('⚠️ 태그 생성 실패 (나중에 수동 설정 가능)', { id: toastId });
+    } finally {
+      console.log('🏷️ [AutoTag] 종료:', songId);
     }
   };
 
@@ -545,7 +564,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         toast.success(`곡이 수정되었습니다: ${editSongData.title}`);
 
         // 수정 시 가사가 있으면 태그 재생성
+        console.log('🏷️ [UpdateSong] runAutoTagging 호출 직전:', {
+          songId: editingSong.id,
+          hasLyrics: !!updatedData.lyrics,
+          title: updatedData.title,
+        });
         await runAutoTagging(editingSong.id, updatedData.lyrics, updatedData.title);
+        console.log('🏷️ [UpdateSong] runAutoTagging 호출 완료:', editingSong.id);
       }
       
       setEditingSong(null);
