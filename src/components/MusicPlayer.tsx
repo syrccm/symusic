@@ -76,10 +76,10 @@ const DEFAULT_CATEGORIES = [
 
 // 곡 목록 검색 탭 정의
 const SEARCH_TABS = [
-  { key: 'category', label: '예배별' },
+  { key: 'category', label: '예배' },
   { key: 'tags', label: '태그' },
-  { key: 'mood', label: '감정/상황' },
-  { key: 'lyrics', label: '가사검색' },
+  { key: 'mood', label: '상황' },
+  { key: 'lyrics', label: '가사' },
 ] as const;
 
 type SearchTabKey = (typeof SEARCH_TABS)[number]['key'];
@@ -1275,7 +1275,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       key={t.key}
                       type="button"
                       onClick={() => setSearchTab(t.key)}
-                      className={`h-9 px-0.5 sm:px-1 rounded-md text-[10px] sm:text-xs font-medium whitespace-nowrap transition-colors ${
+                      className={`h-9 px-0.5 sm:px-1 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
                         searchTab === t.key
                           ? 'bg-purple-600 text-white shadow-sm shadow-purple-900/40'
                           : 'bg-slate-800/50 text-gray-300 border border-purple-400/30 hover:bg-purple-900/40'
