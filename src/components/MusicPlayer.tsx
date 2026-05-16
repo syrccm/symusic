@@ -12,7 +12,6 @@ import {
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -26,7 +25,7 @@ import { useSongs, type Song } from '@/hooks/useSongs';
 import { useNotices } from '@/hooks/useNotices';
 import { AboutModal } from '@/components/AboutModal';
 import { AnalyticsDialog } from '@/components/AnalyticsDialog';
-import { NoticeDialog } from '@/components/NoticeDialog';
+import { NoticePanel } from '@/components/NoticePanel';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import { generateAndSaveTags } from '@/lib/autoTags';
 import {
@@ -35,7 +34,6 @@ import {
   SkipBack,
   SkipForward,
   Music,
-  Settings,
   Trash2,
   Edit,
   Loader2,
@@ -47,13 +45,14 @@ import {
   Scroll,
   Repeat,
   Shuffle,
-  LogOut,
   Star,
   ArrowLeft,
   Share2,
-  BarChart3,
   SunMedium,
-  Menu
+  Menu,
+  Search,
+  Bell,
+  ChevronDown
 } from 'lucide-react';
 
 // Types
@@ -83,6 +82,9 @@ const SEARCH_TABS = [
 ] as const;
 
 type SearchTabKey = (typeof SEARCH_TABS)[number]['key'];
+
+// 하단 탭바 정의
+type MainTabKey = 'songs' | 'search' | 'favorites' | 'notices';
 
 // 감정/상황 → 관련 태그 키워드 매핑 (태그에 부분 포함되면 매칭)
 const MOOD_PRESETS: { label: string; keywords: string[] }[] = [
@@ -123,7 +125,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isBatchTagging, setIsBatchTagging] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
-  
+
   // Playback modes
   const [repeatMode, setRepeatMode] = useState<RepeatMode>('all');
   const [isShuffleEnabled, setIsShuffleEnabled] = useState(false);
@@ -139,8 +141,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // About modal
   const [isAboutOpen, setIsAboutOpen] = useState(false);
 
-  // Notice dialog (공지)
-  const [isNoticeOpen, setIsNoticeOpen] = useState(false);
+  // 하단 탭바 + 전체 플레이어 화면
+  const [activeTab, setActiveTab] = useState<MainTabKey>('songs');
+  const [isFullPlayerOpen, setIsFullPlayerOpen] = useState(false);
+
+  // Notice (공지 탭)
   const {
     notices,
     loading: noticesLoading,
@@ -191,11 +196,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [adminPassword, setAdminPassword] = useState('');
   const [rememberAdmin, setRememberAdmin] = useState(false);
   const [isAdminAuthenticating, setIsAdminAuthenticating] = useState(false);
-  
+
   // Admin management dialog
   const [showAdminManagementDialog, setShowAdminManagementDialog] = useState(false);
   const [activeAdminTab, setActiveAdminTab] = useState('add');
-  
+
   // Song form state
   const [newSong, setNewSong] = useState({
     title: '',
@@ -204,7 +209,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     youtubeUrl: '',
     lyrics: ''
   });
-  
+
   // Edit song state
   const [editingSong, setEditingSong] = useState<Song | null>(null);
   const [editSongData, setEditSongData] = useState({
@@ -214,7 +219,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     youtubeUrl: '',
     lyrics: ''
   });
-  
+
   // Audio ref
   const audioRef = useRef<HTMLAudioElement>(null);
 
@@ -267,13 +272,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     const currentIndex = modes.indexOf(repeatMode);
     const nextMode = modes[(currentIndex + 1) % modes.length];
     setRepeatMode(nextMode);
-    
+
     const modeNames = {
       'all': '전체 반복',
       'one': '한 곡 반복',
       'off': '반복 끄기'
     };
-    
+
     toast.success(`${modeNames[nextMode]} 모드로 변경되었습니다`);
   };
 
@@ -281,7 +286,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const toggleShuffle = () => {
     const newShuffleState = !isShuffleEnabled;
     setIsShuffleEnabled(newShuffleState);
-    
+
     if (newShuffleState) {
       setShuffledIndices(generateShuffledIndices());
       toast.success('셔플 재생이 활성화되었습니다');
@@ -472,7 +477,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
     try {
       const finalAudioUrl = generateR2UrlFromTitle(newSong.title);
-      
+
       const songData: any = {
         title: newSong.title.trim(),
         category: newSong.category,
@@ -483,11 +488,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       if (newSong.description && newSong.description.trim()) {
         songData.description = newSong.description.trim();
       }
-      
+
       if (newSong.youtubeUrl && newSong.youtubeUrl.trim()) {
         songData.youtubeUrl = newSong.youtubeUrl.trim();
       }
-      
+
       if (newSong.lyrics && newSong.lyrics.trim()) {
         songData.lyrics = newSong.lyrics.trim();
       }
@@ -508,7 +513,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         if (!db) {
           throw new Error('Firebase 연결이 끊어졌습니다.');
         }
-        
+
         console.log('📡 [AddSong] Firebase에 저장 시작...');
         const docRef = await addDoc(collection(db, 'songs'), songData);
         console.log('✅ [AddSong] Firebase 저장 성공! 문서 ID:', docRef.id);
@@ -518,21 +523,21 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         // 곡 저장 직후 태그 자동 생성 (가사가 있을 때만)
         await runAutoTagging(docRef.id, songData.lyrics, songData.title);
       }
-      
-      setNewSong({ 
-        title: '', 
-        category: '', 
-        description: '', 
-        youtubeUrl: '', 
-        lyrics: '' 
+
+      setNewSong({
+        title: '',
+        category: '',
+        description: '',
+        youtubeUrl: '',
+        lyrics: ''
       });
       console.log('✅ [AddSong] 폼 초기화 완료');
-      
+
     } catch (error: any) {
       console.error('❌ [AddSong] 저장 오류:', error);
-      
+
       let errorMessage = '곡 추가 중 오류가 발생했습니다.';
-      
+
       if (error?.code === 'permission-denied') {
         errorMessage = 'Firebase 권한이 없습니다. 관리자에게 문의하세요.';
       } else if (error?.code === 'unavailable') {
@@ -540,9 +545,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       } else if (error?.message) {
         errorMessage += ' ' + error.message;
       }
-      
+
       toast.error(errorMessage);
-      
+
     } finally {
       setIsAddingSong(false);
       console.log('🎵 [AddSong] 프로세스 종료');
@@ -558,7 +563,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
     try {
       const finalAudioUrl = generateR2UrlFromTitle(editSongData.title);
-      
+
       const updatedData: any = {
         title: editSongData.title.trim(),
         category: editSongData.category,
@@ -569,11 +574,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       if (editSongData.description && editSongData.description.trim()) {
         updatedData.description = editSongData.description.trim();
       }
-      
+
       if (editSongData.youtubeUrl && editSongData.youtubeUrl.trim()) {
         updatedData.youtubeUrl = editSongData.youtubeUrl.trim();
       }
-      
+
       if (editSongData.lyrics && editSongData.lyrics.trim()) {
         updatedData.lyrics = editSongData.lyrics.trim();
       }
@@ -597,10 +602,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         await runAutoTagging(editingSong.id, updatedData.lyrics, updatedData.title);
         console.log('🏷️ [UpdateSong] runAutoTagging 호출 완료:', editingSong.id);
       }
-      
+
       setEditingSong(null);
       setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '' });
-      
+
     } catch (error: any) {
       console.error('❌ [UpdateSong] 수정 오류:', error);
       toast.error('곡 수정 중 오류가 발생했습니다: ' + error.message);
@@ -624,7 +629,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         }
         setCurrentSongIndex(-1);
       }
-      
+
       if (isOfflineMode || !db) {
         setSongsLocal((prev) => prev.filter((s) => s.id !== songId));
 
@@ -633,7 +638,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         await deleteDoc(doc(db, 'songs', songId));
         toast.success(`"${songToDelete?.title}" 곡이 삭제되었습니다.`);
       }
-      
+
     } catch (error: any) {
       console.error('❌ [DeleteSong] 삭제 오류:', error);
       toast.error('곡 삭제 중 오류가 발생했습니다: ' + error.message);
@@ -650,7 +655,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
 
     setIsAdminAuthenticating(true);
-    
+
     console.log('🔐 [Admin] 로그인 시도 시작');
     console.log('🔐 [Admin] 입력된 이메일:', adminEmail);
     console.log('🔐 [Admin] Auth 객체 존재 여부:', !!auth);
@@ -663,7 +668,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         projectId: auth.app?.options?.projectId || '없음'
       }
     } : 'Auth 객체가 null입니다');
-    
+
     try {
       if (!auth) {
         throw new Error('Firebase Auth가 초기화되지 않았습니다. Firebase 설정을 확인하세요.');
@@ -682,26 +687,26 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       setIsAdmin(true);
       setShowAdminDialog(false);
       setAdminPassword('');
-      
+
       if (rememberAdmin) {
         localStorage.setItem('symusic-admin-email', adminEmail);
         console.log('🔐 [Admin] 이메일을 로컬 스토리지에 저장함');
       }
 
       toast.success('관리자로 로그인되었습니다.');
-      
+
       requestAnimationFrame(() => {
         console.log('🔐 [Admin] 관리 창 열기 실행');
         setShowAdminManagementDialog(true);
       });
-      
+
     } catch (error: any) {
       console.error('❌ [Admin] Firebase 인증 실패 - 상세 오류 정보:');
       console.error('❌ [Admin] 오류 타입:', error?.constructor?.name || typeof error);
       console.error('❌ [Admin] 오류 코드:', error?.code || '코드 없음');
       console.error('❌ [Admin] 오류 메시지:', error?.message || '메시지 없음');
       console.error('❌ [Admin] 전체 오류 객체:', error);
-      
+
       if (error?.code) {
         console.error('❌ [Admin] Firebase 오류 코드 분석:');
         switch (error.code) {
@@ -729,7 +734,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             console.error('❌ [Admin] 알 수 없는 Firebase 인증 오류:', error.code);
         }
       }
-      
+
       const message = error?.message || 'Firebase 관리자 인증에 실패했습니다.';
       toast.error(message);
     } finally {
@@ -821,7 +826,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // Get next song index based on playback mode
   const getNextSongIndex = (currentIndex: number) => {
     const filteredSongs = getFilteredSongs();
-    
+
     if (isShuffleEnabled && shuffledIndices.length > 0) {
       const currentShuffleIndex = shuffledIndices.indexOf(currentIndex);
       if (currentShuffleIndex < shuffledIndices.length - 1) {
@@ -916,6 +921,53 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setIsFavoritesMode(false);
   };
 
+  // 찬양 탭: 곡 선택 → 재생 + 전체 플레이어(전체화면 가사)
+  const handlePickSong = (index: number) => {
+    playSong(index);
+    setIsFullPlayerOpen(true);
+  };
+
+  // 검색 탭: 결과 선택 → 재생 후 찬양 탭으로 이동 (미니 플레이어)
+  const handlePickFromSearch = (index: number) => {
+    playSong(index);
+    setActiveTab('songs');
+  };
+
+  // 즐겨찾기 탭: 개별 곡 선택 → 즐겨찾기 모드로 재생 + 전체 플레이어
+  const playFavoriteSong = (song: Song) => {
+    setIsFavoritesMode(true);
+    setCurrentSongIndex(songs.indexOf(song));
+
+    if (song.audioUrl && audioRef.current) {
+      audioRef.current.src = song.audioUrl;
+      audioRef.current.play().then(() => {
+        setIsPlaying(true);
+        trackSongPlay(song.id).catch((err) =>
+          console.error('[Analytics] trackSongPlay failed:', err),
+        );
+      }).catch(error => {
+        console.error('Playback failed:', error);
+        toast.error(`오디오 재생에 실패했습니다: ${song.title}`);
+      });
+    } else {
+      toast.error('오디오 파일이 없습니다.');
+    }
+
+    setActiveTab('songs');
+    setIsFullPlayerOpen(true);
+  };
+
+  // 즐겨찾기 탭: 전체 즐겨찾기 재생 시작 → 찬양 탭 + 전체 플레이어
+  const handlePlayAllFavorites = () => {
+    if (favorites.length === 0) {
+      toast('즐겨찾기한 곡이 없어요. 곡 옆 ⭐ 버튼으로 추가해보세요!');
+      return;
+    }
+    playFavorites();
+    setActiveTab('songs');
+    setIsFullPlayerOpen(true);
+  };
+
   // Toggle play/pause
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -938,7 +990,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     const filteredSongs = getFilteredSongs();
     const currentIndex = filteredSongs.findIndex(song => songs.indexOf(song) === currentSongIndex);
     const nextIndex = getNextSongIndex(currentIndex);
-    
+
     if (nextIndex >= 0) {
       playSong(nextIndex);
     }
@@ -947,7 +999,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const skipToPrevious = () => {
     const filteredSongs = getFilteredSongs();
     const currentIndex = filteredSongs.findIndex(song => songs.indexOf(song) === currentSongIndex);
-    
+
     if (isShuffleEnabled && shuffledIndices.length > 0) {
       const currentShuffleIndex = shuffledIndices.indexOf(currentIndex);
       if (currentShuffleIndex > 0) {
@@ -963,12 +1015,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // Seek to position
   const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
     if (!audioRef.current || !duration) return;
-    
+
     const rect = e.currentTarget.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const percentage = x / rect.width;
     const newTime = percentage * duration;
-    
+
     audioRef.current.currentTime = newTime;
     setCurrentTime(newTime);
   };
@@ -980,7 +1032,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       setAdminEmail(savedEmail);
       setRememberAdmin(true);
     }
-    
+
     let cleanup: (() => void) | undefined;
 
     const init = async () => {
@@ -1044,7 +1096,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
     const handleEnded = () => {
       setIsPlaying(false);
-      
+
       if (repeatMode === 'one') {
         audio.currentTime = 0;
         audio.play().then(() => {
@@ -1054,7 +1106,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         const filteredSongs = getFilteredSongs();
         const currentIndex = filteredSongs.findIndex(song => songs.indexOf(song) === currentSongIndex);
         const nextIndex = getNextSongIndex(currentIndex);
-        
+
         if (nextIndex >= 0) {
           playSong(nextIndex);
         }
@@ -1113,629 +1165,737 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   const filteredSongs = getFilteredSongs();
   const currentSong = currentSongIndex >= 0 ? songs[currentSongIndex] : null;
+  const favoriteSongs = songs.filter((song) => favorites.includes(song.id));
   // songs 전체에서 사용된 태그 수집 (태그 탭 버튼 목록)
   const allTags = Array.from(
     new Set(songs.flatMap((s) => (Array.isArray(s.tags) ? s.tags : [])))
   ).sort((a, b) => a.localeCompare(b, 'ko'));
 
+  // 곡 설명("제목|본문|설교자|구분|날짜") 파싱
+  const parseSermon = (description?: string) =>
+    description
+      ?.split('|')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0) ?? [];
+
+  const currentSermon = parseSermon(currentSong?.description);
+  const miniSubtitle =
+    currentSermon[2] || currentSong?.category || '수영로말씀적용찬양';
+
+  // 곡 목록 한 줄 렌더러 (찬양/검색/즐겨찾기 공통)
+  const renderSongList = (
+    list: Song[],
+    onPick: (index: number) => void,
+    emptyText: string,
+  ) => {
+    if (list.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <Music className="h-8 w-8 text-gray-600 mx-auto mb-2" />
+          <p className="text-gray-400 text-sm">{emptyText}</p>
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-1.5">
+        {list.map((song, index) => {
+          const isCurrentSong = songs.indexOf(song) === currentSongIndex;
+          return (
+            <div
+              key={song.id}
+              ref={isCurrentSong ? currentSongRowRef : null}
+              onClick={() => onPick(index)}
+              className={`px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
+                isCurrentSong
+                  ? 'bg-gradient-to-r from-purple-500/25 to-pink-500/25 border border-purple-500/40'
+                  : 'bg-slate-800/40 border border-slate-700/60 hover:bg-slate-700/50 active:bg-slate-700/70'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500 font-mono w-5 flex-shrink-0 text-xs text-center">
+                  {index + 1}
+                </span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1">
+                    <span className="text-white truncate text-sm">{song.title}</span>
+                    {index < 2 && (
+                      <SunMedium className="w-4 h-4 text-pink-400 flex-shrink-0 animate-pulse" />
+                    )}
+                    {isCurrentSong && isPlaying && (
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <span className="w-0.5 h-2 bg-purple-400 rounded-full animate-pulse" />
+                        <span className="w-0.5 h-3 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }} />
+                        <span className="w-0.5 h-1.5 bg-purple-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }} />
+                      </div>
+                    )}
+                  </div>
+                  {(() => {
+                    const meta = parseSermon(song.description);
+                    const sub = meta[2] || song.category;
+                    return sub ? (
+                      <p className="text-[11px] text-purple-300/70 truncate">{sub}</p>
+                    ) : null;
+                  })()}
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShareClick({ id: song.id, title: song.title });
+                  }}
+                  className="flex-shrink-0 p-1.5 rounded hover:bg-slate-600/40 transition-colors"
+                  aria-label={`${song.title} 공유하기`}
+                  title="공유하기"
+                >
+                  <Share2 className="h-4 w-4 text-gray-500 hover:text-purple-300" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleFavorite(song.id);
+                  }}
+                  className="flex-shrink-0 p-1.5 rounded hover:bg-slate-600/40 transition-colors"
+                  aria-label={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
+                  title={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
+                >
+                  <Star
+                    className={`h-4 w-4 ${
+                      isFavorite(song.id)
+                        ? 'fill-pink-400 text-pink-400'
+                        : 'text-gray-500 hover:fill-pink-400 hover:text-pink-400'
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const TABS: { key: MainTabKey; label: string; icon: React.ReactNode }[] = [
+    { key: 'songs', label: '찬양', icon: <Music className="h-5 w-5" /> },
+    { key: 'search', label: '검색', icon: <Search className="h-5 w-5" /> },
+    { key: 'favorites', label: '즐겨찾기', icon: <Star className="h-5 w-5" /> },
+    { key: 'notices', label: '공지', icon: <Bell className="h-5 w-5" /> },
+  ];
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <div className="flex flex-col min-h-screen max-w-md mx-auto">
-        
-        <div className="flex-shrink-0 p-4 pb-2">
-          <div className="flex items-center gap-1">
-            <div className="flex items-center gap-2 min-w-0 flex-1">
-              <div className="w-10 h-10 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
+      <div className="relative flex flex-col min-h-screen max-w-md mx-auto">
+
+        {/* ===== 헤더 ===== */}
+        <header className="sticky top-0 z-30 bg-slate-900/85 backdrop-blur border-b border-purple-500/20">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-9 h-9 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
                 <Music className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-lg font-bold leading-tight">SY Music</h1>
-                <p className="text-xs text-purple-300 truncate">수영로말씀적용찬양</p>
+                <h1 className="text-base font-bold leading-tight">SY Music</h1>
+                <p className="text-[11px] text-purple-300 truncate">수영로말씀적용찬양</p>
               </div>
             </div>
 
-            <div className="flex items-center flex-shrink-0">
+            <div ref={menuRef} className="relative flex-shrink-0">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsNoticeOpen(true)}
-                aria-label={
-                  noticeUnreadCount > 0
-                    ? `공지 ${noticeUnreadCount}건 (안 읽음)`
-                    : '공지사항 열기'
-                }
-                title="공지사항"
-                className="text-pink-300 hover:text-white hover:bg-transparent px-2 py-2 relative font-semibold transition-colors"
+                onClick={() => setIsMenuOpen((v) => !v)}
+                aria-label="메뉴 열기"
+                title="메뉴"
+                className="text-white hover:text-white hover:bg-transparent"
+                style={{ padding: '8px', lineHeight: 0, height: 'auto' }}
               >
-                News
-                {noticeUnreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-pulse border-2 border-slate-900" />
-                )}
+                <Menu style={{ width: '26px', height: '26px' }} strokeWidth={1.5} color="white" />
               </Button>
 
-              <div ref={menuRef} className="relative">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setIsMenuOpen((v) => !v)}
-                  aria-label="메뉴 열기"
-                  title="메뉴"
-                  className="text-white font-bold hover:text-white hover:bg-transparent"
-                  style={{ padding: '8px', lineHeight: 0, height: 'auto' }}
-                >
-                  <Menu
-                    style={{ width: '28px', height: '28px' }}
-                    strokeWidth={1.5}
-                    color="white"
-                  />
-                </Button>
+              {isMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 w-52 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg overflow-hidden z-50">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGitaOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                  >
+                    🎸 카포·조옮김
+                  </button>
+                  <div className="h-px bg-purple-500/30" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsTunerOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                  >
+                    🎵 기타조율기
+                  </button>
+                  <div className="h-px bg-purple-500/30" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast('🎹 메트로놈은 준비 중입니다.');
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-gray-400 hover:bg-purple-500/20 transition-colors"
+                  >
+                    🎹 메트로놈 <span className="text-[10px] text-gray-500">(준비 중)</span>
+                  </button>
+                  <div className="h-px bg-purple-500/30" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAboutOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                  >
+                    ℹ️ 개발자 정보
+                  </button>
 
-                {isMenuOpen && (
-                  <div className="absolute right-0 top-full mt-1 w-44 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg overflow-hidden z-50">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsGitaOpen(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                    >
-                      🎸 카포·조옮김
-                    </button>
-                    <div className="h-px bg-purple-500/30" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsTunerOpen(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                    >
-                      🎵 기타조율기
-                    </button>
-                    <div className="h-px bg-purple-500/30" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setIsAboutOpen(true);
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                    >
-                      ℹ️ 개발자 정보
-                    </button>
-                  </div>
-                )}
-              </div>
+                  {isAdminRoute && isAdmin && (
+                    <>
+                      <div className="h-px bg-purple-500/30" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleAdminManagementAccess();
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                      >
+                        ⚙️ 곡 관리
+                      </button>
+                      <div className="h-px bg-purple-500/30" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAnalyticsOpen(true);
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                      >
+                        📊 통계
+                      </button>
+                      <div className="h-px bg-purple-500/30" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleAdminLogout();
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2.5 text-sm text-red-300 hover:bg-red-500/10 transition-colors"
+                      >
+                        🚪 로그아웃
+                      </button>
+                    </>
+                  )}
+
+                  {isAdminRoute && !isAdmin && (
+                    <>
+                      <div className="h-px bg-purple-500/30" />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleAdminManagementAccess();
+                          setIsMenuOpen(false);
+                        }}
+                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                      >
+                        🔐 관리자 로그인
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
-          {isAdminRoute && (
-            <div className="mt-2 flex items-center justify-end space-x-2">
-              {isOfflineMode && (
-                <div className="flex items-center space-x-1 text-xs mr-1">
-                  <WifiOff className="h-3 w-3 text-orange-400" />
-                  <span className="text-orange-400 hidden sm:inline">오프라인</span>
+          {isOfflineMode && (
+            <div className="flex items-center gap-1 px-4 pb-2 -mt-1 text-xs text-orange-400">
+              <WifiOff className="h-3 w-3" />
+              <span>오프라인 모드</span>
+            </div>
+          )}
+        </header>
+
+        {/* ===== 본문 (탭별 화면) ===== */}
+        <main
+          className="flex-1 overflow-y-auto"
+          style={{ paddingBottom: currentSong ? 148 : 80 }}
+        >
+          {/* --- 🎵 찬양 탭 --- */}
+          {activeTab === 'songs' && (
+            <div className="px-4 py-4 space-y-3">
+              {isFavoritesMode && (
+                <div className="flex items-center justify-between bg-purple-900/40 border border-purple-400/40 rounded-lg px-3 py-2">
+                  <span className="text-xs text-purple-100 flex items-center">
+                    <Star className="h-3.5 w-3.5 mr-1 fill-pink-400 text-pink-400" />
+                    즐겨찾기 재생 중 ({favorites.length}곡)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={exitFavoritesMode}
+                    className="text-xs text-purple-200 hover:text-white flex items-center"
+                  >
+                    <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                    전체 목록
+                  </button>
                 </div>
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 p-2"
-                onClick={() => setIsAnalyticsOpen(true)}
-                title="사용 통계 보기"
-                aria-label="사용 통계 보기"
-              >
-                <BarChart3 className="h-5 w-5" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-purple-400 hover:text-purple-300 p-2"
-                onClick={handleAdminManagementAccess}
-                title="관리자 메뉴"
-              >
-                <Settings className="h-4 w-4" />
-              </Button>
-              {isAdmin && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-red-400 hover:text-red-300 p-2"
-                  onClick={handleAdminLogout}
-                  title="로그아웃"
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span className="hidden sm:inline ml-1 text-xs">로그아웃</span>
-                </Button>
+
+              <div className="flex items-center gap-2 text-sm text-purple-200">
+                <List className="h-4 w-4" />
+                <span>곡 목록 ({filteredSongs.length})</span>
+              </div>
+
+              {renderSongList(
+                filteredSongs,
+                handlePickSong,
+                isFavoritesMode ? '즐겨찾기한 곡이 없어요' : '곡이 없습니다',
               )}
             </div>
           )}
 
-          <div className="mt-3 space-y-2">
-            {isFavoritesMode ? (
-              <Button
-                onClick={exitFavoritesMode}
-                variant="outline"
-                className="w-full h-12 bg-slate-800/50 border border-purple-400 text-white hover:bg-purple-900/40 hover:text-white justify-start"
-              >
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                전체 목록으로
-                <span className="ml-auto text-xs text-purple-200/90 flex items-center">
-                  <Star className="h-3 w-3 mr-1 fill-pink-400 text-pink-400" />
-                  즐겨찾기 {favorites.length}곡
-                </span>
-              </Button>
-            ) : (
-              <>
-                {/* 검색 탭 바 — 모바일에서 한 줄 4개 */}
-                <div className="grid grid-cols-4 gap-1">
-                  {SEARCH_TABS.map((t) => (
-                    <button
-                      key={t.key}
-                      type="button"
-                      onClick={() => setSearchTab(t.key)}
-                      className={`h-9 px-0.5 sm:px-1 rounded-md text-sm font-medium whitespace-nowrap transition-colors ${
-                        searchTab === t.key
-                          ? 'bg-purple-600 text-white shadow-sm shadow-purple-900/40'
-                          : 'bg-slate-800/50 text-gray-300 border border-purple-400/30 hover:bg-purple-900/40'
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
+          {/* --- 🔍 검색 탭 --- */}
+          {activeTab === 'search' && (
+            <div className="px-4 py-4 space-y-3">
+              <div className="grid grid-cols-4 gap-1">
+                {SEARCH_TABS.map((t) => (
+                  <button
+                    key={t.key}
+                    type="button"
+                    onClick={() => setSearchTab(t.key)}
+                    className={`h-10 rounded-md text-sm font-medium transition-colors ${
+                      searchTab === t.key
+                        ? 'bg-purple-600 text-white shadow-sm shadow-purple-900/40'
+                        : 'bg-slate-800/50 text-gray-300 border border-purple-400/30 hover:bg-purple-900/40'
+                    }`}
+                  >
+                    {t.label}
+                  </button>
+                ))}
+              </div>
 
-                {/* 탭별 패널 */}
-                <div className="mt-2">
-                  {searchTab === 'category' && (
-                    <Select value={currentCategory} onValueChange={setCurrentCategory}>
-                      <SelectTrigger className="w-full bg-slate-800/50 border-purple-400 text-white h-12">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-slate-800 border-slate-700">
-                        <SelectItem value="전체" className="text-white hover:bg-purple-600/20">
-                          🎵 전체
-                        </SelectItem>
-                        <SelectItem value="금철" className="text-white hover:bg-purple-600/20">
-                          🌙 금철
-                        </SelectItem>
-                        <SelectItem value="주일" className="text-white hover:bg-purple-600/20">
-                          ⛪ 주일
-                        </SelectItem>
-                        <SelectItem value="QT" className="text-white hover:bg-purple-600/20">
-                          📖 QT
-                        </SelectItem>
-                        <SelectItem value="기타" className="text-white hover:bg-purple-600/20">
-                          🎼 기타
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  )}
+              <div>
+                {searchTab === 'category' && (
+                  <Select value={currentCategory} onValueChange={setCurrentCategory}>
+                    <SelectTrigger className="w-full bg-slate-800/50 border-purple-400 text-white h-12">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      <SelectItem value="전체" className="text-white hover:bg-purple-600/20">🎵 전체</SelectItem>
+                      <SelectItem value="금철" className="text-white hover:bg-purple-600/20">🌙 금철</SelectItem>
+                      <SelectItem value="주일" className="text-white hover:bg-purple-600/20">⛪ 주일</SelectItem>
+                      <SelectItem value="QT" className="text-white hover:bg-purple-600/20">📖 QT</SelectItem>
+                      <SelectItem value="기타" className="text-white hover:bg-purple-600/20">🎼 기타</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
 
-                  {searchTab === 'tags' && (
-                    allTags.length === 0 ? (
-                      <p className="text-xs text-gray-400 py-2 px-1">
-                        아직 생성된 태그가 없습니다.
-                      </p>
-                    ) : (
-                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto">
-                        {allTags.map((tag) => {
-                          const active = selectedTags.includes(tag);
-                          return (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() =>
-                                setSelectedTags((prev) =>
-                                  prev.includes(tag)
-                                    ? prev.filter((x) => x !== tag)
-                                    : [...prev, tag]
-                                )
-                              }
-                              className={`px-2 py-1 rounded-full text-[11px] transition-colors ${
-                                active
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
-                              }`}
-                            >
-                              #{tag}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    )
-                  )}
-
-                  {searchTab === 'mood' && (
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {MOOD_PRESETS.map((m) => {
-                        const active = selectedMood === m.label;
+                {searchTab === 'tags' && (
+                  allTags.length === 0 ? (
+                    <p className="text-xs text-gray-400 py-2 px-1">아직 생성된 태그가 없습니다.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
+                      {allTags.map((tag) => {
+                        const active = selectedTags.includes(tag);
                         return (
                           <button
-                            key={m.label}
+                            key={tag}
                             type="button"
-                            onClick={() => setSelectedMood(active ? null : m.label)}
-                            className={`px-2 py-2 rounded-md text-[11px] sm:text-xs transition-colors ${
+                            onClick={() =>
+                              setSelectedTags((prev) =>
+                                prev.includes(tag)
+                                  ? prev.filter((x) => x !== tag)
+                                  : [...prev, tag]
+                              )
+                            }
+                            className={`px-2.5 py-1.5 rounded-full text-xs transition-colors ${
                               active
                                 ? 'bg-purple-600 text-white'
                                 : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
                             }`}
                           >
-                            {m.label}
+                            #{tag}
                           </button>
                         );
                       })}
                     </div>
-                  )}
+                  )
+                )}
 
-                  {searchTab === 'lyrics' && (
-                    <Input
-                      value={lyricsQuery}
-                      onChange={(e) => setLyricsQuery(e.target.value)}
-                      placeholder="가사 키워드를 입력하세요"
-                      className="w-full bg-slate-800/50 border-purple-400/40 text-white h-10 text-sm"
-                    />
-                  )}
-                </div>
-
-                <Button
-                  onClick={playFavorites}
-                  variant="outline"
-                  className="w-full h-10 bg-slate-800/50 border border-purple-400/40 text-white hover:bg-purple-900/40 hover:text-white hover:border-purple-400/60 justify-start"
-                >
-                  <Star className="h-4 w-4 mr-2 fill-pink-400 text-pink-400" />
-                  즐겨찾기 재생 ({favorites.length})
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className="flex-shrink-0 px-4 pb-2">
-          <Card className="bg-slate-800/50 border-slate-700">
-            <CardHeader className="p-2 pb-1">
-              <CardTitle className="text-xs text-white flex items-center space-x-1">
-                <List className="h-3 w-3" />
-                <span>곡 목록</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-2 pt-0">
-              <div className="max-h-32 overflow-y-auto">
-                {filteredSongs.length === 0 ? (
-                  <div className="text-center py-3">
-                    <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
-                    <p className="text-gray-400 text-xs">
-                      {isFavoritesMode
-                        ? '즐겨찾기한 곡이 없어요'
-                        : searchTab === 'category' && currentCategory === '전체'
-                          ? '기본 곡을 설치하는 중입니다...'
-                          : '검색 결과가 없습니다'
-                      }
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-0.5">
-                    {filteredSongs.map((song, index) => {
-                      const isCurrentSong = songs.indexOf(song) === currentSongIndex;
+                {searchTab === 'mood' && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {MOOD_PRESETS.map((m) => {
+                      const active = selectedMood === m.label;
                       return (
-                        <div
-                          key={song.id}
-                          ref={isCurrentSong ? currentSongRowRef : null}
-                          onClick={() => playSong(index)}
-                          className={`px-2 py-1 rounded cursor-pointer transition-all text-xs ${
-                            isCurrentSong
-                              ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30'
-                              : 'bg-slate-700/30 hover:bg-slate-700/50 active:bg-slate-700/70'
+                        <button
+                          key={m.label}
+                          type="button"
+                          onClick={() => setSelectedMood(active ? null : m.label)}
+                          className={`px-2 py-3 rounded-md text-xs transition-colors ${
+                            active
+                              ? 'bg-purple-600 text-white'
+                              : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
                           }`}
                         >
-                          <div className="flex items-center space-x-2">
-                            <span className="text-gray-400 font-mono w-4 flex-shrink-0 text-xs">
-                              {index + 1}
-                            </span>
-                            <div className="flex-1 min-w-0 flex items-center space-x-1">
-                              <span className="text-white truncate text-xs">{song.title}</span>
-                              {index < 2 && (
-                                <SunMedium className="w-4 h-4 text-pink-400 flex-shrink-0 ml-1 animate-pulse" />
-                              )}
-                              {isCurrentSong && (
-                                <div className="flex items-center space-x-0.5">
-                                  <div className="w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse"></div>
-                                  <div className="w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                                  <div className="w-0.5 h-0.5 bg-purple-400 rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
-                                </div>
-                              )}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleShareClick({ id: song.id, title: song.title });
-                              }}
-                              className="flex-shrink-0 p-1 -m-1 rounded hover:bg-slate-600/40 transition-colors"
-                              aria-label={`${song.title} 공유하기`}
-                              title="공유하기"
-                            >
-                              <Share2 className="h-3.5 w-3.5 text-gray-500 hover:text-purple-300" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleFavorite(song.id);
-                              }}
-                              className="flex-shrink-0 p-1 -m-1 rounded hover:bg-slate-600/40 transition-colors"
-                              aria-label={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
-                              title={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
-                            >
-                              <Star
-                                className={`h-3.5 w-3.5 ${
-                                  isFavorite(song.id)
-                                    ? 'fill-pink-400 text-pink-400'
-                                    : 'text-gray-500 hover:fill-pink-400 hover:text-pink-400'
-                                }`}
-                              />
-                            </button>
-                          </div>
-                        </div>
+                          {m.label}
+                        </button>
                       );
                     })}
                   </div>
                 )}
+
+                {searchTab === 'lyrics' && (
+                  <Input
+                    value={lyricsQuery}
+                    onChange={(e) => setLyricsQuery(e.target.value)}
+                    placeholder="가사 키워드를 입력하세요"
+                    className="w-full bg-slate-800/50 border-purple-400/40 text-white h-12 text-sm"
+                  />
+                )}
               </div>
-            </CardContent>
-          </Card>
+
+              <div className="flex items-center gap-2 text-sm text-purple-200 pt-1">
+                <Search className="h-4 w-4" />
+                <span>검색 결과 ({filteredSongs.length})</span>
+              </div>
+
+              {renderSongList(filteredSongs, handlePickFromSearch, '검색 결과가 없습니다')}
+            </div>
+          )}
+
+          {/* --- ⭐ 즐겨찾기 탭 --- */}
+          {activeTab === 'favorites' && (
+            <div className="px-4 py-4 space-y-3">
+              <Button
+                onClick={handlePlayAllFavorites}
+                className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white justify-center"
+              >
+                <Play className="h-4 w-4 mr-2" />
+                즐겨찾기 재생 시작 ({favoriteSongs.length})
+              </Button>
+
+              <div className="flex items-center gap-2 text-sm text-purple-200 pt-1">
+                <Star className="h-4 w-4 fill-pink-400 text-pink-400" />
+                <span>즐겨찾기 목록 ({favoriteSongs.length})</span>
+              </div>
+
+              {renderSongList(
+                favoriteSongs,
+                (index) => playFavoriteSong(favoriteSongs[index]),
+                '즐겨찾기한 곡이 없어요. 곡 옆 ⭐ 버튼으로 추가해보세요!',
+              )}
+            </div>
+          )}
+
+          {/* --- 📰 공지 탭 --- */}
+          {activeTab === 'notices' && (
+            <NoticePanel
+              notices={notices}
+              loading={noticesLoading}
+              lastReadAt={noticeLastReadAt}
+              onMarkAllRead={markAllNoticesRead}
+              isAdmin={isAdminRoute && isAdmin}
+            />
+          )}
+        </main>
+
+        {/* ===== 미니 플레이어 + 하단 탭바 ===== */}
+        <div className="fixed bottom-0 inset-x-0 z-40">
+          <div className="max-w-md mx-auto">
+            {currentSong && !isFullPlayerOpen && (
+              <div
+                role="button"
+                tabIndex={0}
+                onClick={() => setIsFullPlayerOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setIsFullPlayerOpen(true);
+                  }
+                }}
+                className="bg-slate-800/90 backdrop-blur border-t border-purple-500/20 px-3 py-2 flex items-center gap-3 cursor-pointer"
+              >
+                <div className="w-9 h-9 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
+                  <Music className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-semibold text-white truncate">
+                    {currentSong.title}
+                  </p>
+                  <p className="text-[10px] text-purple-300 truncate">{miniSubtitle}</p>
+                  <div className="mt-1 h-1 bg-slate-600 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-100"
+                      style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    togglePlay();
+                  }}
+                  className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-white"
+                  aria-label={isPlaying ? '일시정지' : '재생'}
+                >
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 ml-0.5" />}
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    skipToNext();
+                  }}
+                  className="flex-shrink-0 w-9 h-9 rounded-full text-white hover:bg-purple-500/20 flex items-center justify-center"
+                  aria-label="다음 곡"
+                >
+                  <SkipForward className="h-4 w-4" />
+                </button>
+              </div>
+            )}
+
+            <nav className="grid grid-cols-4 bg-slate-900/95 backdrop-blur border-t border-purple-500/20">
+              {TABS.map((tab) => {
+                const active = activeTab === tab.key;
+                return (
+                  <button
+                    key={tab.key}
+                    type="button"
+                    onClick={() => setActiveTab(tab.key)}
+                    className={`relative flex flex-col items-center justify-center gap-0.5 py-2.5 transition-colors ${
+                      active ? 'text-purple-400' : 'text-gray-400 hover:text-gray-200'
+                    }`}
+                    aria-label={tab.label}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    <span className="relative">
+                      {tab.icon}
+                      {tab.key === 'notices' && noticeUnreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center border border-slate-900">
+                          {noticeUnreadCount > 9 ? '9+' : noticeUnreadCount}
+                        </span>
+                      )}
+                    </span>
+                    <span className="text-[11px] font-medium">{tab.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
         </div>
 
-        <div className="flex flex-col">
-          
-          <div className="flex-shrink-0 px-4 pb-2">
-            <Card className="bg-slate-800/50 border-slate-700">
-              <CardContent className="p-3">
-                {currentSong ? (
-                  <div className="space-y-3">
-                    <div className="space-y-1">
-                      <div 
-                        className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
-                        onClick={handleSeek}
-                      >
-                        <div 
-                          className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-100"
-                          style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
-                        />
-                      </div>
-                      <div className="flex justify-between text-xs text-gray-400">
-                        <span>{formatTime(currentTime)}</span>
-                        <span>{formatTime(duration)}</span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-center space-x-3">
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={toggleRepeatMode}
-                        className={`p-2 relative hover:bg-purple-500/20 ${
-                          repeatMode === 'off'
-                            ? 'text-gray-500 hover:text-gray-400'
-                            : 'text-purple-400 hover:text-purple-300'
-                        }`}
-                      >
-                        {repeatMode === 'one' ? (
-                          <div className="relative">
-                            <Repeat className="h-4 w-4" />
-                            <span className="absolute -top-1 -right-1 text-xs font-bold bg-purple-500 text-white rounded-full w-3 h-3 flex items-center justify-center leading-none">
-                              1
-                            </span>
-                          </div>
-                        ) : (
-                          <Repeat className="h-4 w-4" />
-                        )}
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={skipToPrevious}
-                        className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
-                      >
-                        <SkipBack className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button
-                        onClick={togglePlay}
-                        size="sm"
-                        className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-12 h-12 rounded-full"
-                        disabled={!currentSong.audioUrl}
-                      >
-                        {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={skipToNext}
-                        className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
-                      >
-                        <SkipForward className="h-4 w-4" />
-                      </Button>
-                      
-                      <Button 
-                        variant="ghost" 
-                        size="sm"
-                        onClick={toggleShuffle}
-                        className={`p-2 hover:bg-purple-500/20 ${
-                          isShuffleEnabled
-                            ? 'text-purple-400 hover:text-purple-300'
-                            : 'text-gray-500 hover:text-gray-400'
-                        }`}
-                      >
-                        <Shuffle className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-4 space-y-2">
-                    <Music className="h-8 w-8 text-gray-600 mx-auto" />
-                    <div>
-                      <p className="text-gray-400 text-sm">재생목록</p>
-                      <p className="text-xs text-gray-500">곡을 선택해주세요</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+        {/* ===== 전체 플레이어 오버레이 ===== */}
+        {isFullPlayerOpen && currentSong && (
+          <div className="fixed inset-0 z-[90] bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
+            <div className="max-w-md mx-auto h-full flex flex-col">
+              <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsFullPlayerOpen(false)}
+                  aria-label="플레이어 닫기"
+                  title="닫기"
+                  className="w-10 h-10 rounded-full hover:bg-slate-700/60 flex items-center justify-center text-white"
+                >
+                  <ChevronDown className="h-6 w-6" />
+                </button>
+                <span className="text-xs text-purple-300">재생 중</span>
+                <div className="w-10 h-10" />
+              </div>
 
-          <div className="flex-1 min-h-0 px-4 pb-4">
-            <Card className="bg-slate-800/50 border-slate-700 h-full flex flex-col">
-              <CardHeader className="p-3 pb-2 flex-shrink-0">
-                <CardTitle className="text-sm text-white flex items-center space-x-2">
-                  <Scroll className="h-4 w-4" />
-                  <span>가사</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-3 pt-0 flex-1 min-h-0 overflow-hidden">
-                <div className="h-full overflow-y-auto bg-slate-700/30 rounded-lg p-3">
-                  {currentSong && currentSong.lyrics ? (
-                    <div className="space-y-3">
-                      <div className="text-left border-b border-slate-600 pb-2 text-xs space-y-1 break-keep">
-                        {(() => {
-                          const parts =
-                            currentSong.description
-                              ?.split('|')
-                              .map((s) => s.trim())
-                              .filter((s) => s.length > 0) ?? [];
-                          return (
-                            <>
-                              {parts[0] && (
-                                <p>
-                                  <span className="text-gray-500">· </span>
-                                  <span className="text-gray-400">설교제목: </span>
-                                  <span className="text-gray-200">{parts[0]}</span>
-                                </p>
-                              )}
-                              {(parts[1] || parts[2]) && (
-                                <p>
-                                  {parts[1] && (
-                                    <>
-                                      <span className="text-gray-500">· </span>
-                                      <span className="text-gray-400">설교본문: </span>
-                                      <span className="text-gray-200">{parts[1]}</span>
-                                    </>
-                                  )}
-                                  {parts[1] && parts[2] && (
-                                    <span className="mx-1 text-gray-500">|</span>
-                                  )}
-                                  {parts[2] && (
-                                    <>
-                                      <span className="text-gray-500">· </span>
-                                      <span className="text-gray-400">설교자: </span>
-                                      <span className="text-gray-200">{parts[2]}</span>
-                                    </>
-                                  )}
-                                </p>
-                              )}
-                              {(parts[3] || parts[4]) && (
-                                <p>
-                                  {parts[3] && (
-                                    <>
-                                      <span className="text-gray-500">· </span>
-                                      <span className="text-gray-400">구분: </span>
-                                      <span className="text-gray-200">{parts[3]}</span>
-                                    </>
-                                  )}
-                                  {parts[3] && parts[4] && (
-                                    <span className="mx-1 text-gray-500">|</span>
-                                  )}
-                                  {parts[4] && (
-                                    <>
-                                      <span className="text-gray-500">· </span>
-                                      <span className="text-gray-400">날짜: </span>
-                                      <span className="text-gray-200">{parts[4]}</span>
-                                    </>
-                                  )}
-                                </p>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </div>
-                      {currentSong.title && (
-                        <h3 className="text-2xl font-bold text-white text-center break-keep">
-                          {currentSong.title}
-                        </h3>
-                      )}
-                      <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
-                        {currentSong.lyrics}
-                      </div>
-                      <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
-                        {currentSong.youtubeUrl && (
-                          <Button
-                            size="sm"
-                            onClick={() => window.open(currentSong.youtubeUrl, '_blank')}
-                            className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-xs transition-colors duration-200"
-                          >
-                            <Youtube className="h-3 w-3 mr-1 text-red-500" />
-                            설교YouTube
-                          </Button>
-                        )}
-                        <button
-                          onClick={() => handleShareClick({ id: currentSong.id, title: currentSong.title })}
-                          onPointerDown={() => setIsSharePressed(true)}
-                          onPointerUp={() => setIsSharePressed(false)}
-                          onPointerLeave={() => setIsSharePressed(false)}
-                          onPointerCancel={() => setIsSharePressed(false)}
-                          className={`h-9 px-3 rounded-md font-semibold text-xs inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
-                            isSharePressed
-                              ? 'bg-purple-950 text-pink-400 scale-[0.98]'
-                              : 'bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400'
-                          }`}
-                        >
-                          <Share2 className="h-3 w-3" />
-                          이 찬양 공유 하기
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center space-y-2">
-                      <Scroll className="h-8 w-8 text-gray-600 mx-auto" />
-                      <div>
-                        <p className="text-gray-400 text-sm">
-                          {currentSong ? '이 곡에는 가사가 없습니다' : '곡을 선택하면 가사가 표시됩니다'}
+              <div className="flex-1 min-h-0 overflow-y-auto px-5 pb-6 space-y-5">
+                <div className="text-center pt-2">
+                  <div className="w-24 h-24 mx-auto rounded-2xl bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-4">
+                    <Music className="h-12 w-12 text-white" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-white break-keep">
+                    {currentSong.title}
+                  </h2>
+                  {currentSermon.length > 0 && (
+                    <div className="mt-2 text-xs text-purple-200/90 space-y-0.5 break-keep">
+                      {currentSermon[0] && (
+                        <p>
+                          <span className="text-gray-400">설교제목: </span>
+                          {currentSermon[0]}
                         </p>
-                        {currentSong && (
-                          <>
-                            <p className="text-xs text-gray-500 mt-1">
-                              관리자가 가사를 추가할 수 있습니다
-                            </p>
-                            <div className="pt-3">
-                              <button
-                                onClick={() => handleShareClick({ id: currentSong.id, title: currentSong.title })}
-                                onPointerDown={() => setIsSharePressed(true)}
-                                onPointerUp={() => setIsSharePressed(false)}
-                                onPointerLeave={() => setIsSharePressed(false)}
-                                onPointerCancel={() => setIsSharePressed(false)}
-                                className={`h-9 px-3 rounded-md border font-semibold text-xs inline-flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
-                                  isSharePressed
-                                    ? 'bg-purple-950 text-pink-300 border-pink-400/70 scale-[0.98]'
-                                    : 'bg-purple-800 text-white border-purple-400/60 hover:text-pink-300 hover:border-pink-400/70'
-                                }`}
-                              >
-                                <Share2 className="h-3 w-3" />
-                                곡 공유하기
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                      )}
+                      {(currentSermon[1] || currentSermon[2]) && (
+                        <p>
+                          {currentSermon[1] && (
+                            <>
+                              <span className="text-gray-400">설교본문: </span>
+                              {currentSermon[1]}
+                            </>
+                          )}
+                          {currentSermon[1] && currentSermon[2] && (
+                            <span className="mx-1 text-gray-500">|</span>
+                          )}
+                          {currentSermon[2] && (
+                            <>
+                              <span className="text-gray-400">설교자: </span>
+                              {currentSermon[2]}
+                            </>
+                          )}
+                        </p>
+                      )}
+                      {(currentSermon[3] || currentSermon[4]) && (
+                        <p>
+                          {currentSermon[3] && (
+                            <>
+                              <span className="text-gray-400">구분: </span>
+                              {currentSermon[3]}
+                            </>
+                          )}
+                          {currentSermon[3] && currentSermon[4] && (
+                            <span className="mx-1 text-gray-500">|</span>
+                          )}
+                          {currentSermon[4] && (
+                            <>
+                              <span className="text-gray-400">날짜: </span>
+                              {currentSermon[4]}
+                            </>
+                          )}
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
-              </CardContent>
-            </Card>
+
+                <div className="space-y-1">
+                  <div
+                    className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
+                    onClick={handleSeek}
+                  >
+                    <div
+                      className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-100"
+                      style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                    />
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400">
+                    <span>{formatTime(currentTime)}</span>
+                    <span>{formatTime(duration)}</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleRepeatMode}
+                    className={`p-2 relative hover:bg-purple-500/20 ${
+                      repeatMode === 'off'
+                        ? 'text-gray-500 hover:text-gray-400'
+                        : 'text-purple-400 hover:text-purple-300'
+                    }`}
+                  >
+                    {repeatMode === 'one' ? (
+                      <div className="relative">
+                        <Repeat className="h-5 w-5" />
+                        <span className="absolute -top-1 -right-1 text-xs font-bold bg-purple-500 text-white rounded-full w-3 h-3 flex items-center justify-center leading-none">
+                          1
+                        </span>
+                      </div>
+                    ) : (
+                      <Repeat className="h-5 w-5" />
+                    )}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={skipToPrevious}
+                    className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
+                  >
+                    <SkipBack className="h-6 w-6" />
+                  </Button>
+
+                  <Button
+                    onClick={togglePlay}
+                    size="sm"
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-16 h-16 rounded-full"
+                    disabled={!currentSong.audioUrl}
+                  >
+                    {isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-1" />}
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={skipToNext}
+                    className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2"
+                  >
+                    <SkipForward className="h-6 w-6" />
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleShuffle}
+                    className={`p-2 hover:bg-purple-500/20 ${
+                      isShuffleEnabled
+                        ? 'text-purple-400 hover:text-purple-300'
+                        : 'text-gray-500 hover:text-gray-400'
+                    }`}
+                  >
+                    <Shuffle className="h-5 w-5" />
+                  </Button>
+                </div>
+
+                <div className="bg-slate-800/50 border border-slate-700 rounded-xl p-4">
+                  <div className="flex items-center gap-2 text-sm text-white mb-3">
+                    <Scroll className="h-4 w-4" />
+                    <span>가사</span>
+                  </div>
+                  {currentSong.lyrics ? (
+                    <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
+                      {currentSong.lyrics}
+                    </div>
+                  ) : (
+                    <p className="text-center text-sm text-gray-400 py-6">
+                      이 곡에는 가사가 없습니다
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex items-center justify-center gap-2 flex-wrap pb-2">
+                  {currentSong.youtubeUrl && (
+                    <Button
+                      size="sm"
+                      onClick={() => window.open(currentSong.youtubeUrl, '_blank')}
+                      className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-xs transition-colors duration-200"
+                    >
+                      <Youtube className="h-3 w-3 mr-1 text-red-500" />
+                      설교YouTube
+                    </Button>
+                  )}
+                  <button
+                    onClick={() => handleShareClick({ id: currentSong.id, title: currentSong.title })}
+                    onPointerDown={() => setIsSharePressed(true)}
+                    onPointerUp={() => setIsSharePressed(false)}
+                    onPointerLeave={() => setIsSharePressed(false)}
+                    onPointerCancel={() => setIsSharePressed(false)}
+                    className={`h-9 px-3 rounded-md font-semibold text-xs inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                      isSharePressed
+                        ? 'bg-purple-950 text-pink-400 scale-[0.98]'
+                        : 'bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400'
+                    }`}
+                  >
+                    <Share2 className="h-3 w-3" />
+                    이 찬양 공유 하기
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
+        )}
 
         {isAdminRoute && (
         <Dialog open={showAdminDialog} onOpenChange={setShowAdminDialog}>
@@ -1790,8 +1950,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 </Label>
               </div>
               <div className="flex space-x-2">
-                <Button 
-                  onClick={handleAdminLogin} 
+                <Button
+                  onClick={handleAdminLogin}
                   className="flex-1"
                   disabled={isAdminAuthenticating}
                 >
@@ -1804,8 +1964,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     '확인'
                   )}
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={() => setShowAdminDialog(false)}
                   className="flex-1"
                   disabled={isAdminAuthenticating}
@@ -1824,13 +1984,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             <DialogHeader>
               <DialogTitle className="text-white">곡 관리</DialogTitle>
             </DialogHeader>
-            
+
             <Tabs value={activeAdminTab} onValueChange={setActiveAdminTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 bg-slate-700">
                 <TabsTrigger value="add" className="text-white data-[state=active]:bg-purple-600">새 곡 추가</TabsTrigger>
                 <TabsTrigger value="manage" className="text-white data-[state=active]:bg-purple-600">기존 곡 관리</TabsTrigger>
               </TabsList>
-              
+
               <TabsContent value="add" className="space-y-4">
                 <div>
                   <Label htmlFor="new-song-category" className="text-white">카테고리 *</Label>
@@ -1846,7 +2006,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     </SelectContent>
                   </Select>
                 </div>
-                
+
                 <div>
                   <Label htmlFor="new-song-title" className="text-white">곡 제목 *</Label>
                   <Input
@@ -1857,7 +2017,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     placeholder="예: 그 손이 일하시네"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="new-song-description" className="text-white">곡 설명</Label>
                   <Input
@@ -1868,7 +2028,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     placeholder="예: 역대하24:17-27"
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="new-song-youtube" className="text-white">말씀 유튜브 링크</Label>
                   <Input
@@ -1879,7 +2039,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     placeholder="https://youtube.com/watch?v=..."
                   />
                 </div>
-                
+
                 <div>
                   <Label htmlFor="new-song-lyrics" className="text-white">가사</Label>
                   <Textarea
@@ -1891,10 +2051,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     rows={6}
                   />
                 </div>
-                
+
                 <div className="flex space-x-2">
-                  <Button 
-                    onClick={handleAddSong} 
+                  <Button
+                    onClick={handleAddSong}
                     className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500"
                     disabled={isAddingSong || !newSong.title || !newSong.category}
                   >
@@ -1910,8 +2070,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       </>
                     )}
                   </Button>
-                  <Button 
-                    variant="outline" 
+                  <Button
+                    variant="outline"
                     onClick={() => {
                       setNewSong({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '' });
                     }}
@@ -1923,15 +2083,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   </Button>
                 </div>
               </TabsContent>
-              
+
               <TabsContent value="manage" className="space-y-4">
                 {editingSong ? (
                   <div className="space-y-4">
                     <div className="flex items-center justify-between">
                       <h3 className="text-lg font-semibold text-white">곡 수정</h3>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={() => {
                           setEditingSong(null);
                           setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '' });
@@ -1941,7 +2101,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         <X className="h-4 w-4" />
                       </Button>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="edit-song-category" className="text-white">카테고리 *</Label>
                       <Select value={editSongData.category} onValueChange={(value) => setEditSongData({...editSongData, category: value})}>
@@ -1956,7 +2116,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         </SelectContent>
                       </Select>
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="edit-song-title" className="text-white">곡 제목 *</Label>
                       <Input
@@ -1966,7 +2126,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         className="bg-slate-700 border-slate-600 text-white"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="edit-song-description" className="text-white">곡 설명</Label>
                       <Input
@@ -1976,7 +2136,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         className="bg-slate-700 border-slate-600 text-white"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="edit-song-youtube" className="text-white">말씀 유튜브 링크</Label>
                       <Input
@@ -1986,7 +2146,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         className="bg-slate-700 border-slate-600 text-white"
                       />
                     </div>
-                    
+
                     <div>
                       <Label htmlFor="edit-song-lyrics" className="text-white">가사</Label>
                       <Textarea
@@ -1997,17 +2157,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         rows={6}
                       />
                     </div>
-                    
+
                     <div className="flex space-x-2">
-                      <Button 
-                        onClick={handleUpdateSong} 
+                      <Button
+                        onClick={handleUpdateSong}
                         className="flex-1 bg-gradient-to-r from-green-500 to-green-600"
                       >
                         <Save className="h-4 w-4 mr-2" />
                         수정 완료
                       </Button>
-                      <Button 
-                        variant="outline" 
+                      <Button
+                        variant="outline"
                         onClick={() => {
                           setEditingSong(null);
                           setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '' });
@@ -2056,7 +2216,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                 </h4>
                                 <p className="text-xs text-gray-400">{song.category}</p>
                               </div>
-                              
+
                               <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
                                 <Button
                                   variant="ghost"
@@ -2100,16 +2260,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       </div>
 
       <AboutModal open={isAboutOpen} onOpenChange={setIsAboutOpen} songs={songs} />
-
-      <NoticeDialog
-        open={isNoticeOpen}
-        onOpenChange={setIsNoticeOpen}
-        notices={notices}
-        loading={noticesLoading}
-        lastReadAt={noticeLastReadAt}
-        onMarkAllRead={markAllNoticesRead}
-        isAdmin={isAdminRoute && isAdmin}
-      />
 
       {isAdminRoute && (
         <AnalyticsDialog
