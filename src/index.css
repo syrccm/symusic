@@ -95,6 +95,14 @@
     @apply border-border;
   }
 
+  html,
+  body,
+  #root {
+    /* 전역 가로 스크롤 완전 차단 (반응형 안전장치) */
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
   }

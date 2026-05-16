@@ -30,9 +30,9 @@ interface StatCardProps {
 
 function StatCard({ label, value, unit }: StatCardProps) {
   return (
-    <div className="rounded-lg border border-purple-500/30 bg-slate-800/60 p-3 text-center">
+    <div className="rounded-lg border border-purple-500/30 bg-slate-800/60 p-2 sm:p-3 text-center">
       <p className="text-xs text-purple-300 mb-1">{label}</p>
-      <p className="text-2xl font-bold text-white">
+      <p className="text-xl sm:text-2xl font-bold text-white">
         {value.toLocaleString('ko-KR')}
         <span className="text-sm font-normal text-gray-400 ml-0.5">{unit}</span>
       </p>
@@ -92,7 +92,7 @@ export function AnalyticsDialog({ open, onOpenChange, songs }: AnalyticsDialogPr
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md mx-4 bg-gradient-to-b from-purple-900/95 to-slate-900/95 border-purple-500/30 text-gray-200 max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-md bg-gradient-to-b from-purple-900/95 to-slate-900/95 border-purple-500/30 text-gray-200">
         <DialogHeader>
           <DialogTitle className="text-white flex items-center gap-2">
             <BarChart3 className="w-5 h-5 text-purple-300" />
