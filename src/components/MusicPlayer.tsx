@@ -1148,7 +1148,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         <div className="text-center space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-purple-400 mx-auto" />
           <p className="text-white text-lg">음악 플레이어 로딩 중...</p>
-          <p className="text-purple-300 text-sm">기본 곡 설치 및 Firebase 연결 중...</p>
+          <p className="text-purple-300 text-base">기본 곡 설치 및 Firebase 연결 중...</p>
         </div>
       </div>
     );
@@ -1179,7 +1179,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       return (
         <div className="text-center py-12">
           <Music className="h-8 w-8 text-gray-600 mx-auto mb-2" />
-          <p className="text-gray-400 text-sm">{emptyText}</p>
+          <p className="text-gray-400 text-base">{emptyText}</p>
         </div>
       );
     }
@@ -1199,12 +1199,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               }`}
             >
               <div className="flex items-center gap-2">
-                <span className="text-gray-500 font-mono w-5 flex-shrink-0 text-xs text-center">
+                <span className="text-gray-500 font-mono w-5 flex-shrink-0 text-base text-center">
                   {index + 1}
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
-                    <span className="text-white truncate text-sm">{song.title}</span>
+                    <span className="text-white truncate text-base">{song.title}</span>
                     {index < 2 && (
                       <SunMedium className="w-4 h-4 text-pink-400 flex-shrink-0 animate-pulse" />
                     )}
@@ -1220,7 +1220,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     const meta = parseSermon(song.description);
                     const sub = meta[2] || song.category;
                     return sub ? (
-                      <p className="text-[11px] text-purple-300/70 truncate">{sub}</p>
+                      <p className="text-base text-purple-300/70 truncate">{sub}</p>
                     ) : null;
                   })()}
                 </div>
@@ -1282,7 +1282,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg font-bold leading-tight">SY Music</h1>
-                <p className="text-sm text-purple-300 truncate">수영로말씀적용찬양</p>
+                <p className="text-base text-purple-300 truncate">수영로말씀적용찬양</p>
               </div>
             </div>
 
@@ -1307,7 +1307,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       setIsGitaOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
                   >
                     🎸 카포·조옮김
                   </button>
@@ -1318,7 +1318,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       setIsTunerOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
                   >
                     🎵 기타조율기
                   </button>
@@ -1329,9 +1329,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       toast('🎹 메트로놈은 준비 중입니다.');
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-400 hover:bg-purple-500/20 transition-colors"
+                    className="w-full text-left px-3 py-2.5 text-base text-gray-400 hover:bg-purple-500/20 transition-colors"
                   >
-                    🎹 메트로놈 <span className="text-[10px] text-gray-500">(준비 중)</span>
+                    🎹 메트로놈 <span className="text-base text-gray-500">(준비 중)</span>
                   </button>
                   <div className="h-px bg-purple-500/30" />
                   <button
@@ -1340,7 +1340,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       setIsAboutOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
                   >
                     ℹ️ 개발자 정보
                   </button>
@@ -1354,7 +1354,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           handleAdminManagementAccess();
                           setIsMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                        className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
                       >
                         ⚙️ 곡 관리
                       </button>
@@ -1365,7 +1365,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           setIsAnalyticsOpen(true);
                           setIsMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                        className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
                       >
                         📊 통계
                       </button>
@@ -1376,7 +1376,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           handleAdminLogout();
                           setIsMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2.5 text-sm text-red-300 hover:bg-red-500/10 transition-colors"
+                        className="w-full text-left px-3 py-2.5 text-base text-red-300 hover:bg-red-500/10 transition-colors"
                       >
                         🚪 로그아웃
                       </button>
@@ -1392,7 +1392,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           handleAdminManagementAccess();
                           setIsMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                        className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
                       >
                         🔐 관리자 로그인
                       </button>
@@ -1404,7 +1404,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           </div>
 
           {isOfflineMode && (
-            <div className="flex items-center gap-1 px-4 pb-2 -mt-1 text-xs text-orange-400">
+            <div className="flex items-center gap-1 px-4 pb-2 -mt-1 text-base text-orange-400">
               <WifiOff className="h-3 w-3" />
               <span>오프라인 모드</span>
             </div>
@@ -1421,14 +1421,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             <div className="px-3 py-2 space-y-2">
               {isFavoritesMode && (
                 <div className="flex items-center justify-between bg-purple-900/40 border border-purple-400/40 rounded-lg px-3 py-2">
-                  <span className="text-xs text-purple-100 flex items-center">
+                  <span className="text-base text-purple-100 flex items-center">
                     <Star className="h-3.5 w-3.5 mr-1 fill-pink-400 text-pink-400" />
                     즐겨찾기 재생 중 ({favorites.length}곡)
                   </span>
                   <button
                     type="button"
                     onClick={exitFavoritesMode}
-                    className="text-xs text-purple-200 hover:text-white flex items-center"
+                    className="text-base text-purple-200 hover:text-white flex items-center"
                   >
                     <ArrowLeft className="h-3.5 w-3.5 mr-1" />
                     전체 목록
@@ -1439,7 +1439,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               {/* 1. 곡 목록 박스 — 고정 높이(5곡), 내부 스크롤 */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader className="px-2 pt-0 pb-1.5 sm:px-2 sm:pt-0 sm:pb-1.5">
-                  <CardTitle className="text-sm text-white flex items-center space-x-1.5">
+                  <CardTitle className="text-base text-white flex items-center space-x-1.5">
                     <List className="h-3.5 w-3.5" />
                     <span>곡 목록 ({filteredSongs.length})</span>
                   </CardTitle>
@@ -1449,7 +1449,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     {filteredSongs.length === 0 ? (
                       <div className="text-center py-3">
                         <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
-                        <p className="text-gray-400 text-xs">
+                        <p className="text-gray-400 text-base">
                           {isFavoritesMode
                             ? '즐겨찾기한 곡이 없어요'
                             : '검색 결과가 없습니다'}
@@ -1465,14 +1465,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                               key={song.id}
                               ref={isCurrentSong ? currentSongRowRef : null}
                               onClick={() => playSong(index)}
-                              className={`px-2 py-1 rounded cursor-pointer transition-all text-xs ${
+                              className={`px-2 py-1 rounded cursor-pointer transition-all text-base ${
                                 isCurrentSong
                                   ? 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30'
                                   : 'bg-slate-700/30 hover:bg-slate-700/50 active:bg-slate-700/70'
                               }`}
                             >
                               <div className="flex items-center space-x-2">
-                                <span className="text-gray-400 font-mono w-5 flex-shrink-0 text-sm">
+                                <span className="text-gray-400 font-mono w-5 flex-shrink-0 text-base">
                                   {index + 1}
                                 </span>
                                 <div className="flex-1 min-w-0 flex items-center space-x-1">
@@ -1545,7 +1545,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
                           />
                         </div>
-                        <div className="flex justify-between text-xs text-gray-400">
+                        <div className="flex justify-between text-base text-gray-400">
                           <span>{formatTime(currentTime)}</span>
                           <span>{formatTime(duration)}</span>
                         </div>
@@ -1618,7 +1618,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   ) : (
                     <div className="flex items-center justify-center gap-2 py-2">
                       <Music className="h-5 w-5 text-gray-600 flex-shrink-0" />
-                      <span className="text-sm text-gray-400">곡을 선택해주세요</span>
+                      <span className="text-base text-gray-400">곡을 선택해주세요</span>
                     </div>
                   )}
                 </CardContent>
@@ -1636,7 +1636,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <div className="bg-slate-700/30 rounded-lg p-2">
                     {currentSong && currentSong.lyrics ? (
                       <div className="space-y-2">
-                        <div className="text-left border-b border-slate-600 pb-2 text-sm space-y-1 break-keep">
+                        <div className="text-left border-b border-slate-600 pb-2 text-base space-y-1 break-keep">
                           {(() => {
                             const parts = parseSermon(currentSong.description);
                             return (
@@ -1707,7 +1707,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             <Button
                               size="sm"
                               onClick={() => window.open(currentSong.youtubeUrl, '_blank')}
-                              className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-xs transition-colors duration-200"
+                              className="bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400 border border-purple-500/30 text-base transition-colors duration-200"
                             >
                               <Youtube className="h-3 w-3 mr-1 text-red-500" />
                               설교YouTube
@@ -1719,7 +1719,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             onPointerUp={() => setIsSharePressed(false)}
                             onPointerLeave={() => setIsSharePressed(false)}
                             onPointerCancel={() => setIsSharePressed(false)}
-                            className={`h-9 px-3 rounded-md font-semibold text-xs inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                            className={`h-9 px-3 rounded-md font-semibold text-base inline-flex items-center justify-center gap-1 border border-purple-500/30 transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
                               isSharePressed
                                 ? 'bg-purple-950 text-pink-400 scale-[0.98]'
                                 : 'bg-purple-900/50 hover:bg-purple-800/60 text-white hover:text-pink-400'
@@ -1734,12 +1734,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       <div className={`text-center ${currentSong ? 'py-6 space-y-2' : 'py-3 space-y-1'}`}>
                         <Scroll className={`text-gray-600 mx-auto ${currentSong ? 'h-8 w-8' : 'h-6 w-6'}`} />
                         <div>
-                          <p className="text-gray-400 text-sm">
+                          <p className="text-gray-400 text-base">
                             {currentSong ? '이 곡에는 가사가 없습니다' : '곡을 선택하면 가사가 표시됩니다'}
                           </p>
                           {currentSong && (
                             <>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className="text-base text-gray-500 mt-1">
                                 관리자가 가사를 추가할 수 있습니다
                               </p>
                               <div className="pt-3">
@@ -1749,7 +1749,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                   onPointerUp={() => setIsSharePressed(false)}
                                   onPointerLeave={() => setIsSharePressed(false)}
                                   onPointerCancel={() => setIsSharePressed(false)}
-                                  className={`h-9 px-3 rounded-md border font-semibold text-xs inline-flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                                  className={`h-9 px-3 rounded-md border font-semibold text-base inline-flex items-center justify-center gap-1 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
                                     isSharePressed
                                       ? 'bg-purple-950 text-pink-300 border-pink-400/70 scale-[0.98]'
                                       : 'bg-purple-800 text-white border-purple-400/60 hover:text-pink-300 hover:border-pink-400/70'
@@ -1779,7 +1779,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     key={t.key}
                     type="button"
                     onClick={() => setSearchTab(t.key)}
-                    className={`h-10 rounded-md text-sm font-medium transition-colors ${
+                    className={`h-10 rounded-md text-base font-medium transition-colors ${
                       searchTab === t.key
                         ? 'bg-purple-600 text-white shadow-sm shadow-purple-900/40'
                         : 'bg-slate-800/50 text-gray-300 border border-purple-400/30 hover:bg-purple-900/40'
@@ -1808,7 +1808,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
                 {searchTab === 'tags' && (
                   allTags.length === 0 ? (
-                    <p className="text-xs text-gray-400 py-2 px-1">아직 생성된 태그가 없습니다.</p>
+                    <p className="text-base text-gray-400 py-2 px-1">아직 생성된 태그가 없습니다.</p>
                   ) : (
                     <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
                       {allTags.map((tag) => {
@@ -1824,7 +1824,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                   : [...prev, tag]
                               )
                             }
-                            className={`px-2.5 py-1.5 rounded-full text-xs transition-colors ${
+                            className={`px-2.5 py-1.5 rounded-full text-base transition-colors ${
                               active
                                 ? 'bg-purple-600 text-white'
                                 : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
@@ -1847,7 +1847,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           key={m.label}
                           type="button"
                           onClick={() => setSelectedMood(active ? null : m.label)}
-                          className={`px-2 py-3 rounded-md text-xs transition-colors ${
+                          className={`px-2 py-3 rounded-md text-base transition-colors ${
                             active
                               ? 'bg-purple-600 text-white'
                               : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
@@ -1865,12 +1865,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     value={lyricsQuery}
                     onChange={(e) => setLyricsQuery(e.target.value)}
                     placeholder="가사 키워드를 입력하세요"
-                    className="w-full bg-slate-800/50 border-purple-400/40 text-white h-12 text-sm"
+                    className="w-full bg-slate-800/50 border-purple-400/40 text-white h-12 text-base"
                   />
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-sm text-purple-200 pt-1">
+              <div className="flex items-center gap-2 text-base text-purple-200 pt-1">
                 <Search className="h-4 w-4" />
                 <span>검색 결과 ({filteredSongs.length})</span>
               </div>
@@ -1890,7 +1890,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 즐겨찾기 재생 시작 ({favoriteSongs.length})
               </Button>
 
-              <div className="flex items-center gap-2 text-sm text-purple-200 pt-1">
+              <div className="flex items-center gap-2 text-base text-purple-200 pt-1">
                 <Star className="h-4 w-4 fill-pink-400 text-pink-400" />
                 <span>즐겨찾기 목록 ({favoriteSongs.length})</span>
               </div>
@@ -1940,7 +1940,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         </span>
                       )}
                     </span>
-                    <span className="text-sm font-medium">{tab.label}</span>
+                    <span className="text-base font-medium">{tab.label}</span>
                   </button>
                 );
               })}
