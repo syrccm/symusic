@@ -185,7 +185,7 @@ export function NoticePanel({
     <div className="px-4 py-4">
       <div className="flex items-center gap-2 mb-1">
         <Newspaper className="w-5 h-5 text-pink-300 flex-shrink-0" />
-        <h2 className="text-white text-lg font-normal">
+        <h2 className="text-white text-xl font-normal">
           {view === 'form'
             ? editingId
               ? '공지 수정'
@@ -193,7 +193,7 @@ export function NoticePanel({
             : '안내드립니다.'}
         </h2>
       </div>
-      <p className="text-purple-200/80 text-xs font-light mb-4">
+      <p className="text-purple-200/80 text-sm font-light mb-4">
         {view === 'form'
           ? editingId
             ? '공지 내용을 수정해주세요'
@@ -210,7 +210,7 @@ export function NoticePanel({
               <Button
                 onClick={handleOpenForm}
                 size="sm"
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-light"
+                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-light text-base"
               >
                 <Plus className="w-4 h-4 mr-1" />
                 새 공지 작성
@@ -223,7 +223,7 @@ export function NoticePanel({
               <Loader2 className="w-6 h-6 animate-spin text-purple-300" />
             </div>
           ) : notices.length === 0 ? (
-            <div className="text-center py-12 text-sm text-gray-400 font-light">
+            <div className="text-center py-12 text-base text-gray-400 font-light">
               <Newspaper className="w-8 h-8 mx-auto mb-2 text-gray-600" />
               아직 공지가 없습니다
             </div>
@@ -255,13 +255,13 @@ export function NoticePanel({
                       )}
                       <div className="flex-1 min-w-0">
                         <p
-                          className={`text-sm font-light truncate ${
+                          className={`text-base font-light truncate ${
                             unread ? 'text-white' : 'text-gray-200'
                           }`}
                         >
                           {notice.title}
                         </p>
-                        <p className="text-xs text-purple-200/70 mt-0.5 font-light">
+                        <p className="text-sm text-purple-200/70 mt-0.5 font-light">
                           {formatKSTDate(notice.createdAt)}
                         </p>
                       </div>
@@ -312,7 +312,7 @@ export function NoticePanel({
               variant="ghost"
               size="sm"
               onClick={handleBackToList}
-              className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 -ml-2 font-light"
+              className="text-purple-300 hover:text-pink-300 hover:bg-pink-500/10 -ml-2 font-light text-base"
             >
               <ArrowLeft className="w-4 h-4 mr-1" />
               목록으로
@@ -351,24 +351,24 @@ export function NoticePanel({
             <h2 className="text-xl font-normal bg-gradient-to-r from-purple-300 to-pink-300 bg-clip-text text-transparent break-keep">
               {selectedNotice.title}
             </h2>
-            <p className="text-xs text-gray-400 font-light">
+            <p className="text-sm text-gray-400 font-light">
               {formatKSTDate(selectedNotice.createdAt)}
             </p>
           </div>
 
-          <div className="whitespace-pre-line text-sm leading-relaxed text-gray-100 break-keep py-2 font-light">
+          <div className="whitespace-pre-line text-base leading-relaxed text-gray-100 break-keep py-2 font-light">
             {selectedNotice.content}
           </div>
 
           <div className="border-t border-purple-500/30 pt-3 space-y-2">
-            <p className="text-xs text-purple-200/80 leading-relaxed font-light">
+            <p className="text-sm text-purple-200/80 leading-relaxed font-light">
               💌 이 공지에 의견이나 나누고 싶은 마음이 있으시면
               <br />
               아래 버튼으로 의견 보내주세요.
             </p>
             <button
               onClick={() => handleSendFeedback(selectedNotice)}
-              className="w-full h-11 rounded-md inline-flex items-center justify-center gap-2 font-light text-sm bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white border border-pink-400/40 transition-colors"
+              className="w-full h-11 rounded-md inline-flex items-center justify-center gap-2 font-light text-base bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600 text-white border border-pink-400/40 transition-colors"
             >
               📧 개발자에게 의견 제출하기
             </button>
@@ -379,27 +379,27 @@ export function NoticePanel({
       {view === 'form' && (
         <div className="space-y-4">
           <div>
-            <Label htmlFor="notice-title" className="text-white font-normal">
+            <Label htmlFor="notice-title" className="text-white font-normal text-base">
               제목 *
             </Label>
             <Input
               id="notice-title"
               value={formTitle}
               onChange={(e) => setFormTitle(e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white font-light"
+              className="bg-slate-700 border-slate-600 text-white font-light text-base"
               placeholder="공지 제목을 입력하세요"
               disabled={submitting}
             />
           </div>
           <div>
-            <Label htmlFor="notice-content" className="text-white font-normal">
+            <Label htmlFor="notice-content" className="text-white font-normal text-base">
               내용 *
             </Label>
             <Textarea
               id="notice-content"
               value={formContent}
               onChange={(e) => setFormContent(e.target.value)}
-              className="bg-slate-700 border-slate-600 text-white font-light"
+              className="bg-slate-700 border-slate-600 text-white font-light text-base"
               placeholder="공지 내용을 입력하세요"
               rows={10}
               disabled={submitting}
@@ -408,7 +408,7 @@ export function NoticePanel({
           <div className="flex space-x-2">
             <Button
               onClick={handleSubmitNotice}
-              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-light"
+              className="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 font-light text-base"
               disabled={submitting || !formTitle.trim() || !formContent.trim()}
             >
               {submitting ? (
@@ -426,7 +426,7 @@ export function NoticePanel({
             <Button
               variant="outline"
               onClick={handleBackToList}
-              className="flex-1 font-light"
+              className="flex-1 font-light text-base"
               disabled={submitting}
             >
               <X className="h-4 w-4 mr-2" />
