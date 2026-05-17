@@ -423,7 +423,8 @@ var state = {
   needleCur: 0,         // 현재 바늘 각도 (deg)
   needleTgt: 0,         // 목표 바늘 각도
   displayFreq: 0,
-  lostFrames: 0
+  lostFrames: 0,
+  activeString: -1      // -1 = 자동 감지, 0~5 = 수동 선택된 줄
 };
 
 /* ---------- DOM ---------- */
@@ -439,10 +440,39 @@ function buildStringCards() {
     var d = document.createElement("div");
     d.className = "str-card";
     d.dataset.idx = i;
+    d.style.cursor = "pointer";
     d.innerHTML = '<div class="sc-num">' + s.num + '번</div>' +
                   '<div class="sc-note">' + s.note + s.oct + '</div>';
+    bindTap(d, function () { selectString(i); });   // 수동 선택
     elStrings.appendChild(d);
   });
+}
+
+/* 줄 카드 수동 선택 — 같은 카드 재클릭 시 자동 감지로 복귀 */
+function selectString(i) {
+  state.activeString = (state.activeString === i) ? -1 : i;
+  if (state.activeString >= 0) {
+    var s = STRINGS[state.activeString];
+    elNote.innerHTML = s.note + '<span class="oct">' + s.oct + '</span>';
+    elNote.style.color = "var(--ink-soft)";
+    elSub.textContent = s.num + "번 줄 선택됨 · 이 줄을 퉁기세요";
+    elCents.innerHTML = "&nbsp;"; elCents.style.color = "var(--ink-dim)";
+    elHint.innerHTML = "&nbsp;";
+    state.needleTgt = 0;
+    refreshCardHighlight();
+  } else {
+    showIdle();   // 자동 모드 복귀
+  }
+}
+
+/* 수동 선택 카드 강조 (신호 없을 때도 유지) */
+function refreshCardHighlight() {
+  var cards = elStrings.children;
+  for (var i = 0; i < cards.length; i++) {
+    cards[i].classList.remove("active", "in-tune");
+    if (state.activeString >= 0 && i === state.activeString)
+      cards[i].classList.add("active");
+  }
 }
 function stringFreq(i) { return STRINGS[i].base * state.refA / 440; }
 
@@ -745,21 +775,29 @@ function colorFor(cents) {
 }
 
 function updateDisplay(f) {
-  var ns = nearestString(f);
-  var s = STRINGS[ns.idx];
-  var cents = Math.max(-50, Math.min(50, ns.cents));
-  var col = colorFor(ns.cents);
+  var idx, cents;
+  if (state.activeString >= 0) {            // 수동 선택된 줄 기준
+    idx = state.activeString;
+    cents = 1200 * Math.log2(f / stringFreq(idx));
+  } else {                                  // 자동: 가장 가까운 줄
+    var ns = nearestString(f);
+    idx = ns.idx;
+    cents = ns.cents;
+  }
+  var s = STRINGS[idx];
+  var clamped = Math.max(-50, Math.min(50, cents));
+  var col = colorFor(cents);
 
   elNote.innerHTML = s.note + '<span class="oct">' + s.oct + '</span>';
   elNote.style.color = col;
   elSub.textContent = s.num + "번 줄 · " + f.toFixed(1) + " Hz";
 
-  var rounded = Math.round(ns.cents);
-  if (Math.abs(ns.cents) <= 5) {
+  var rounded = Math.round(cents);
+  if (Math.abs(cents) <= 5) {
     elCents.textContent = "✓ 정확합니다";
     elCents.style.color = "var(--ok)";
     elHint.innerHTML = "&nbsp;";
-  } else if (ns.cents < 0) {
+  } else if (cents < 0) {
     elCents.textContent = "▼ " + Math.abs(rounded) + " cents 낮음";
     elCents.style.color = "var(--low)";
     elHint.textContent = "줄을 조이세요 (음을 높이세요)";
@@ -770,20 +808,32 @@ function updateDisplay(f) {
   }
 
   // 바늘 목표 각도 (±50 cents → ±60°)
-  state.needleTgt = (cents / 50) * 60;
+  state.needleTgt = (clamped / 50) * 60;
 
   // 6줄 카드 강조
   var cards = elStrings.children;
   for (var i = 0; i < cards.length; i++) {
     cards[i].classList.remove("active", "in-tune");
-    if (i === ns.idx) {
+    if (i === idx) {
       cards[i].classList.add("active");
-      if (Math.abs(ns.cents) <= 5) cards[i].classList.add("in-tune");
+      if (Math.abs(cents) <= 5) cards[i].classList.add("in-tune");
     }
   }
 }
 
 function showIdle() {
+  if (state.activeString >= 0) {        // 수동 선택 유지 (신호 없어도 표시)
+    var s = STRINGS[state.activeString];
+    elNote.innerHTML = s.note + '<span class="oct">' + s.oct + '</span>';
+    elNote.style.color = "var(--ink-soft)";
+    elSub.textContent = s.num + "번 줄 선택됨 · 이 줄을 퉁기세요";
+    elCents.innerHTML = "&nbsp;";
+    elCents.style.color = "var(--ink-dim)";
+    elHint.innerHTML = "&nbsp;";
+    state.needleTgt = 0;
+    refreshCardHighlight();
+    return;
+  }
   elNote.innerHTML = "—";
   elNote.style.color = "var(--ink-dim)";
   elSub.textContent = "소리를 입력하세요";
