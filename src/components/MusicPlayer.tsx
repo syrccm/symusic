@@ -1263,10 +1263,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   };
 
   const TABS: { key: MainTabKey; label: string; icon: React.ReactNode }[] = [
-    { key: 'songs', label: '찬양', icon: <Music className="h-5 w-5" /> },
-    { key: 'search', label: '검색', icon: <Search className="h-5 w-5" /> },
-    { key: 'favorites', label: '즐겨찾기', icon: <Star className="h-5 w-5" /> },
-    { key: 'notices', label: '공지', icon: <Bell className="h-5 w-5" /> },
+    { key: 'songs', label: '찬양', icon: <Music className="h-6 w-6" /> },
+    { key: 'search', label: '검색', icon: <Search className="h-6 w-6" /> },
+    { key: 'favorites', label: '즐겨찾기', icon: <Star className="h-6 w-6" /> },
+    { key: 'notices', label: '공지', icon: <Bell className="h-6 w-6" /> },
   ];
 
   return (
@@ -1281,8 +1281,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <Music className="h-5 w-5 text-white" />
               </div>
               <div className="min-w-0">
-                <h1 className="text-base font-bold leading-tight">SY Music</h1>
-                <p className="text-[11px] text-purple-300 truncate">수영로말씀적용찬양</p>
+                <h1 className="text-lg font-bold leading-tight">SY Music</h1>
+                <p className="text-sm text-purple-300 truncate">수영로말씀적용찬양</p>
               </div>
             </div>
 
@@ -1472,11 +1472,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                               }`}
                             >
                               <div className="flex items-center space-x-2">
-                                <span className="text-gray-400 font-mono w-4 flex-shrink-0 text-xs">
+                                <span className="text-gray-400 font-mono w-5 flex-shrink-0 text-sm">
                                   {index + 1}
                                 </span>
                                 <div className="flex-1 min-w-0 flex items-center space-x-1">
-                                  <span className="text-white truncate text-xs">
+                                  <span className="text-white truncate text-base">
                                     {song.title}
                                   </span>
                                   {index < 2 && (
@@ -1500,7 +1500,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                   aria-label={`${song.title} 공유하기`}
                                   title="공유하기"
                                 >
-                                  <Share2 className="h-3.5 w-3.5 text-gray-500 hover:text-purple-300" />
+                                  <Share2 className="h-5 w-5 text-gray-500 hover:text-purple-300" />
                                 </button>
                                 <button
                                   type="button"
@@ -1513,7 +1513,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                   title={isFavorite(song.id) ? '즐겨찾기에서 제거' : '즐겨찾기에 추가'}
                                 >
                                   <Star
-                                    className={`h-3.5 w-3.5 ${
+                                    className={`h-5 w-5 ${
                                       isFavorite(song.id)
                                         ? 'fill-pink-400 text-pink-400'
                                         : 'text-gray-500 hover:fill-pink-400 hover:text-pink-400'
@@ -1627,7 +1627,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               {/* 3. 가사 영역 — 페이지 스크롤(내부 스크롤 없음) */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader className="px-2 pt-2 pb-0 sm:px-2 sm:pt-2 sm:pb-0">
-                  <CardTitle className="text-sm text-white flex items-center space-x-2">
+                  <CardTitle className="text-base text-white flex items-center space-x-2">
                     <Scroll className="h-4 w-4" />
                     <span>가사</span>
                   </CardTitle>
@@ -1636,7 +1636,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <div className="bg-slate-700/30 rounded-lg p-2">
                     {currentSong && currentSong.lyrics ? (
                       <div className="space-y-2">
-                        <div className="text-left border-b border-slate-600 pb-2 text-xs space-y-1 break-keep">
+                        <div className="text-left border-b border-slate-600 pb-2 text-sm space-y-1 break-keep">
                           {(() => {
                             const parts = parseSermon(currentSong.description);
                             return (
@@ -1699,7 +1699,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             {currentSong.title}
                           </h3>
                         )}
-                        <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
+                        <div className="whitespace-pre-line text-white leading-relaxed text-center text-base break-keep">
                           {currentSong.lyrics}
                         </div>
                         <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
@@ -1940,7 +1940,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         </span>
                       )}
                     </span>
-                    <span className="text-[11px] font-medium">{tab.label}</span>
+                    <span className="text-sm font-medium">{tab.label}</span>
                   </button>
                 );
               })}
