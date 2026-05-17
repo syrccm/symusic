@@ -1271,7 +1271,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <div className="relative flex flex-col min-h-screen max-w-md mx-auto">
+      <div className="relative flex flex-col min-h-screen w-full max-w-full sm:max-w-2xl lg:max-w-5xl mx-auto">
 
         {/* ===== 헤더 ===== */}
         <header className="sticky top-0 z-30 bg-slate-900/85 backdrop-blur border-b border-purple-500/20">
@@ -1418,9 +1418,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         >
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
-            <div className="px-3 py-2 space-y-1.5">
+            <div className="px-3 sm:px-5 lg:px-6 py-2 sm:py-4">
               {isFavoritesMode && (
-                <div className="flex items-center justify-between bg-purple-900/40 border border-purple-400/40 rounded-lg px-3 py-2">
+                <div className="flex items-center justify-between bg-purple-900/40 border border-purple-400/40 rounded-lg px-3 py-2 mb-1.5 sm:mb-3">
                   <span className="text-xs text-purple-100 flex items-center">
                     <Star className="h-3.5 w-3.5 mr-1 fill-pink-400 text-pink-400" />
                     즐겨찾기 재생 중 ({favorites.length}곡)
@@ -1436,6 +1436,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 </div>
               )}
 
+              {/* PC 2열 그리드 / 모바일·태블릿 단일 컬럼 */}
+              <div className="space-y-1.5 sm:space-y-3 lg:space-y-0 lg:flex lg:gap-5 lg:items-start">
+
+              {/* 왼쪽 컬럼: 곡 목록 (PC 2/5) */}
+              <div className="lg:w-2/5 lg:flex-shrink-0">
               {/* 1. 곡 목록 박스 — 고정 높이(5곡), 내부 스크롤 */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader className="p-2 pb-0">
@@ -1445,7 +1450,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="p-2 pt-0">
-                  <div className="max-h-32 overflow-y-auto">
+                  <div className="max-h-32 sm:max-h-72 lg:max-h-[calc(100vh-220px)] overflow-y-auto">
                     {filteredSongs.length === 0 ? (
                       <div className="text-center py-3">
                         <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
@@ -1476,7 +1481,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                   {index + 1}
                                 </span>
                                 <div className="flex-1 min-w-0 flex items-center space-x-1">
-                                  <span className="text-white truncate text-xs">
+                                  <span className="text-white truncate text-xs sm:text-sm">
                                     {song.title}
                                   </span>
                                   {index < 2 && (
@@ -1529,6 +1534,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   </div>
                 </CardContent>
               </Card>
+              </div>
+
+              {/* 오른쪽 컬럼: 플레이어 + 가사 (PC 3/5) */}
+              <div className="lg:w-3/5 space-y-1.5 sm:space-y-3 lg:space-y-4">
 
               {/* 2. 플레이어 — 진행바 + 컨트롤 */}
               <Card className="bg-slate-800/50 border-slate-700">
@@ -1698,11 +1707,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           })()}
                         </div>
                         {currentSong.title && (
-                          <h3 className="text-2xl font-bold text-white text-center break-keep">
+                          <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white text-center break-keep">
                             {currentSong.title}
                           </h3>
                         )}
-                        <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
+                        <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm sm:text-base lg:text-lg break-keep">
                           {currentSong.lyrics}
                         </div>
                         <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
@@ -1770,12 +1779,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   </div>
                 </CardContent>
               </Card>
+              </div>
+            </div>
             </div>
           )}
 
           {/* --- 🔍 검색 탭 --- */}
           {activeTab === 'search' && (
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 sm:px-6 py-4 space-y-3 lg:max-w-3xl lg:mx-auto">
               <div className="grid grid-cols-4 gap-1">
                 {SEARCH_TABS.map((t) => (
                   <button
@@ -1884,7 +1895,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
           {/* --- ⭐ 즐겨찾기 탭 --- */}
           {activeTab === 'favorites' && (
-            <div className="px-4 py-4 space-y-3">
+            <div className="px-4 sm:px-6 py-4 space-y-3 lg:max-w-3xl lg:mx-auto">
               <Button
                 onClick={handlePlayAllFavorites}
                 className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white justify-center"
@@ -1908,6 +1919,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
           {/* --- 📰 공지 탭 --- */}
           {activeTab === 'notices' && (
+            <div className="lg:max-w-3xl lg:mx-auto">
             <NoticePanel
               notices={notices}
               loading={noticesLoading}
@@ -1915,12 +1927,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               onMarkAllRead={markAllNoticesRead}
               isAdmin={isAdminRoute && isAdmin}
             />
+            </div>
           )}
         </main>
 
         {/* ===== 미니 플레이어 + 하단 탭바 ===== */}
         <div className="fixed bottom-0 inset-x-0 z-40">
-          <div className="max-w-md mx-auto">
+          <div className="w-full max-w-full sm:max-w-2xl lg:max-w-5xl mx-auto">
             <nav className="grid grid-cols-4 bg-slate-900/95 backdrop-blur border-t border-purple-500/20">
               {TABS.map((tab) => {
                 const active = activeTab === tab.key;
