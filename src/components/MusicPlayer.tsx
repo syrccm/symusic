@@ -271,14 +271,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     const currentIndex = modes.indexOf(repeatMode);
     const nextMode = modes[(currentIndex + 1) % modes.length];
     setRepeatMode(nextMode);
-
-    const modeNames = {
-      'all': '전체 반복',
-      'one': '한 곡 반복',
-      'off': '반복 끄기'
-    };
-
-    toast.success(`${modeNames[nextMode]} 모드로 변경되었습니다`);
   };
 
   // Toggle shuffle mode
@@ -288,10 +280,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
     if (newShuffleState) {
       setShuffledIndices(generateShuffledIndices());
-      toast.success('셔플 재생이 활성화되었습니다');
     } else {
       setShuffledIndices([]);
-      toast.success('셔플 재생이 비활성화되었습니다');
     }
   };
 
@@ -860,7 +850,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       audioRef.current.src = song.audioUrl;
       audioRef.current.play().then(() => {
         setIsPlaying(true);
-        toast.success(`재생 중: ${song.title}`);
         trackSongPlay(song.id).catch((err) =>
           console.error('[Analytics] trackSongPlay failed:', err),
         );
