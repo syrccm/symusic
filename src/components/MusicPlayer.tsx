@@ -1418,7 +1418,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         >
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
-            <div className="px-3 py-3 space-y-2">
+            <div className="px-3 py-2 space-y-2">
               {isFavoritesMode && (
                 <div className="flex items-center justify-between bg-purple-900/40 border border-purple-400/40 rounded-lg px-3 py-2">
                   <span className="text-xs text-purple-100 flex items-center">
@@ -1438,9 +1438,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
               {/* 1. 곡 목록 박스 — 고정 높이(5곡), 내부 스크롤 */}
               <Card className="bg-slate-800/50 border-slate-700">
-                <CardHeader className="px-2 pt-2 pb-0 sm:px-2 sm:pt-2 sm:pb-0">
-                  <CardTitle className="text-xs text-white flex items-center space-x-1">
-                    <List className="h-3 w-3" />
+                <CardHeader className="px-2 pt-0 pb-1.5 sm:px-2 sm:pt-0 sm:pb-1.5">
+                  <CardTitle className="text-sm text-white flex items-center space-x-1.5">
+                    <List className="h-3.5 w-3.5" />
                     <span>곡 목록 ({filteredSongs.length})</span>
                   </CardTitle>
                 </CardHeader>
@@ -1534,8 +1534,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardContent className="px-2 py-2 sm:px-2 sm:py-2">
                   {currentSong ? (
-                    <div className="space-y-2">
-                      <div className="space-y-1">
+                    <div className="space-y-3 py-0.5">
+                      <div className="space-y-1.5">
                         <div
                           className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
                           onClick={handleSeek}
@@ -1616,12 +1616,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-3 space-y-2">
-                      <Music className="h-8 w-8 text-gray-600 mx-auto" />
-                      <div>
-                        <p className="text-gray-400 text-sm">재생목록</p>
-                        <p className="text-xs text-gray-500">곡을 선택해주세요</p>
-                      </div>
+                    <div className="flex items-center justify-center gap-2 py-2">
+                      <Music className="h-5 w-5 text-gray-600 flex-shrink-0" />
+                      <span className="text-sm text-gray-400">곡을 선택해주세요</span>
                     </div>
                   )}
                 </CardContent>
@@ -1734,8 +1731,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         </div>
                       </div>
                     ) : (
-                      <div className="py-8 text-center space-y-2">
-                        <Scroll className="h-8 w-8 text-gray-600 mx-auto" />
+                      <div className={`text-center ${currentSong ? 'py-6 space-y-2' : 'py-3 space-y-1'}`}>
+                        <Scroll className={`text-gray-600 mx-auto ${currentSong ? 'h-8 w-8' : 'h-6 w-6'}`} />
                         <div>
                           <p className="text-gray-400 text-sm">
                             {currentSong ? '이 곡에는 가사가 없습니다' : '곡을 선택하면 가사가 표시됩니다'}
