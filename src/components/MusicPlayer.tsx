@@ -1174,7 +1174,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     list: Song[],
     onPick: (index: number) => void,
     emptyText: string,
-    showSub: boolean = true,
   ) => {
     if (list.length === 0) {
       return (
@@ -1217,13 +1216,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       </div>
                     )}
                   </div>
-                  {showSub && (() => {
-                    const meta = parseSermon(song.description);
-                    const sub = meta[2] || song.category;
-                    return sub ? (
-                      <p className="text-base text-purple-300/70 truncate">{sub}</p>
-                    ) : null;
-                  })()}
                 </div>
                 <button
                   type="button"
@@ -1869,7 +1861,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <span>검색 결과 ({filteredSongs.length})</span>
               </div>
 
-              {renderSongList(filteredSongs, handlePickFromSearch, '검색 결과가 없습니다', false)}
+              {renderSongList(filteredSongs, handlePickFromSearch, '검색 결과가 없습니다')}
             </div>
           )}
 
