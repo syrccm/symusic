@@ -103,10 +103,6 @@ export function useSongs({ silent = false }: UseSongsOptions = {}): UseSongsResu
             }
           }
         );
-
-        if (!silent) {
-          toast.success('🎵 음악 플레이어가 준비되었습니다! (Firebase 연결됨)');
-        }
       } catch (error) {
         console.error('[useSongs] init error:', error);
         if (cancelled) return;
