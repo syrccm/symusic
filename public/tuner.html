@@ -407,6 +407,7 @@ var STRINGS = [
 var state = {
   refA: 440,
   running: false,
+  starting: false,
   audioCtx: null,
   analyser: null,
   micStream: null,
@@ -799,11 +800,21 @@ function showIdle() {
    오디오 시작 — 7) Pre-filter + 12) 고역 차단
    ============================================================ */
 function startTuner() {
+  if (state.running || state.starting) return;        // 중복 실행 방지
   var Ctx = window.AudioContext || window.webkitAudioContext;
   if (!Ctx || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     showMicError();
     return;
   }
+  // iOS Safari: AudioContext는 사용자 제스처(클릭) 동기 컨텍스트 안에서
+  // 생성·resume 해야 함. 비동기 getUserMedia 콜백 뒤에 만들면 suspended 고착.
+  if (!state.audioCtx || state.audioCtx.state === "closed") {
+    try { state.audioCtx = new Ctx(); }
+    catch (e) { showMicError(); return; }
+  }
+  if (state.audioCtx.state === "suspended") state.audioCtx.resume();
+
+  state.starting = true;
   navigator.mediaDevices.getUserMedia({
     audio: {
       echoCancellation: false,
@@ -811,9 +822,9 @@ function startTuner() {
       autoGainControl: false
     }
   }).then(function (stream) {
+    state.starting = false;
     state.micStream = stream;
-    var ctx = new Ctx();
-    state.audioCtx = ctx;
+    var ctx = state.audioCtx;
     if (ctx.state === "suspended") ctx.resume();
 
     var src = ctx.createMediaStreamSource(stream);
@@ -849,6 +860,7 @@ function startTuner() {
     $("tunerScreen").style.display = "block";
     state.rafId = requestAnimationFrame(loop);
   }).catch(function () {
+    state.starting = false;
     showMicError();
   });
 }

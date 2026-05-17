@@ -2339,7 +2339,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           <iframe
             src="/tuner.html"
             title="기타조율기"
-            allow="microphone"
+            allow="microphone; camera"
             className="w-full h-full border-0"
           />
         </div>
