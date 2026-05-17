@@ -1648,25 +1648,18 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                     <span className="text-gray-200">{parts[0]}</span>
                                   </p>
                                 )}
-                                {(parts[1] || parts[2]) && (
+                                {parts[1] && (
                                   <p>
-                                    {parts[1] && (
-                                      <>
-                                        <span className="text-gray-500">· </span>
-                                        <span className="text-gray-400">설교본문: </span>
-                                        <span className="text-gray-200">{parts[1]}</span>
-                                      </>
-                                    )}
-                                    {parts[1] && parts[2] && (
-                                      <span className="mx-1 text-gray-500">|</span>
-                                    )}
-                                    {parts[2] && (
-                                      <>
-                                        <span className="text-gray-500">· </span>
-                                        <span className="text-gray-400">설교자: </span>
-                                        <span className="text-gray-200">{parts[2]}</span>
-                                      </>
-                                    )}
+                                    <span className="text-gray-500">· </span>
+                                    <span className="text-gray-400">설교본문: </span>
+                                    <span className="text-gray-200">{parts[1]}</span>
+                                  </p>
+                                )}
+                                {parts[2] && (
+                                  <p>
+                                    <span className="text-gray-500">· </span>
+                                    <span className="text-gray-400">설교자: </span>
+                                    <span className="text-gray-200">{parts[2]}</span>
                                   </p>
                                 )}
                                 {(parts[3] || parts[4]) && (
