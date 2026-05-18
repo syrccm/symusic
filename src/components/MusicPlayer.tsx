@@ -1145,6 +1145,32 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   }
 
   const filteredSongs = getFilteredSongs();
+
+  // 검색 탭: 미선택 상태에서는 곡 목록 대신 안내 메시지만 노출
+  const SEARCH_EMPTY_HINTS: Record<string, { icon: string; title: string; desc: string }> = {
+    tags: {
+      icon: '🏷️',
+      title: '태그를 선택하면 해당 찬양이 표시됩니다',
+      desc: '태그 버튼을 눌러 원하는 주제를 선택해보세요',
+    },
+    mood: {
+      icon: '🎯',
+      title: '상황을 선택하면 해당 찬양이 표시됩니다',
+      desc: '원하는 상황 버튼을 눌러보세요',
+    },
+    lyrics: {
+      icon: '🔍',
+      title: '가사 키워드를 입력하면 해당 찬양이 표시됩니다',
+      desc: '검색창에 단어를 입력해보세요',
+    },
+  };
+  const searchHasSelection =
+    searchTab === 'category' ||
+    (searchTab === 'tags' && selectedTags.length > 0) ||
+    (searchTab === 'mood' && !!selectedMood) ||
+    (searchTab === 'lyrics' && lyricsQuery.trim().length > 0);
+  const searchEmptyHint = SEARCH_EMPTY_HINTS[searchTab];
+
   const currentSong = currentSongIndex >= 0 ? songs[currentSongIndex] : null;
   const favoriteSongs = songs.filter((song) => favorites.includes(song.id));
   // songs 전체에서 사용된 태그 수집 (태그 탭 버튼 목록)
@@ -1869,12 +1895,24 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 )}
               </div>
 
-              <div className="flex items-center gap-2 text-base text-purple-200 pt-1">
-                <Search className="h-4 w-4" />
-                <span>검색 결과 ({filteredSongs.length})</span>
-              </div>
+              {searchHasSelection ? (
+                <>
+                  <div className="flex items-center gap-2 text-base text-purple-200 pt-1">
+                    <Search className="h-4 w-4" />
+                    <span>검색 결과 ({filteredSongs.length}곡)</span>
+                  </div>
 
-              {renderSongList(filteredSongs, handlePickFromSearch, '검색 결과가 없습니다')}
+                  {renderSongList(filteredSongs, handlePickFromSearch, '검색 결과가 없습니다')}
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center text-center py-16 px-4">
+                  <div className="text-5xl mb-3">{searchEmptyHint?.icon}</div>
+                  <p className="text-base text-gray-200">{searchEmptyHint?.title}</p>
+                  <p className="text-sm text-gray-400 mt-1">
+                    ({searchEmptyHint?.desc})
+                  </p>
+                </div>
+              )}
             </div>
           )}
 
