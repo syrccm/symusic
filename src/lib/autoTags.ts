@@ -1,11 +1,20 @@
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
+export interface GeneratedTagsResult {
+  tags: string[];
+  /** 곡이 어울리는 상황 (위로/감사/예배/새힘/기도/회개) */
+  moods: string[];
+}
+
 /**
- * 서버리스 함수(/api/generate-tags)에 가사를 보내 태그 배열을 받아온다.
+ * 서버리스 함수(/api/generate-tags)에 가사를 보내 태그/상황을 받아온다.
  * API 키는 서버에만 있으므로 프론트엔드에서는 노출되지 않는다.
  */
-export async function requestTags(lyrics: string, title?: string): Promise<string[]> {
+export async function requestTags(
+  lyrics: string,
+  title?: string
+): Promise<GeneratedTagsResult> {
   const res = await fetch('/api/generate-tags', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -27,7 +36,10 @@ export async function requestTags(lyrics: string, title?: string): Promise<strin
   if (!Array.isArray(data?.tags)) {
     throw new Error('서버 응답 형식이 올바르지 않습니다.');
   }
-  return data.tags as string[];
+  return {
+    tags: data.tags as string[],
+    moods: Array.isArray(data?.moods) ? (data.moods as string[]) : [],
+  };
 }
 
 /**
@@ -45,18 +57,24 @@ export async function generateAndSaveTags(
   }
 
   try {
-    const tags = await requestTags(lyrics, title);
+    const { tags, moods } = await requestTags(lyrics, title);
+    const now = new Date().toISOString();
     await updateDoc(doc(db, 'songs', songId), {
       tags,
-      tagsGeneratedAt: new Date().toISOString(),
+      tagsGeneratedAt: now,
+      moods,
+      moodsGeneratedAt: now,
     });
     return tags;
   } catch (err) {
-    // 태그 생성 실패 시에도 곡은 유효하게 유지: tags 를 빈 배열로 기록
+    // 태그 생성 실패 시에도 곡은 유효하게 유지: tags/moods 를 빈 배열로 기록
     try {
+      const now = new Date().toISOString();
       await updateDoc(doc(db, 'songs', songId), {
         tags: [],
-        tagsGeneratedAt: new Date().toISOString(),
+        tagsGeneratedAt: now,
+        moods: [],
+        moodsGeneratedAt: now,
       });
     } catch {
       // 빈 배열 기록까지 실패하면 무시 (다음 일괄 생성에서 재시도 가능)

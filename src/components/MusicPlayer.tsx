@@ -86,14 +86,14 @@ type SearchTabKey = (typeof SEARCH_TABS)[number]['key'];
 // 하단 탭바 정의
 type MainTabKey = 'songs' | 'search' | 'favorites' | 'notices';
 
-// 감정/상황 → 관련 태그 키워드 매핑 (태그에 부분 포함되면 매칭)
-const MOOD_PRESETS: { label: string; keywords: string[] }[] = [
-  { label: '위로가 필요해요', keywords: ['위로', '치유', '소망', '평안', '회복', '쉼'] },
-  { label: '감사한 마음이에요', keywords: ['감사', '은혜', '찬양', '축복', '기쁨'] },
-  { label: '예배드리고 싶어요', keywords: ['예배', '경배', '찬양', '영광', '거룩'] },
-  { label: '새힘이 필요해요', keywords: ['소망', '용기', '힘', '승리', '믿음', '새힘'] },
-  { label: '기도하고 싶어요', keywords: ['기도', '간구', '중보', '간절', '부르짖음'] },
-  { label: '회개하고 싶어요', keywords: ['회개', '용서', '죄', '십자가', '정결', '돌이킴'] },
+// 상황 라벨 → moods 필드 값 1:1 매핑 (api/generate-tags.js의 6가지 상황과 동일)
+const MOOD_PRESETS: { label: string; mood: string }[] = [
+  { label: '위로가 필요해요', mood: '위로' },
+  { label: '감사한 마음이에요', mood: '감사' },
+  { label: '예배드리고 싶어요', mood: '예배' },
+  { label: '새힘이 필요해요', mood: '새힘' },
+  { label: '기도하고 싶어요', mood: '기도' },
+  { label: '회개하고 싶어요', mood: '회개' },
 ];
 
 
@@ -391,7 +391,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
   };
 
-  // 기존 곡 일괄 태그 생성: tags 필드가 없고 가사가 있는 곡만 순차 처리.
+  // 기존 곡 일괄 태그 생성: tags 또는 moods 가 없고 가사가 있는 곡만 순차 처리.
+  // (moods 도입 이전에 태그만 생성된 곡도 상황 분류를 받도록 재처리)
   // API 과부하 방지를 위해 곡 사이 500ms 대기.
   const handleBatchGenerateTags = async () => {
     if (!isAdmin) {
@@ -407,8 +408,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     const targets = songs.filter(
       (s) =>
         !s.id.startsWith('local-') &&
-        // tags 필드가 없거나(미생성) 빈 배열(이전 생성 실패)인 곡 모두 재처리
-        (s.tags === undefined || s.tags.length === 0) &&
+        // tags 또는 moods 가 없거나(미생성) 빈 배열(이전 생성 실패/도입 이전)인 곡 모두 재처리
+        (s.tags === undefined ||
+          s.tags.length === 0 ||
+          s.moods === undefined ||
+          s.moods.length === 0) &&
         !!s.lyrics &&
         s.lyrics.trim().length > 0
     );
@@ -793,11 +797,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       const preset = MOOD_PRESETS.find((m) => m.label === selectedMood);
       if (!preset) return songs;
       return songs.filter(
-        (s) =>
-          Array.isArray(s.tags) &&
-          s.tags.some((t) =>
-            preset.keywords.some((k) => t.includes(k) || k.includes(t))
-          )
+        (s) => Array.isArray(s.moods) && s.moods.includes(preset.mood)
       );
     }
 

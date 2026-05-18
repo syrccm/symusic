@@ -19,6 +19,10 @@ export interface Song {
   tags?: string[];
   /** 태그 생성 시각 (ISO 문자열) */
   tagsGeneratedAt?: string;
+  /** Claude API로 자동 분류된 상황 (위로/감사/예배/새힘/기도/회개) */
+  moods?: string[];
+  /** 상황 분류 생성 시각 (ISO 문자열) */
+  moodsGeneratedAt?: string;
   created_at: string;
 }
 
