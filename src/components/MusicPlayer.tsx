@@ -1790,8 +1790,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       <div
                         className={`flex flex-wrap gap-1.5 ${
                           tagsExpanded
-                            ? 'max-h-60 overflow-y-auto'
-                            : 'max-h-[5.25rem] overflow-hidden'
+                            ? 'max-h-none overflow-visible'
+                            : 'max-h-24 overflow-hidden'
                         }`}
                       >
                         {(tagsExpanded
