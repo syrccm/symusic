@@ -117,6 +117,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [currentCategory, setCurrentCategory] = useState('전체');
   const [searchTab, setSearchTab] = useState<SearchTabKey>('category');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [tagsExpanded, setTagsExpanded] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [lyricsQuery, setLyricsQuery] = useState('');
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
@@ -1785,30 +1786,53 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   allTags.length === 0 ? (
                     <p className="text-base text-gray-400 py-2 px-1">아직 생성된 태그가 없습니다.</p>
                   ) : (
-                    <div className="flex flex-wrap gap-1.5 max-h-40 overflow-y-auto">
-                      {allTags.map((tag) => {
-                        const active = selectedTags.includes(tag);
-                        return (
-                          <button
-                            key={tag}
-                            type="button"
-                            onClick={() =>
-                              setSelectedTags((prev) =>
-                                prev.includes(tag)
-                                  ? prev.filter((x) => x !== tag)
-                                  : [...prev, tag]
-                              )
-                            }
-                            className={`px-2.5 py-1.5 rounded-full text-base transition-colors ${
-                              active
-                                ? 'bg-purple-600 text-white'
-                                : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
-                            }`}
-                          >
-                            #{tag}
-                          </button>
-                        );
-                      })}
+                    <div>
+                      <div
+                        className={`flex flex-wrap gap-1.5 ${
+                          tagsExpanded
+                            ? 'max-h-60 overflow-y-auto'
+                            : 'max-h-[5.25rem] overflow-hidden'
+                        }`}
+                      >
+                        {(tagsExpanded
+                          ? allTags
+                          : [
+                              ...allTags.filter((t) => selectedTags.includes(t)),
+                              ...allTags.filter((t) => !selectedTags.includes(t)),
+                            ]
+                        ).map((tag) => {
+                          const active = selectedTags.includes(tag);
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() =>
+                                setSelectedTags((prev) =>
+                                  prev.includes(tag)
+                                    ? prev.filter((x) => x !== tag)
+                                    : [...prev, tag]
+                                )
+                              }
+                              className={`px-2.5 py-1.5 rounded-full text-base transition-colors ${
+                                active
+                                  ? 'bg-purple-600 text-white'
+                                  : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
+                              }`}
+                            >
+                              #{tag}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setTagsExpanded((prev) => !prev)}
+                        className="mt-2 w-full px-3 py-2 rounded-lg text-base font-medium bg-purple-900/40 text-purple-200 hover:bg-purple-800/50 transition-colors"
+                      >
+                        {tagsExpanded
+                          ? '태그 접기 ▲'
+                          : `태그 더보기 ▼ (총 ${allTags.length}개)`}
+                      </button>
                     </div>
                   )
                 )}
