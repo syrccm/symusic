@@ -99,6 +99,9 @@
   body {
     overflow-x: hidden;
     max-width: 100vw;
+    /* iOS Safari 당겨서 새로고침(Pull to Refresh) 비활성화 */
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
   }
 
   #root {

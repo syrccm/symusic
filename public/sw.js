@@ -1,5 +1,5 @@
 // SY Music Service Worker
-const CACHE_NAME = 'symusic-v2';
+const CACHE_NAME = 'symusic-v3';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -47,7 +47,10 @@ function shouldBypassSW(request) {
     url.includes('firebaseapp.com') ||
     url.includes('googleapis.com/identitytoolkit') ||
     url.includes('securetoken.googleapis.com') ||
-    url.includes('identitytoolkit.googleapis.com')
+    url.includes('identitytoolkit.googleapis.com') ||
+    // 음악 스트림(Cloudflare R2)은 SW가 가로채면 오디오 Range 요청이 끊기므로 네트워크 직행
+    url.includes('.r2.dev') ||
+    url.includes('r2.cloudflarestorage.com')
   );
 }
 
