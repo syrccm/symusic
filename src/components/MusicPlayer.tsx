@@ -822,17 +822,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       return songs.filter(song => favorites.includes(song.id));
     }
     if (songsMiniTab === 'search') {
-      return getSearchResultSongs();
+      const result = getSearchResultSongs();
+      // 검색 결과가 비어 있으면(필터 미적용/0건) 전체 곡으로 폴백
+      return result.length > 0 ? result : songs;
     }
     return songs;
-  };
-
-  // 검색 필터 초기화 (전체 미니 탭 / ✕ 버튼 공통)
-  const resetSearchFilters = () => {
-    setSelectedTags([]);
-    setSelectedMood(null);
-    setLyricsQuery('');
-    setCurrentCategory('전체');
   };
 
   // Get next song index based on playback mode
@@ -1176,25 +1170,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const filteredSongs = getFilteredSongs();
   const searchResultSongs = getSearchResultSongs();
 
-  // 찬양 탭 미니 탭: 실제 필터가 적용된 경우에만 '검색결과' 탭 노출
+  // 찬양 탭 미니 탭: 항상 2개 고정(전체 / 검색).
+  // 실제 필터가 적용된 경우에만 검색 결과 곡 수를 노출, 그 외엔 0건.
   const hasActiveSearchFilter =
     (searchTab === 'category' && currentCategory !== '전체') ||
     (searchTab === 'tags' && selectedTags.length > 0) ||
     (searchTab === 'mood' && !!selectedMood) ||
     (searchTab === 'lyrics' && lyricsQuery.trim().length > 0);
-  const searchSummary =
-    searchTab === 'category'
-      ? currentCategory
-      : searchTab === 'tags'
-      ? selectedTags.map((t) => `#${t}`).join(' ')
-      : searchTab === 'mood'
-      ? selectedMood ?? ''
-      : searchTab === 'lyrics'
-      ? `"${lyricsQuery.trim()}"`
-      : '';
-  const showSearchMiniTab = hasActiveSearchFilter;
+  const searchCount = hasActiveSearchFilter ? searchResultSongs.length : 0;
+  const searchTabEnabled = searchCount > 0;
   const activeMiniTab: 'all' | 'search' =
-    showSearchMiniTab && songsMiniTab === 'search' ? 'search' : 'all';
+    searchTabEnabled && songsMiniTab === 'search' ? 'search' : 'all';
 
   // 검색 탭: 미선택 상태에서는 곡 목록 대신 안내 메시지만 노출
   const SEARCH_EMPTY_HINTS: Record<string, { icon: string; title: string; desc: string }> = {
@@ -1495,61 +1481,39 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 </div>
               )}
 
-              {/* 0. 미니 탭 바 — 전체 / 검색결과 */}
+              {/* 0. 미니 탭 바 — 전체 / 검색 (항상 2개 고정) */}
               {!isFavoritesMode && (
                 <div className="flex items-stretch gap-2">
-                  {/* 🎵 전체 */}
+                  {/* 🎵 전체 — 보라색 계열 */}
                   <button
                     type="button"
-                    onClick={() => {
-                      resetSearchFilters();
-                      setSongsMiniTab('all');
-                    }}
+                    onClick={() => setSongsMiniTab('all')}
                     className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-colors ${
                       activeMiniTab === 'all'
-                        ? 'bg-purple-700 text-white shadow-sm shadow-purple-900/40'
-                        : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
+                        ? 'bg-purple-600 text-white shadow-sm shadow-purple-900/40'
+                        : 'bg-purple-950/40 text-purple-300/60 hover:bg-purple-900/40'
                     }`}
                   >
                     <span>🎵</span>
                     <span>전체 ({songs.length})</span>
                   </button>
 
-                  {/* 🔍 검색결과 */}
-                  {showSearchMiniTab && (
-                    <div
-                      className={`flex-1 h-11 rounded-lg flex items-center overflow-hidden transition-colors ${
-                        activeMiniTab === 'search'
-                          ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white shadow-sm shadow-orange-900/40'
-                          : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
-                      }`}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => setSongsMiniTab('search')}
-                        className="flex-1 h-full px-2 flex items-center justify-center gap-1 min-w-0"
-                      >
-                        <span className="flex-shrink-0">🔍</span>
-                        <span className="truncate text-base font-semibold">
-                          {searchSummary} {searchResultSongs.length}곡
-                        </span>
-                      </button>
-                      {activeMiniTab === 'search' && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            resetSearchFilters();
-                            setSongsMiniTab('all');
-                          }}
-                          aria-label="검색 초기화"
-                          title="검색 초기화"
-                          className="flex-shrink-0 h-full px-2.5 flex items-center justify-center text-white/90 hover:text-white hover:bg-black/15 transition-colors"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      )}
-                    </div>
-                  )}
+                  {/* 🔍 검색 — 핑크/주황 계열, N=0이면 비활성화 */}
+                  <button
+                    type="button"
+                    disabled={!searchTabEnabled}
+                    onClick={() => searchTabEnabled && setSongsMiniTab('search')}
+                    className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                      activeMiniTab === 'search'
+                        ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white shadow-sm shadow-orange-900/40'
+                        : searchTabEnabled
+                        ? 'bg-orange-950/40 text-orange-300/60 hover:bg-orange-900/40'
+                        : 'bg-slate-800/40 text-gray-600 cursor-not-allowed'
+                    }`}
+                  >
+                    <span>🔍</span>
+                    <span>검색 ({searchCount})</span>
+                  </button>
                 </div>
               )}
 
