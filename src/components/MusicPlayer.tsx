@@ -145,6 +145,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // 하단 탭바
   const [activeTab, setActiveTab] = useState<MainTabKey>('songs');
 
+  // 찬양 탭 내부 미니 탭 (전체 / 검색결과)
+  const [songsMiniTab, setSongsMiniTab] = useState<'all' | 'search'>('all');
+
   // Notice (공지 탭)
   const {
     notices,
@@ -778,12 +781,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setActiveAdminTab('manage');
   };
 
-  // Get filtered songs
-  const getFilteredSongs = () => {
-    if (isFavoritesMode) {
-      return songs.filter(song => favorites.includes(song.id));
-    }
-
+  // 검색/태그/상황/가사 필터를 적용한 결과
+  // (검색 탭과 찬양 탭 '검색결과' 미니 탭이 공통으로 사용)
+  const getSearchResultSongs = () => {
     if (searchTab === 'tags') {
       if (selectedTags.length === 0) return songs;
       // 선택한 태그 중 하나라도 포함하면 노출 (OR)
@@ -813,6 +813,28 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       : songs.filter(song => song.category === currentCategory);
   };
 
+  // 플레이어가 순회하고 찬양 탭이 표시하는 목록
+  // - 즐겨찾기 모드: 즐겨찾기 곡
+  // - 찬양 탭 '검색결과' 미니 탭: 필터 적용 결과
+  // - 그 외(전체): 전체 곡
+  const getFilteredSongs = () => {
+    if (isFavoritesMode) {
+      return songs.filter(song => favorites.includes(song.id));
+    }
+    if (songsMiniTab === 'search') {
+      return getSearchResultSongs();
+    }
+    return songs;
+  };
+
+  // 검색 필터 초기화 (전체 미니 탭 / ✕ 버튼 공통)
+  const resetSearchFilters = () => {
+    setSelectedTags([]);
+    setSelectedMood(null);
+    setLyricsQuery('');
+    setCurrentCategory('전체');
+  };
+
   // Get next song index based on playback mode
   const getNextSongIndex = (currentIndex: number) => {
     const filteredSongs = getFilteredSongs();
@@ -839,12 +861,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
   };
 
-  // Play song
-  const playSong = (index: number) => {
-    const filteredSongs = getFilteredSongs();
-    if (index < 0 || index >= filteredSongs.length) return;
-
-    const song = filteredSongs[index];
+  // 특정 곡 객체를 바로 재생
+  const playSongObject = (song: Song) => {
     setCurrentSongIndex(songs.indexOf(song));
 
     if (song.audioUrl && audioRef.current) {
@@ -861,6 +879,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     } else {
       toast.error('오디오 파일이 없습니다.');
     }
+  };
+
+  // Play song
+  const playSong = (index: number) => {
+    const filteredSongs = getFilteredSongs();
+    if (index < 0 || index >= filteredSongs.length) return;
+    playSongObject(filteredSongs[index]);
   };
 
   const handleShareClick = (song: { id: string; title: string }) => {
@@ -910,10 +935,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setIsFavoritesMode(false);
   };
 
-  // 검색 탭: 결과 선택 → 재생 후 찬양 탭으로 이동
+  // 검색 탭: 결과 선택 → 찬양 탭으로 이동 + '검색결과' 미니 탭 자동 활성화 후 재생
   const handlePickFromSearch = (index: number) => {
-    playSong(index);
+    const list = getSearchResultSongs();
+    const song = list[index];
+    if (!song) return;
+    setSongsMiniTab('search');
     setActiveTab('songs');
+    playSongObject(song);
   };
 
   // 즐겨찾기 탭: 개별 곡 선택 → 즐겨찾기 모드로 재생 후 찬양 탭으로 이동
@@ -1060,7 +1089,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     if (isShuffleEnabled) {
       setShuffledIndices(generateShuffledIndices());
     }
-  }, [songs, currentCategory, isShuffleEnabled, isFavoritesMode, favorites, searchTab, selectedTags, selectedMood, lyricsQuery]);
+  }, [songs, currentCategory, isShuffleEnabled, isFavoritesMode, favorites, searchTab, selectedTags, selectedMood, lyricsQuery, songsMiniTab]);
 
   // Audio event handlers
   useEffect(() => {
@@ -1145,6 +1174,27 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   }
 
   const filteredSongs = getFilteredSongs();
+  const searchResultSongs = getSearchResultSongs();
+
+  // 찬양 탭 미니 탭: 실제 필터가 적용된 경우에만 '검색결과' 탭 노출
+  const hasActiveSearchFilter =
+    (searchTab === 'category' && currentCategory !== '전체') ||
+    (searchTab === 'tags' && selectedTags.length > 0) ||
+    (searchTab === 'mood' && !!selectedMood) ||
+    (searchTab === 'lyrics' && lyricsQuery.trim().length > 0);
+  const searchSummary =
+    searchTab === 'category'
+      ? currentCategory
+      : searchTab === 'tags'
+      ? selectedTags.map((t) => `#${t}`).join(' ')
+      : searchTab === 'mood'
+      ? selectedMood ?? ''
+      : searchTab === 'lyrics'
+      ? `"${lyricsQuery.trim()}"`
+      : '';
+  const showSearchMiniTab = hasActiveSearchFilter;
+  const activeMiniTab: 'all' | 'search' =
+    showSearchMiniTab && songsMiniTab === 'search' ? 'search' : 'all';
 
   // 검색 탭: 미선택 상태에서는 곡 목록 대신 안내 메시지만 노출
   const SEARCH_EMPTY_HINTS: Record<string, { icon: string; title: string; desc: string }> = {
@@ -1442,6 +1492,64 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     <ArrowLeft className="h-3.5 w-3.5 mr-1" />
                     전체 목록
                   </button>
+                </div>
+              )}
+
+              {/* 0. 미니 탭 바 — 전체 / 검색결과 */}
+              {!isFavoritesMode && (
+                <div className="flex items-stretch gap-2">
+                  {/* 🎵 전체 */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      resetSearchFilters();
+                      setSongsMiniTab('all');
+                    }}
+                    className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-colors ${
+                      activeMiniTab === 'all'
+                        ? 'bg-purple-700 text-white shadow-sm shadow-purple-900/40'
+                        : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
+                    }`}
+                  >
+                    <span>🎵</span>
+                    <span>전체 ({songs.length})</span>
+                  </button>
+
+                  {/* 🔍 검색결과 */}
+                  {showSearchMiniTab && (
+                    <div
+                      className={`flex-1 h-11 rounded-lg flex items-center overflow-hidden transition-colors ${
+                        activeMiniTab === 'search'
+                          ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white shadow-sm shadow-orange-900/40'
+                          : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
+                      }`}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => setSongsMiniTab('search')}
+                        className="flex-1 h-full px-2 flex items-center justify-center gap-1 min-w-0"
+                      >
+                        <span className="flex-shrink-0">🔍</span>
+                        <span className="truncate text-base font-semibold">
+                          {searchSummary} {searchResultSongs.length}곡
+                        </span>
+                      </button>
+                      {activeMiniTab === 'search' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            resetSearchFilters();
+                            setSongsMiniTab('all');
+                          }}
+                          aria-label="검색 초기화"
+                          title="검색 초기화"
+                          className="flex-shrink-0 h-full px-2.5 flex items-center justify-center text-white/90 hover:text-white hover:bg-black/15 transition-colors"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1899,10 +2007,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <>
                   <div className="flex items-center gap-2 text-base text-purple-200 pt-1">
                     <Search className="h-4 w-4" />
-                    <span>검색 결과 ({filteredSongs.length}곡)</span>
+                    <span>검색 결과 ({searchResultSongs.length}곡)</span>
                   </div>
 
-                  {renderSongList(filteredSongs, handlePickFromSearch, '검색 결과가 없습니다')}
+                  {renderSongList(searchResultSongs, handlePickFromSearch, '검색 결과가 없습니다')}
                 </>
               ) : (
                 <div className="flex flex-col items-center justify-center text-center py-16 px-4">
