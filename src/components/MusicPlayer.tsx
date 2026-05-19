@@ -1558,7 +1558,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     }`}
                   >
                     <span>🎵</span>
-                    <span>전체 ({songs.length})</span>
+                    <span>전체재생 ({songs.length})</span>
                   </button>
 
                   {/* 🔍 검색 — 핑크/주황 계열, N=0이면 비활성화 */}
@@ -1575,7 +1575,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     }`}
                   >
                     <span>🔍</span>
-                    <span>검색 ({searchCount})</span>
+                    <span>검색재생 ({searchCount})</span>
                   </button>
                 </div>
               )}
