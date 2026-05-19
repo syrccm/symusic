@@ -941,6 +941,25 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setIsFavoritesMode(false);
   };
 
+  // 좌측 🎵 전체재생 미니탭 클릭 시: 기존 재생을 즉시 중단하고 전체 곡 첫 번째부터 자동재생
+  const playAllFromStart = () => {
+    if (songs.length === 0) return;
+    exitFavoritesMode();
+    setSearchPlaybackActive(false);
+    setSongsMiniTab('all');
+    playSongObject(songs[0]);
+  };
+
+  // 우측 🔍 검색재생 미니탭 클릭 시: 기존 재생을 즉시 중단하고 검색 결과/큐 첫 번째부터 자동재생
+  const playSearchFromStart = () => {
+    const list = searchQueue.length > 0 ? searchQueue : getSearchResultSongs();
+    if (list.length === 0) return;
+    exitFavoritesMode();
+    setSongsMiniTab('search');
+    setSearchPlaybackActive(true);
+    playSongObject(list[0]);
+  };
+
   // 검색 탭: 곡 한 줄 클릭 → 찬양 탭 이동 + 검색 미니 탭 활성화 (큐는 검색 결과 전체)
   const handlePickFromSearch = (index: number) => {
     const list = getSearchResultSongs();
@@ -1574,8 +1593,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <button
                   type="button"
                   onClick={() => {
-                    exitFavoritesMode();
-                    setSongsMiniTab('all');
+                    // 같은 활성 탭 재클릭은 무시, 다른 탭에서 넘어오면 첫 곡부터 재시작
+                    if (activeMiniTab === 'all') return;
+                    playAllFromStart();
                   }}
                   className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'all'
@@ -1592,8 +1612,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     type="button"
                     onClick={() => {
-                      exitFavoritesMode();
-                      setSongsMiniTab('search');
+                      if (activeMiniTab === 'search') return;
+                      playSearchFromStart();
                     }}
                     className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                       activeMiniTab === 'search'
@@ -1609,6 +1629,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     type="button"
                     disabled={favoriteSongs.length === 0}
                     onClick={() => {
+                      if (activeMiniTab === 'favorites') return;
                       if (favoriteSongs.length === 0) return;
                       playFavorites();
                     }}
