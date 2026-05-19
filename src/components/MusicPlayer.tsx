@@ -147,11 +147,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // 찬양 탭 내부 미니 탭 (전체 / 검색결과)
   const [songsMiniTab, setSongsMiniTab] = useState<'all' | 'search'>('all');
 
-  // 우측 미니탭이 '검색재생' 모드인지 여부.
-  // - true: 사용자가 검색 결과에서 실제로 곡을 재생(클릭)했을 때
-  // - false: 기본 상태 / 검색이 완전히 초기화되었을 때 / 즐겨찾기 재생으로 전환했을 때
-  // 검색어 입력·필터 적용만으로는 true가 되지 않는다.
-  const [searchPlaybackActive, setSearchPlaybackActive] = useState(false);
+  // 미니탭에 [검색] 탭이 생성됐는지 여부 (한 번 true가 되면 세션 종료 전까지 유지).
+  // 하단 '검색' 탭에서 곡을 선택 → 재생 버튼을 눌러 실제로 재생을 시작했을 때 true가 된다.
+  // 검색 초기화/다른 탭 이동에도 false로 돌아가지 않는다.
+  const [searchTabCreated, setSearchTabCreated] = useState(false);
 
   // 검색 탭: 체크된 곡 id 목록 + 재생 큐(선택곡/전체 재생 시 구성)
   const [selectedSearchSongs, setSelectedSearchSongs] = useState<string[]>([]);
@@ -914,7 +913,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
 
     setIsFavoritesMode(true);
-    setSearchPlaybackActive(false);
     toast(`즐겨찾기 ${favoriteSongs.length}곡 재생을 시작합니다 ✨`);
 
     const firstSong = favoriteSongs[0];
@@ -941,34 +939,33 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setIsFavoritesMode(false);
   };
 
-  // 좌측 🎵 전체재생 미니탭 클릭 시: 기존 재생을 즉시 중단하고 전체 곡 첫 번째부터 자동재생
+  // 좌측 [전체] 미니탭 클릭 시: 기존 재생을 즉시 중단하고 전체 곡 첫 번째부터 자동재생
   const playAllFromStart = () => {
     if (songs.length === 0) return;
     exitFavoritesMode();
-    setSearchPlaybackActive(false);
     setSongsMiniTab('all');
     playSongObject(songs[0]);
   };
 
-  // 우측 🔍 검색재생 미니탭 클릭 시: 기존 재생을 즉시 중단하고 검색 결과/큐 첫 번째부터 자동재생
+  // 우측 [검색] 미니탭 클릭 시: 기존 재생을 즉시 중단하고 마지막 검색 재생 큐 첫 곡부터 자동재생
   const playSearchFromStart = () => {
     const list = searchQueue.length > 0 ? searchQueue : getSearchResultSongs();
     if (list.length === 0) return;
     exitFavoritesMode();
     setSongsMiniTab('search');
-    setSearchPlaybackActive(true);
     playSongObject(list[0]);
   };
 
-  // 검색 탭: 곡 한 줄 클릭 → 찬양 탭 이동 + 검색 미니 탭 활성화 (큐는 검색 결과 전체)
+  // 검색 탭: 곡 한 줄 클릭 → 찬양 탭 이동 + 검색 미니 탭 생성/활성화
+  // 큐는 클릭 시점의 검색 결과 전체로 고정(필터 해제 후에도 유지)
   const handlePickFromSearch = (index: number) => {
     const list = getSearchResultSongs();
     const song = list[index];
     if (!song) return;
-    setSearchQueue([]); // 큐 비움 → 검색 결과 전체로 순회
+    setSearchQueue(list);
     setSongsMiniTab('search');
     setIsFavoritesMode(false);
-    setSearchPlaybackActive(true);
+    setSearchTabCreated(true);
     setActiveTab('songs');
     playSongObject(song);
   };
@@ -992,7 +989,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setSearchQueue(selected);
     setSongsMiniTab('search');
     setIsFavoritesMode(false);
-    setSearchPlaybackActive(true);
+    setSearchTabCreated(true);
     setActiveTab('songs');
     playSongObject(selected[0]);
   };
@@ -1004,7 +1001,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setSearchQueue(all);
     setSongsMiniTab('search');
     setIsFavoritesMode(false);
-    setSearchPlaybackActive(true);
+    setSearchTabCreated(true);
     setActiveTab('songs');
     playSongObject(all[0]);
   };
@@ -1012,7 +1009,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // 즐겨찾기 탭: 개별 곡 선택 → 즐겨찾기 모드로 재생 후 찬양 탭으로 이동
   const playFavoriteSong = (song: Song) => {
     setIsFavoritesMode(true);
-    setSearchPlaybackActive(false);
     setCurrentSongIndex(songs.indexOf(song));
 
     if (song.audioUrl && audioRef.current) {
@@ -1226,23 +1222,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     });
   }, [currentSongIndex]);
 
-  // 우측 미니탭은 사용자가 검색 결과에서 실제로 곡을 재생했을 때만 '검색재생'으로 전환된다
-  // (검색어 입력·필터 적용만으로는 전환되지 않음).
-  // 검색이 완전히 초기화되면(필터 해제 + 큐 비움) '검색재생' 컨텍스트를 해제하여
-  // 우측 미니탭을 자동으로 ⭐ 즐겨찾기로 복귀시킨다.
-  useEffect(() => {
-    const hasFilter =
-      (searchTab === 'category' && currentCategory !== '전체') ||
-      (searchTab === 'tags' && selectedTags.length > 0) ||
-      (searchTab === 'mood' && !!selectedMood) ||
-      (searchTab === 'lyrics' && lyricsQuery.trim().length > 0);
-    const searchActive = searchQueue.length > 0 || hasFilter;
-    if (!searchActive) {
-      setSearchPlaybackActive(false);
-      setSongsMiniTab((prev) => (prev === 'search' ? 'all' : prev));
-    }
-  }, [searchTab, currentCategory, selectedTags, selectedMood, lyricsQuery, searchQueue]);
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4">
@@ -1258,38 +1237,21 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const filteredSongs = getFilteredSongs();
   const searchResultSongs = getSearchResultSongs();
 
-  // 찬양 탭 미니 탭: 항상 2개 고정(전체 / 검색).
-  // 실제 필터가 적용된 경우에만 검색 결과 곡 수를 노출, 그 외엔 0건.
-  const hasActiveSearchFilter =
-    (searchTab === 'category' && currentCategory !== '전체') ||
-    (searchTab === 'tags' && selectedTags.length > 0) ||
-    (searchTab === 'mood' && !!selectedMood) ||
-    (searchTab === 'lyrics' && lyricsQuery.trim().length > 0);
-  // 재생 큐가 있으면 큐 곡 수, 없으면 필터 적용 시 검색 결과 곡 수
-  const searchCount =
-    searchQueue.length > 0
-      ? searchQueue.length
-      : hasActiveSearchFilter
-      ? searchResultSongs.length
-      : 0;
+  // 찬양 탭 미니탭:
+  // - 기본: [전체] [★] 2개
+  // - 하단 '검색' 탭에서 곡 선택 → 재생을 한 번이라도 실행하면 [검색] 탭이 추가되어
+  //   세션 종료 전까지 [전체] [★] [검색] 3개로 고정 유지.
+  // [검색] 탭이 보여주는 곡 수는 마지막 검색 재생 큐(searchQueue) 길이.
+  const searchCount = searchQueue.length;
   // 검색 탭 체크된(현재 결과 내) 곡 수
   const selectedSearchCount = searchResultSongs.filter((s) =>
     selectedSearchSongs.includes(s.id)
   ).length;
-  // 미니탭은 항상 2개. 좌측은 전체재생 고정, 우측은
-  // 사용자가 검색 결과에서 실제로 재생을 시작한 경우에 한해 '검색재생',
-  // 그 외에는 '즐겨찾기'를 하나만 동적으로 노출한다.
-  const rightTabMode: 'search' | 'favorites' = searchPlaybackActive
+  const activeMiniTab: 'all' | 'search' | 'favorites' = isFavoritesMode
+    ? 'favorites'
+    : songsMiniTab === 'search'
     ? 'search'
-    : 'favorites';
-  const activeMiniTab: 'all' | 'search' | 'favorites' =
-    rightTabMode === 'search'
-      ? songsMiniTab === 'search'
-        ? 'search'
-        : 'all'
-      : isFavoritesMode
-      ? 'favorites'
-      : 'all';
+    : 'all';
 
   // 검색 탭: 미선택 상태에서는 곡 목록 대신 안내 메시지만 노출
   const SEARCH_EMPTY_HINTS: Record<string, { icon: string; title: string; desc: string }> = {
@@ -1587,9 +1549,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
             <div className="px-3 py-2 space-y-2">
-              {/* 0. 미니 탭 바 — 좌: 전체재생(고정) / 우: 즐겨찾기 ↔ 검색재생(동적), 항상 2개 */}
+              {/* 0. 미니 탭 바 — 기본 [전체] [★], 검색 재생을 한 번이라도 하면 [검색] 추가 (세션 내 영구) */}
               <div className="flex items-stretch gap-2">
-                {/* 🎵 전체재생 (좌측 고정) */}
+                {/* [전체] (좌측 고정) */}
                 <button
                   type="button"
                   onClick={() => {
@@ -1603,12 +1565,32 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
                   }`}
                 >
-                  <span>🎵</span>
-                  <span>전체재생 ({songs.length})</span>
+                  <span>전체 ({songs.length})</span>
                 </button>
 
-                {/* 우측 동적 탭: 검색 활성 시 🔍 검색재생, 그 외 ⭐ 즐겨찾기 */}
-                {rightTabMode === 'search' ? (
+                {/* [★] 즐겨찾기 — 곡 없으면 비활성 */}
+                <button
+                  type="button"
+                  disabled={favoriteSongs.length === 0}
+                  onClick={() => {
+                    if (activeMiniTab === 'favorites') return;
+                    if (favoriteSongs.length === 0) return;
+                    playFavorites();
+                  }}
+                  className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    activeMiniTab === 'favorites'
+                      ? 'bg-pink-500 text-white shadow-sm shadow-pink-900/40'
+                      : favoriteSongs.length > 0
+                      ? 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
+                      : 'bg-slate-800/40 text-gray-600 cursor-not-allowed'
+                  }`}
+                  aria-label="즐겨찾기"
+                >
+                  <span>★</span>
+                </button>
+
+                {/* [검색] — 첫 검색 재생 이후 세션 종료 전까지 영구 노출 */}
+                {searchTabCreated && (
                   <button
                     type="button"
                     onClick={() => {
@@ -1621,28 +1603,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
                     }`}
                   >
-                    <span>🔍</span>
-                    <span>검색재생 ({searchCount})</span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    disabled={favoriteSongs.length === 0}
-                    onClick={() => {
-                      if (activeMiniTab === 'favorites') return;
-                      if (favoriteSongs.length === 0) return;
-                      playFavorites();
-                    }}
-                    className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                      activeMiniTab === 'favorites'
-                        ? 'bg-pink-500 text-white shadow-sm shadow-pink-900/40'
-                        : favoriteSongs.length > 0
-                        ? 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
-                        : 'bg-slate-800/40 text-gray-600 cursor-not-allowed'
-                    }`}
-                  >
-                    <span>⭐</span>
-                    <span>즐겨찾기 ({favoriteSongs.length})</span>
+                    <span>검색 ({searchCount})</span>
                   </button>
                 )}
               </div>
@@ -2199,7 +2160,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       // (즐겨찾기 곡이 없으면 기본 동작인 즐겨찾기 메인 탭으로 이동)
                       if (
                         tab.key === 'favorites' &&
-                        searchPlaybackActive &&
+                        activeMiniTab === 'search' &&
                         favoriteSongs.length > 0
                       ) {
                         handlePlayAllFavorites();
