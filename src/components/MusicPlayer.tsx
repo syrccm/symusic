@@ -1573,9 +1573,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <button
                   type="button"
                   disabled={favoriteSongs.length === 0}
-                  onClick={() =>
-                    favoriteSongs.length > 0 && setIsFavoritesMode(true)
-                  }
+                  onClick={() => {
+                    if (favoriteSongs.length === 0) return;
+                    playFavorites();
+                  }}
                   className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'favorites'
                       ? 'bg-pink-500 text-white shadow-sm shadow-pink-900/40'
