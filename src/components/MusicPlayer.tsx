@@ -148,6 +148,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // 찬양 탭 내부 미니 탭 (전체 / 검색결과)
   const [songsMiniTab, setSongsMiniTab] = useState<'all' | 'search'>('all');
 
+  // 검색 탭: 체크된 곡 id 목록 + 재생 큐(선택곡/전체 재생 시 구성)
+  const [selectedSearchSongs, setSelectedSearchSongs] = useState<string[]>([]);
+  const [searchQueue, setSearchQueue] = useState<Song[]>([]);
+
   // Notice (공지 탭)
   const {
     notices,
@@ -822,6 +826,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       return songs.filter(song => favorites.includes(song.id));
     }
     if (songsMiniTab === 'search') {
+      // 선택곡/전체 재생으로 구성된 큐가 있으면 그 큐를 우선 사용
+      if (searchQueue.length > 0) return searchQueue;
       const result = getSearchResultSongs();
       // 검색 결과가 비어 있으면(필터 미적용/0건) 전체 곡으로 폴백
       return result.length > 0 ? result : songs;
@@ -929,14 +935,47 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     setIsFavoritesMode(false);
   };
 
-  // 검색 탭: 결과 선택 → 찬양 탭으로 이동 + '검색결과' 미니 탭 자동 활성화 후 재생
+  // 검색 탭: 곡 한 줄 클릭 → 찬양 탭 이동 + 검색 미니 탭 활성화 (큐는 검색 결과 전체)
   const handlePickFromSearch = (index: number) => {
     const list = getSearchResultSongs();
     const song = list[index];
     if (!song) return;
+    setSearchQueue([]); // 큐 비움 → 검색 결과 전체로 순회
     setSongsMiniTab('search');
     setActiveTab('songs');
     playSongObject(song);
+  };
+
+  // 검색 탭 체크박스 토글
+  const toggleSearchSongSelect = (id: string) => {
+    setSelectedSearchSongs((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  // 검색 탭: 선택곡 재생 → 체크된 곡들로 큐 구성 후 찬양 탭으로 이동
+  const playSelectedSearchSongs = () => {
+    const selected = getSearchResultSongs().filter((s) =>
+      selectedSearchSongs.includes(s.id)
+    );
+    if (selected.length === 0) {
+      toast.error('재생할 곡을 선택해주세요');
+      return;
+    }
+    setSearchQueue(selected);
+    setSongsMiniTab('search');
+    setActiveTab('songs');
+    playSongObject(selected[0]);
+  };
+
+  // 검색 탭: 전체 재생 → 검색된 전체 곡으로 큐 구성 후 찬양 탭으로 이동
+  const playAllSearchSongs = () => {
+    const all = getSearchResultSongs();
+    if (all.length === 0) return;
+    setSearchQueue(all);
+    setSongsMiniTab('search');
+    setActiveTab('songs');
+    playSongObject(all[0]);
   };
 
   // 즐겨찾기 탭: 개별 곡 선택 → 즐겨찾기 모드로 재생 후 찬양 탭으로 이동
@@ -1177,8 +1216,18 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     (searchTab === 'tags' && selectedTags.length > 0) ||
     (searchTab === 'mood' && !!selectedMood) ||
     (searchTab === 'lyrics' && lyricsQuery.trim().length > 0);
-  const searchCount = hasActiveSearchFilter ? searchResultSongs.length : 0;
+  // 재생 큐가 있으면 큐 곡 수, 없으면 필터 적용 시 검색 결과 곡 수
+  const searchCount =
+    searchQueue.length > 0
+      ? searchQueue.length
+      : hasActiveSearchFilter
+      ? searchResultSongs.length
+      : 0;
   const searchTabEnabled = searchCount > 0;
+  // 검색 탭 체크된(현재 결과 내) 곡 수
+  const selectedSearchCount = searchResultSongs.filter((s) =>
+    selectedSearchSongs.includes(s.id)
+  ).length;
   const activeMiniTab: 'all' | 'search' =
     searchTabEnabled && songsMiniTab === 'search' ? 'search' : 'all';
 
@@ -1226,6 +1275,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     list: Song[],
     onPick: (index: number) => void,
     emptyText: string,
+    selection?: { selectedIds: string[]; onToggle: (id: string) => void },
   ) => {
     if (list.length === 0) {
       return (
@@ -1251,6 +1301,19 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               }`}
             >
               <div className="flex items-center gap-2">
+                {selection && (
+                  <input
+                    type="checkbox"
+                    checked={selection.selectedIds.includes(song.id)}
+                    onClick={(e) => e.stopPropagation()}
+                    onChange={(e) => {
+                      e.stopPropagation();
+                      selection.onToggle(song.id);
+                    }}
+                    className="flex-shrink-0 w-5 h-5 accent-purple-600 cursor-pointer"
+                    aria-label={`${song.title} 선택`}
+                  />
+                )}
                 <span className="text-gray-500 font-mono w-5 flex-shrink-0 text-base text-center">
                   {index + 1}
                 </span>
@@ -1852,7 +1915,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     key={t.key}
                     type="button"
-                    onClick={() => setSearchTab(t.key)}
+                    onClick={() => {
+                      setSearchTab(t.key);
+                      setSelectedSearchSongs([]);
+                    }}
                     className={`h-10 rounded-md text-base font-medium transition-colors ${
                       searchTab === t.key
                         ? 'bg-purple-600 text-white shadow-sm shadow-purple-900/40'
@@ -1969,12 +2035,38 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
               {searchHasSelection ? (
                 <>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Button
+                      onClick={playSelectedSearchSongs}
+                      className="h-11 bg-purple-600 hover:bg-purple-700 text-white justify-center text-base font-semibold"
+                    >
+                      <Play className="h-4 w-4 mr-1.5" />
+                      선택곡 재생 ({selectedSearchCount})
+                    </Button>
+                    <Button
+                      onClick={playAllSearchSongs}
+                      disabled={searchResultSongs.length === 0}
+                      className="h-11 bg-gradient-to-r from-pink-600 to-orange-500 hover:from-pink-700 hover:to-orange-600 text-white justify-center text-base font-semibold disabled:opacity-50"
+                    >
+                      <SkipForward className="h-4 w-4 mr-1.5" />
+                      전체 재생 ({searchResultSongs.length})
+                    </Button>
+                  </div>
+
                   <div className="flex items-center gap-2 text-base text-purple-200 pt-1">
                     <Search className="h-4 w-4" />
                     <span>검색 결과 ({searchResultSongs.length}곡)</span>
                   </div>
 
-                  {renderSongList(searchResultSongs, handlePickFromSearch, '검색 결과가 없습니다')}
+                  {renderSongList(
+                    searchResultSongs,
+                    handlePickFromSearch,
+                    '검색 결과가 없습니다',
+                    {
+                      selectedIds: selectedSearchSongs,
+                      onToggle: toggleSearchSongSelect,
+                    },
+                  )}
                 </>
               ) : (
                 <div className="flex flex-col items-center justify-center text-center py-16 px-4">
