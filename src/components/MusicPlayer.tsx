@@ -47,7 +47,6 @@ import {
   Repeat,
   Shuffle,
   Star,
-  ArrowLeft,
   Share2,
   SunMedium,
   Menu,
@@ -1228,8 +1227,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const selectedSearchCount = searchResultSongs.filter((s) =>
     selectedSearchSongs.includes(s.id)
   ).length;
-  const activeMiniTab: 'all' | 'search' =
-    searchTabEnabled && songsMiniTab === 'search' ? 'search' : 'all';
+  const activeMiniTab: 'all' | 'search' | 'favorites' = isFavoritesMode
+    ? 'favorites'
+    : searchTabEnabled && songsMiniTab === 'search'
+    ? 'search'
+    : 'all';
 
   // 검색 탭: 미선택 상태에서는 곡 목록 대신 안내 메시지만 노출
   const SEARCH_EMPTY_HINTS: Record<string, { icon: string; title: string; desc: string }> = {
@@ -1527,58 +1529,65 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
             <div className="px-3 py-2 space-y-2">
-              {isFavoritesMode && (
-                <div className="flex items-center justify-between bg-purple-900/40 border border-purple-400/40 rounded-lg px-3 py-2">
-                  <span className="text-base text-purple-100 flex items-center">
-                    <Star className="h-3.5 w-3.5 mr-1 fill-pink-400 text-pink-400" />
-                    즐겨찾기 재생 중 ({favorites.length}곡)
-                  </span>
-                  <button
-                    type="button"
-                    onClick={exitFavoritesMode}
-                    className="text-base text-purple-200 hover:text-white flex items-center"
-                  >
-                    <ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                    전체 목록
-                  </button>
-                </div>
-              )}
+              {/* 0. 미니 탭 바 — 전체재생 / 검색재생 / 즐겨찾기 (항상 3개 고정) */}
+              <div className="flex items-stretch gap-2">
+                {/* 🎵 전체재생 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    exitFavoritesMode();
+                    setSongsMiniTab('all');
+                  }}
+                  className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    activeMiniTab === 'all'
+                      ? 'bg-purple-700 text-white shadow-sm shadow-purple-900/40'
+                      : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
+                  }`}
+                >
+                  <span>🎵</span>
+                  <span>전체재생 ({songs.length})</span>
+                </button>
 
-              {/* 0. 미니 탭 바 — 전체 / 검색 (항상 2개 고정) */}
-              {!isFavoritesMode && (
-                <div className="flex items-stretch gap-2">
-                  {/* 🎵 전체 — 보라색 계열 */}
-                  <button
-                    type="button"
-                    onClick={() => setSongsMiniTab('all')}
-                    className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                      activeMiniTab === 'all'
-                        ? 'bg-purple-600 text-white shadow-sm shadow-purple-900/40'
-                        : 'bg-purple-950/40 text-purple-300/60 hover:bg-purple-900/40'
-                    }`}
-                  >
-                    <span>🎵</span>
-                    <span>전체재생 ({songs.length})</span>
-                  </button>
+                {/* 🔍 검색재생 — N=0이면 비활성화 */}
+                <button
+                  type="button"
+                  disabled={!searchTabEnabled}
+                  onClick={() => {
+                    if (!searchTabEnabled) return;
+                    exitFavoritesMode();
+                    setSongsMiniTab('search');
+                  }}
+                  className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    activeMiniTab === 'search'
+                      ? 'bg-pink-600 text-white shadow-sm shadow-pink-900/40'
+                      : searchTabEnabled
+                      ? 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
+                      : 'bg-slate-800/40 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  <span>🔍</span>
+                  <span>검색재생 ({searchCount})</span>
+                </button>
 
-                  {/* 🔍 검색 — 핑크/주황 계열, N=0이면 비활성화 */}
-                  <button
-                    type="button"
-                    disabled={!searchTabEnabled}
-                    onClick={() => searchTabEnabled && setSongsMiniTab('search')}
-                    className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-colors ${
-                      activeMiniTab === 'search'
-                        ? 'bg-gradient-to-r from-pink-600 to-orange-500 text-white shadow-sm shadow-orange-900/40'
-                        : searchTabEnabled
-                        ? 'bg-orange-950/40 text-orange-300/60 hover:bg-orange-900/40'
-                        : 'bg-slate-800/40 text-gray-600 cursor-not-allowed'
-                    }`}
-                  >
-                    <span>🔍</span>
-                    <span>검색재생 ({searchCount})</span>
-                  </button>
-                </div>
-              )}
+                {/* ⭐ 즐겨찾기 — 즐겨찾기 곡 없으면 비활성화 */}
+                <button
+                  type="button"
+                  disabled={favoriteSongs.length === 0}
+                  onClick={() =>
+                    favoriteSongs.length > 0 && setIsFavoritesMode(true)
+                  }
+                  className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    activeMiniTab === 'favorites'
+                      ? 'bg-pink-500 text-white shadow-sm shadow-pink-900/40'
+                      : favoriteSongs.length > 0
+                      ? 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
+                      : 'bg-slate-800/40 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
+                  <span>⭐</span>
+                  <span>즐겨찾기 ({favoriteSongs.length})</span>
+                </button>
+              </div>
 
               {/* 1. 곡 목록 박스 — 고정 높이(5곡), 내부 스크롤 */}
               <Card className="bg-slate-800/50 border-slate-700">
