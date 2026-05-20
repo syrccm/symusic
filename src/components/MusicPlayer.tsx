@@ -1616,7 +1616,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-2 pt-0 pb-2 sm:px-2 sm:pt-0 sm:pb-2">
-                  <div className="max-h-32 overflow-y-auto">
+                  {/* 미니탭(전체/즐겨찾기/검색) 공용 곡 목록 — 스크롤바 항상 표시 */}
+                  <div className="max-h-32 overflow-y-scroll scrollbar-visible">
                     {filteredSongs.length === 0 ? (
                       <div className="text-center py-3">
                         <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
@@ -2019,24 +2020,28 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 )}
 
                 {searchTab === 'mood' && (
-                  <div className="grid grid-cols-2 gap-2">
-                    {MOOD_PRESETS.map((m) => {
-                      const active = selectedMood === m.label;
-                      return (
-                        <button
-                          key={m.label}
-                          type="button"
-                          onClick={() => setSelectedMood(active ? null : m.label)}
-                          className={`px-2 py-3 rounded-md text-base transition-colors ${
-                            active
-                              ? 'bg-purple-600 text-white'
-                              : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
-                          }`}
-                        >
-                          {m.label}
-                        </button>
-                      );
-                    })}
+                  // 상황 태그 목록 — 4줄 고정 높이, 초과 시 내부 스크롤. 스크롤바 항상 표시.
+                  // h-[14rem] = 4행(약 48px) + 3 gap(8px)을 수용하는 224px.
+                  <div className="h-[14rem] overflow-y-scroll scrollbar-visible pr-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      {MOOD_PRESETS.map((m) => {
+                        const active = selectedMood === m.label;
+                        return (
+                          <button
+                            key={m.label}
+                            type="button"
+                            onClick={() => setSelectedMood(active ? null : m.label)}
+                            className={`px-2 py-3 rounded-md text-base transition-colors ${
+                              active
+                                ? 'bg-purple-600 text-white'
+                                : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
+                            }`}
+                          >
+                            {m.label}
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
 

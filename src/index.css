@@ -118,3 +118,26 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* 스크롤 가능 영역에 항상 보이는 얇은 스크롤바.
+   overflow-y: scroll 만으로는 모바일 WebKit에서 핸들이 숨어 사용자가
+   스크롤 가능 여부를 인지하기 어려워, 슬림한 자체 스타일을 강제한다. */
+.scrollbar-visible {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(168, 85, 247, 0.55) rgba(148, 163, 184, 0.18);
+}
+.scrollbar-visible::-webkit-scrollbar {
+  width: 6px;
+  -webkit-appearance: none;
+}
+.scrollbar-visible::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.18);
+  border-radius: 3px;
+}
+.scrollbar-visible::-webkit-scrollbar-thumb {
+  background: rgba(168, 85, 247, 0.55);
+  border-radius: 3px;
+}
+.scrollbar-visible::-webkit-scrollbar-thumb:hover {
+  background: rgba(168, 85, 247, 0.75);
+}
