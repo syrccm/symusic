@@ -2160,17 +2160,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     key={tab.key}
                     type="button"
                     onClick={() => {
-                      // 검색재생 중 즐겨찾기 하단 탭 클릭 시:
-                      // 찬양 탭으로 이동 + ⭐ 즐겨찾기 미니탭 활성화 + 즐겨찾기 즉시 재생.
-                      // (즐겨찾기 곡이 없으면 기본 동작인 즐겨찾기 메인 탭으로 이동)
-                      if (
-                        tab.key === 'favorites' &&
-                        activeMiniTab === 'search' &&
-                        favoriteSongs.length > 0
-                      ) {
-                        handlePlayAllFavorites();
-                        return;
-                      }
+                      // 하단 탭은 화면 이동만. 현재 재생은 절대 중단/변경하지 않는다.
                       setActiveTab(tab.key);
                     }}
                     className={`relative flex flex-col items-center justify-center gap-0.5 py-2.5 transition-colors ${
