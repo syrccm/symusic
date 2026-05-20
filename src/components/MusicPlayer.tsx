@@ -1549,9 +1549,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
             <div className="px-3 py-2 space-y-2">
-              {/* 0. 미니 탭 바 — 기본 [전체] [★], 검색 재생을 한 번이라도 하면 [검색] 추가 (세션 내 영구) */}
+              {/* 0. 미니 탭 바 — 기본 [전체재생] [★], 검색 재생을 한 번이라도 하면 [검색재생] 추가 (세션 내 영구) */}
               <div className="flex items-stretch gap-2">
-                {/* [전체] (좌측 고정) */}
+                {/* [전체재생] (좌측 고정) */}
                 <button
                   type="button"
                   onClick={() => {
@@ -1561,11 +1561,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   }}
                   className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'all'
-                      ? 'bg-purple-700 text-white shadow-sm shadow-purple-900/40'
+                      ? 'bg-pink-600 text-white shadow-sm shadow-pink-900/40'
                       : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
                   }`}
                 >
-                  <span>전체 ({songs.length})</span>
+                  <span>전체재생 ({songs.length})</span>
                 </button>
 
                 {/* [★] 즐겨찾기 — 곡 없으면 비활성 */}
@@ -1586,10 +1586,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   }`}
                   aria-label="즐겨찾기"
                 >
-                  <span>★</span>
+                  <span>★ ({favoriteSongs.length})</span>
                 </button>
 
-                {/* [검색] — 첫 검색 재생 이후 세션 종료 전까지 영구 노출 */}
+                {/* [검색재생] — 첫 검색 재생 이후 세션 종료 전까지 영구 노출 */}
                 {searchTabCreated && (
                   <button
                     type="button"
@@ -1599,11 +1599,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     }}
                     className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                       activeMiniTab === 'search'
-                        ? 'bg-pink-600 text-white shadow-sm shadow-pink-900/40'
+                        ? 'bg-pink-700 text-white shadow-sm shadow-pink-900/40'
                         : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
                     }`}
                   >
-                    <span>검색 ({searchCount})</span>
+                    <span>검색재생 ({searchCount})</span>
                   </button>
                 )}
               </div>
