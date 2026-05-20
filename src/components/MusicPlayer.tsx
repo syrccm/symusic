@@ -2020,9 +2020,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 )}
 
                 {searchTab === 'mood' && (
-                  // 상황 태그 목록 — 4줄 고정 높이, 초과 시 내부 스크롤. 스크롤바 항상 표시.
-                  // h-[14rem] = 4행(약 48px) + 3 gap(8px)을 수용하는 224px.
-                  <div className="h-[14rem] overflow-y-scroll scrollbar-visible pr-1">
+                  // 상황 태그 목록 — 4행 고정 높이, 초과 시 내부 스크롤. 스크롤바 항상 표시.
+                  // 버튼: text-base + py-3 ≈ 48px. 4행 + 3 gap = 4*48 + 3*8 = 216px.
+                  // 안전 마진을 두어 13.75rem(220px)로 설정 → 5번째 행 4px 살짝 노출되어 스크롤 가능 힌트.
+                  <div
+                    className="overflow-y-scroll scrollbar-visible pr-1"
+                    style={{ height: '13.75rem' }}
+                  >
                     <div className="grid grid-cols-2 gap-2">
                       {MOOD_PRESETS.map((m) => {
                         const active = selectedMood === m.label;
@@ -2031,7 +2035,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             key={m.label}
                             type="button"
                             onClick={() => setSelectedMood(active ? null : m.label)}
-                            className={`px-2 py-3 rounded-md text-base transition-colors ${
+                            className={`px-2 py-3 rounded-md text-base whitespace-nowrap transition-colors ${
                               active
                                 ? 'bg-purple-600 text-white'
                                 : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
