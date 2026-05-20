@@ -1549,9 +1549,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
             <div className="px-3 py-2 space-y-2">
-              {/* 0. 미니 탭 바 — 기본 [전체재생] [★], 검색 재생을 한 번이라도 하면 [검색재생] 추가 (세션 내 영구) */}
+              {/* 0. 미니 탭 바 — [전체] [★] [검색] 3개 상시 노출
+                  - [검색]은 첫 검색 재생 전까지 흐리게(비활성), 클릭 불가
+                  - 활성 배경색은 즐겨찾기 별표와 동일한 pink-400 */}
               <div className="flex items-stretch gap-2">
-                {/* [전체재생] (좌측 고정) */}
+                {/* [전체] (좌측 고정) */}
                 <button
                   type="button"
                   onClick={() => {
@@ -1561,14 +1563,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   }}
                   className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'all'
-                      ? 'bg-pink-600 text-white shadow-sm shadow-pink-900/40'
+                      ? 'bg-pink-400 text-white shadow-sm shadow-pink-900/40'
                       : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
                   }`}
                 >
-                  <span>전체재생 ({songs.length})</span>
+                  <span>전체 ({songs.length})</span>
                 </button>
 
-                {/* [★] 즐겨찾기 — 곡 없으면 비활성 */}
+                {/* [★] 즐겨찾기 — 곡 없으면 흐리게(클릭 불가) */}
                 <button
                   type="button"
                   disabled={favoriteSongs.length === 0}
@@ -1579,33 +1581,36 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   }}
                   className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'favorites'
-                      ? 'bg-pink-500 text-white shadow-sm shadow-pink-900/40'
+                      ? 'bg-pink-400 text-white shadow-sm shadow-pink-900/40'
                       : favoriteSongs.length > 0
                       ? 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
-                      : 'bg-slate-800/40 text-gray-600 cursor-not-allowed'
+                      : 'bg-slate-800/40 text-gray-600 opacity-40 cursor-not-allowed'
                   }`}
                   aria-label="즐겨찾기"
                 >
-                  <span>★ ({favoriteSongs.length})</span>
+                  <span>★</span>
                 </button>
 
-                {/* [검색재생] — 첫 검색 재생 이후 세션 종료 전까지 영구 노출 */}
-                {searchTabCreated && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (activeMiniTab === 'search') return;
-                      playSearchFromStart();
-                    }}
-                    className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                      activeMiniTab === 'search'
-                        ? 'bg-pink-700 text-white shadow-sm shadow-pink-900/40'
-                        : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
-                    }`}
-                  >
-                    <span>검색재생 ({searchCount})</span>
-                  </button>
-                )}
+                {/* [검색] — 항상 노출. 검색 탭에서 곡 선택 후 재생을 한 번 실행해야 활성화됨.
+                    한 번 활성화되면 세션 종료 전까지 활성 상태 유지 */}
+                <button
+                  type="button"
+                  disabled={!searchTabCreated}
+                  onClick={() => {
+                    if (!searchTabCreated) return;
+                    if (activeMiniTab === 'search') return;
+                    playSearchFromStart();
+                  }}
+                  className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                    activeMiniTab === 'search'
+                      ? 'bg-pink-400 text-white shadow-sm shadow-pink-900/40'
+                      : searchTabCreated
+                      ? 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
+                      : 'bg-slate-800/40 text-gray-600 opacity-40 cursor-not-allowed'
+                  }`}
+                >
+                  <span>검색 ({searchCount})</span>
+                </button>
               </div>
 
               {/* 1. 곡 목록 박스 — 고정 높이(5곡), 내부 스크롤 */}
