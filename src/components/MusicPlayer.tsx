@@ -84,14 +84,19 @@ type SearchTabKey = (typeof SEARCH_TABS)[number]['key'];
 // 하단 탭바 정의
 type MainTabKey = 'songs' | 'search' | 'favorites' | 'notices';
 
-// 상황 라벨 → moods 필드 값 1:1 매핑 (api/generate-tags.js의 6가지 상황과 동일)
+// 상황 라벨 → moods 필드 값 1:1 매핑 (api/generate-tags.js의 10가지 상황과 동일)
+// 라벨은 "~할 때 / ~닥칠 때 / ~필요할 때" 처럼 사용자가 처한 실제 상황으로 묘사한다.
 const MOOD_PRESETS: { label: string; mood: string }[] = [
-  { label: '위로가 필요해요', mood: '위로' },
-  { label: '감사한 마음이에요', mood: '감사' },
-  { label: '예배드리고 싶어요', mood: '예배' },
-  { label: '새힘이 필요해요', mood: '새힘' },
-  { label: '기도하고 싶어요', mood: '기도' },
-  { label: '회개하고 싶어요', mood: '회개' },
+  { label: '위로가 필요할 때', mood: '위로' },
+  { label: '감사할 때', mood: '감사' },
+  { label: '예배드릴 때', mood: '예배' },
+  { label: '새 힘이 필요할 때', mood: '새힘' },
+  { label: '기도하고 싶을 때', mood: '기도' },
+  { label: '회개할 때', mood: '회개' },
+  { label: '두려울 때', mood: '두려움' },
+  { label: '결단이 필요할 때', mood: '결단' },
+  { label: '고난이 닥칠 때', mood: '고난' },
+  { label: '영적 전쟁 중일 때', mood: '영적전쟁' },
 ];
 
 
