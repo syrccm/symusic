@@ -1340,7 +1340,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
-                    <span className="text-white truncate text-base">{song.title}</span>
+                    <span className="text-white text-base line-clamp-2 break-words">{song.title}</span>
                   </div>
                 </div>
                 <button
@@ -1642,7 +1642,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                   {index + 1}
                                 </span>
                                 <div className="flex-1 min-w-0 flex items-center space-x-1">
-                                  <span className="text-white truncate text-base">
+                                  <span className="text-white text-base line-clamp-2 break-words">
                                     {song.title}
                                   </span>
                                 </div>
