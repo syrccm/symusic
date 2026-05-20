@@ -1549,9 +1549,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
             <div className="px-3 py-2 space-y-2">
-              {/* 0. 미니 탭 바 — [전체] [★] [검색] 3개 상시 노출
+              {/* 0. 미니 탭 바 — [전체] [즐겨찾기] [검색] 3개 상시 노출
                   - [검색]은 첫 검색 재생 전까지 흐리게(비활성), 클릭 불가
-                  - 활성 배경색은 즐겨찾기 별표와 동일한 pink-400 */}
+                  - 활성 배경색은 violet-800 (#5B21B6) */}
               <div className="flex items-stretch gap-2">
                 {/* [전체] (좌측 고정) */}
                 <button
@@ -1563,14 +1563,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   }}
                   className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'all'
-                      ? 'bg-pink-400 text-white shadow-sm shadow-pink-900/40'
+                      ? 'bg-violet-800 text-white shadow-sm shadow-violet-900/40'
                       : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
                   }`}
                 >
                   <span>전체 ({songs.length})</span>
                 </button>
 
-                {/* [★] 즐겨찾기 — 곡 없으면 흐리게(클릭 불가) */}
+                {/* [즐겨찾기] — 곡 없으면 흐리게(클릭 불가) */}
                 <button
                   type="button"
                   disabled={favoriteSongs.length === 0}
@@ -1581,14 +1581,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   }}
                   className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'favorites'
-                      ? 'bg-pink-400 text-white shadow-sm shadow-pink-900/40'
+                      ? 'bg-violet-800 text-white shadow-sm shadow-violet-900/40'
                       : favoriteSongs.length > 0
                       ? 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
                       : 'bg-slate-800/40 text-gray-600 opacity-40 cursor-not-allowed'
                   }`}
                   aria-label="즐겨찾기"
                 >
-                  <span>★</span>
+                  <span>즐겨찾기</span>
                 </button>
 
                 {/* [검색] — 항상 노출. 검색 탭에서 곡 선택 후 재생을 한 번 실행해야 활성화됨.
@@ -1603,7 +1603,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   }}
                   className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'search'
-                      ? 'bg-pink-400 text-white shadow-sm shadow-pink-900/40'
+                      ? 'bg-violet-800 text-white shadow-sm shadow-violet-900/40'
                       : searchTabCreated
                       ? 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
                       : 'bg-slate-800/40 text-gray-600 opacity-40 cursor-not-allowed'
