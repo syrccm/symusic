@@ -1537,7 +1537,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         {/* ===== 본문 (탭별 화면) ===== */}
         <main
           className="flex-1 overflow-y-auto"
-          style={{ paddingBottom: 88 }}
+          style={{ paddingBottom: 108 }}
         >
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
@@ -2141,7 +2141,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       aria-current={active ? 'page' : undefined}
                     >
                       <span
-                        className={`absolute -top-3 left-1/2 -translate-x-1/2 flex items-center justify-center w-14 h-14 rounded-full shadow-lg border-4 border-slate-900 transition-colors ${
+                        className={`absolute top-2 left-1/2 -translate-x-1/2 flex items-center justify-center w-14 h-14 rounded-full shadow-lg border-4 border-slate-900 transition-colors ${
                           active
                             ? 'bg-teal-400 text-white'
                             : 'bg-teal-500 text-white hover:bg-teal-400'
@@ -2150,7 +2150,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         <Search className="h-7 w-7" strokeWidth={2.25} />
                       </span>
                       <span
-                        className={`mt-12 text-base font-medium transition-colors ${
+                        className={`mt-[68px] text-base font-medium transition-colors ${
                           active ? 'text-teal-400' : 'text-gray-400'
                         }`}
                       >
