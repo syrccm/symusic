@@ -1537,7 +1537,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         {/* ===== 본문 (탭별 화면) ===== */}
         <main
           className="flex-1 overflow-y-auto"
-          style={{ paddingBottom: 72 }}
+          style={{ paddingBottom: 88 }}
         >
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
@@ -2125,9 +2125,41 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         {/* ===== 미니 플레이어 + 하단 탭바 ===== */}
         <div className="fixed bottom-0 inset-x-0 z-40">
           <div className="max-w-md mx-auto">
-            <nav className="grid grid-cols-4 bg-slate-900/95 backdrop-blur border-t border-purple-500/20">
+            <nav className="relative grid grid-cols-4 bg-slate-900/95 backdrop-blur border-t border-purple-500/20 overflow-visible">
               {TABS.map((tab) => {
                 const active = activeTab === tab.key;
+
+                // 검색 탭: 중앙 돌출(FAB) 스타일
+                if (tab.key === 'search') {
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => setActiveTab(tab.key)}
+                      className="relative flex flex-col items-center justify-end py-2.5"
+                      aria-label={tab.label}
+                      aria-current={active ? 'page' : undefined}
+                    >
+                      <span
+                        className={`absolute -top-6 left-1/2 -translate-x-1/2 flex items-center justify-center w-14 h-14 rounded-full shadow-lg border-4 border-slate-900 transition-colors ${
+                          active
+                            ? 'bg-teal-400 text-white'
+                            : 'bg-teal-500 text-white hover:bg-teal-400'
+                        }`}
+                      >
+                        <Search className="h-7 w-7" strokeWidth={2.25} />
+                      </span>
+                      <span
+                        className={`mt-9 text-base font-medium transition-colors ${
+                          active ? 'text-teal-400' : 'text-gray-400'
+                        }`}
+                      >
+                        {tab.label}
+                      </span>
+                    </button>
+                  );
+                }
+
                 return (
                   <button
                     key={tab.key}
