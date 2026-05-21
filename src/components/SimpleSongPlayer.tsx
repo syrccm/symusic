@@ -229,7 +229,7 @@ export default function SimpleSongPlayer() {
 
             <div className="text-center space-y-2 pb-4 border-b border-slate-700">
               <p className="text-base font-semibold text-purple-200 mb-2">🎁 찬양 선물이 도착했어요</p>
-              <div className="text-xs text-left space-y-1 break-keep">
+              <div className="text-sm text-left space-y-1 break-keep">
                 {(() => {
                   const parts =
                     song.description
@@ -301,7 +301,7 @@ export default function SimpleSongPlayer() {
 
             <div className="min-h-[140px] bg-slate-700/30 rounded-lg p-4">
               {song.lyrics ? (
-                <div className="whitespace-pre-line text-white leading-relaxed text-center text-sm break-keep">
+                <div className="whitespace-pre-line text-white leading-relaxed text-center text-base break-keep">
                   {song.lyrics}
                 </div>
               ) : (
