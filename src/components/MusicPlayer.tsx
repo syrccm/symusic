@@ -1537,7 +1537,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         {/* ===== 본문 (탭별 화면) ===== */}
         <main
           className="flex-1 overflow-y-auto"
-          style={{ paddingBottom: 108 }}
+          style={{ paddingBottom: 88 }}
         >
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
@@ -2130,32 +2130,33 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 const active = activeTab === tab.key;
 
                 // 검색 탭: 중앙 돌출(FAB) 스타일
+                // - 다른 탭과 동일한 flex/justify-center 구조를 사용해 라벨 위치를 자동 정렬한다.
+                // - 원형 버튼은 아이콘 자리(h-6 w-6 placeholder)에 absolute로 띄우고
+                //   bottom-0 기준으로 정렬해 라벨 위에는 침범하지 않고 위쪽으로만 살짝 돌출시킨다.
                 if (tab.key === 'search') {
                   return (
                     <button
                       key={tab.key}
                       type="button"
                       onClick={() => setActiveTab(tab.key)}
-                      className="relative flex flex-col items-center justify-end py-2.5"
+                      className={`relative flex flex-col items-center justify-center gap-0.5 py-2.5 transition-colors ${
+                        active ? 'text-teal-400' : 'text-gray-400 hover:text-gray-200'
+                      }`}
                       aria-label={tab.label}
                       aria-current={active ? 'page' : undefined}
                     >
-                      <span
-                        className={`absolute top-2 left-1/2 -translate-x-1/2 flex items-center justify-center w-14 h-14 rounded-full shadow-lg border-4 border-slate-900 transition-colors ${
-                          active
-                            ? 'bg-teal-400 text-white'
-                            : 'bg-teal-500 text-white hover:bg-teal-400'
-                        }`}
-                      >
-                        <Search className="h-7 w-7" strokeWidth={2.25} />
+                      <span className="relative h-6 w-6 flex items-center justify-center">
+                        <span
+                          className={`absolute bottom-0 left-1/2 -translate-x-1/2 flex items-center justify-center w-12 h-12 rounded-full shadow-lg border-4 border-slate-900 transition-colors ${
+                            active
+                              ? 'bg-teal-400 text-white'
+                              : 'bg-teal-500 text-white hover:bg-teal-400'
+                          }`}
+                        >
+                          <Search className="h-7 w-7" strokeWidth={2.25} />
+                        </span>
                       </span>
-                      <span
-                        className={`mt-[68px] text-base font-medium transition-colors ${
-                          active ? 'text-teal-400' : 'text-gray-400'
-                        }`}
-                      >
-                        {tab.label}
-                      </span>
+                      <span className="text-base font-medium">{tab.label}</span>
                     </button>
                   );
                 }
