@@ -2044,7 +2044,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <Button
                       onClick={playSelectedSearchSongs}
-                      className="h-11 bg-purple-600 hover:bg-purple-700 text-white justify-center text-base font-semibold"
+                      className="h-11 bg-transparent border-2 border-purple-500 text-purple-300 hover:bg-purple-500/20 hover:text-purple-200 justify-center text-base font-semibold"
                     >
                       <Play className="h-4 w-4 mr-1.5" />
                       선택곡 재생 ({selectedSearchCount})
