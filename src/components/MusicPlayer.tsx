@@ -50,7 +50,9 @@ import {
   Share2,
   Menu,
   Search,
-  Bell
+  Bell,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 
 // Types
@@ -120,6 +122,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [currentCategory, setCurrentCategory] = useState('전체');
   const [searchTab, setSearchTab] = useState<SearchTabKey>('category');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  // 태그 탭: false = 4행 고정 + 내부 스크롤, true = 전체 펼침(스크롤 제거)
+  const [tagsExpanded, setTagsExpanded] = useState(false);
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [lyricsQuery, setLyricsQuery] = useState('');
   const [currentSongIndex, setCurrentSongIndex] = useState(-1);
@@ -1967,42 +1971,62 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   allTags.length === 0 ? (
                     <p className="text-base text-gray-400 py-2 px-1">아직 생성된 태그가 없습니다.</p>
                   ) : (
-                    // 태그 목록 — 4행 고정 높이, 초과 시 내부 스크롤. 스크롤바 항상 표시.
-                    // 칩 버튼: text-base + py-1.5 ≈ 36px, gap-1.5 = 6px → 4행 = 4*36 + 3*6 = 162px.
-                    // 168px(10.5rem)로 두어 5행째 일부 노출 → 스크롤 가능 힌트.
-                    <div
-                      className="overflow-y-scroll scrollbar-visible pr-1"
-                      style={{ height: '10.5rem' }}
-                    >
-                      <div className="flex flex-wrap gap-1.5">
-                        {[
-                          ...allTags.filter((t) => selectedTags.includes(t)),
-                          ...allTags.filter((t) => !selectedTags.includes(t)),
-                        ].map((tag) => {
-                          const active = selectedTags.includes(tag);
-                          return (
-                            <button
-                              key={tag}
-                              type="button"
-                              onClick={() =>
-                                setSelectedTags((prev) =>
-                                  prev.includes(tag)
-                                    ? prev.filter((x) => x !== tag)
-                                    : [...prev, tag]
-                                )
-                              }
-                              className={`px-2.5 py-1.5 rounded-full text-base transition-colors ${
-                                active
-                                  ? 'bg-purple-600 text-white'
-                                  : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
-                              }`}
-                            >
-                              #{tag}
-                            </button>
-                          );
-                        })}
+                    <>
+                      {/* 태그 목록 — 기본은 4행 고정 높이 + 내부 스크롤(스크롤바 항상 표시).
+                          칩 버튼: text-base + py-1.5 ≈ 36px, gap-1.5 = 6px → 4행 = 4*36 + 3*6 = 162px.
+                          168px(10.5rem)로 두어 5행째 일부 노출 → 스크롤 가능 힌트.
+                          '전체 보기' 시(tagsExpanded) 높이 고정/스크롤 제거하고 전부 펼친다. */}
+                      <div
+                        className={tagsExpanded ? 'pr-1' : 'overflow-y-scroll scrollbar-visible pr-1'}
+                        style={tagsExpanded ? undefined : { height: '10.5rem' }}
+                      >
+                        <div className="flex flex-wrap gap-1.5">
+                          {[
+                            ...allTags.filter((t) => selectedTags.includes(t)),
+                            ...allTags.filter((t) => !selectedTags.includes(t)),
+                          ].map((tag) => {
+                            const active = selectedTags.includes(tag);
+                            return (
+                              <button
+                                key={tag}
+                                type="button"
+                                onClick={() =>
+                                  setSelectedTags((prev) =>
+                                    prev.includes(tag)
+                                      ? prev.filter((x) => x !== tag)
+                                      : [...prev, tag]
+                                  )
+                                }
+                                className={`px-2.5 py-1.5 rounded-full text-base transition-colors ${
+                                  active
+                                    ? 'bg-purple-600 text-white'
+                                    : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
+                                }`}
+                              >
+                                #{tag}
+                              </button>
+                            );
+                          })}
+                        </div>
                       </div>
-                    </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setTagsExpanded((v) => !v)}
+                        aria-expanded={tagsExpanded}
+                        className="mt-2 w-full inline-flex items-center justify-center gap-1 rounded-md border border-purple-400/30 bg-purple-900/30 py-2 text-base text-purple-200 transition-colors hover:bg-purple-900/50 active:bg-purple-900/60"
+                      >
+                        {tagsExpanded ? (
+                          <>
+                            접기 <ChevronUp className="h-4 w-4" />
+                          </>
+                        ) : (
+                          <>
+                            태그 전체 보기 <ChevronDown className="h-4 w-4" />
+                          </>
+                        )}
+                      </button>
+                    </>
                   )
                 )}
 
