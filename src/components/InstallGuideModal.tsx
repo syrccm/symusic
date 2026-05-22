@@ -1,5 +1,5 @@
 import { useEffect, type ReactNode } from 'react';
-import { Info, MonitorDown, MoreVertical, Share, Smartphone, X } from 'lucide-react';
+import { Info, Smartphone, X } from 'lucide-react';
 import type { InstallMethod } from '@/utils/deviceDetect';
 
 interface InstallGuideModalProps {
@@ -16,16 +16,16 @@ interface GuideContent {
   notice?: ReactNode;
 }
 
-// 단계 안내문 안에 들어가는 작은 아이콘 칩 (예: 공유 ⬆, 메뉴 ⋮, 설치 아이콘)
-function IconChip({ children }: { children: ReactNode }) {
+// 단계 안내문 안의 특수문자/이모지(⊕ ⬆ ⋮ ⋯)를 강조하는 인라인 span.
+// 색상은 해당 안내의 accent(teal/보라)를 따른다.
+function Sym({ accent, children }: { accent: Accent; children: ReactNode }) {
   return (
-    <span className="mx-0.5 inline-flex items-center justify-center rounded-md bg-slate-700 px-1.5 py-0.5 align-middle text-white">
+    <span className={`font-bold ${accent === 'teal' ? 'text-teal-300' : 'text-[#a78bfa]'}`}>
       {children}
     </span>
   );
 }
 
-const chipIcon = 'h-3.5 w-3.5';
 const strong = 'font-semibold text-white';
 
 function getGuide(method: InstallMethod): GuideContent {
@@ -36,11 +36,7 @@ function getGuide(method: InstallMethod): GuideContent {
         accent: 'teal',
         steps: [
           <>
-            하단의 공유 버튼{' '}
-            <IconChip>
-              <Share className={chipIcon} />
-            </IconChip>{' '}
-            을 탭하세요
+            하단의 공유 버튼 <Sym accent="teal">⬆</Sym> 을 탭하세요
           </>,
           <>
             <span className={strong}>'홈 화면에 추가'</span> 를 선택하세요
@@ -57,11 +53,7 @@ function getGuide(method: InstallMethod): GuideContent {
         accent: 'purple',
         steps: [
           <>
-            오른쪽 위 점 세 개{' '}
-            <IconChip>
-              <MoreVertical className={chipIcon} />
-            </IconChip>{' '}
-            메뉴를 탭하세요
+            오른쪽 위 점 세 개 <Sym accent="purple">⋮</Sym> 메뉴를 탭하세요
           </>,
           <>
             <span className={strong}>'홈 화면에 추가'</span> 를 선택하세요
@@ -91,11 +83,9 @@ function getGuide(method: InstallMethod): GuideContent {
         accent: 'teal',
         steps: [
           <>
-            주소창 오른쪽 끝의 설치 아이콘{' '}
-            <IconChip>
-              <MonitorDown className={chipIcon} />
-            </IconChip>{' '}
-            을 클릭하세요
+            주소창 우측 설치 아이콘<Sym accent="teal">(⊕)</Sym>이 보이면 클릭, 없으면{' '}
+            메뉴<Sym accent="teal">(⋮)</Sym> → <span className={strong}>'저장 및 공유'</span>{' '}
+            → <span className={strong}>'페이지를 앱으로 설치'</span>
           </>,
           <>
             <span className={strong}>'설치'</span> 버튼을 클릭하세요
@@ -110,11 +100,9 @@ function getGuide(method: InstallMethod): GuideContent {
         accent: 'teal',
         steps: [
           <>
-            주소창 오른쪽 끝의 앱 설치 아이콘{' '}
-            <IconChip>
-              <MonitorDown className={chipIcon} />
-            </IconChip>{' '}
-            을 클릭하세요
+            주소창 우측 끝을 확인하세요. 설치 아이콘<Sym accent="teal">(⊕)</Sym>이 보이면 클릭,{' '}
+            없으면 브라우저 메뉴<Sym accent="teal">(⋯)</Sym> → <span className={strong}>'앱'</span>{' '}
+            → <span className={strong}>'이 사이트를 앱으로 설치'</span>
           </>,
           <>
             <span className={strong}>'설치'</span> 버튼을 클릭하세요
@@ -129,11 +117,7 @@ function getGuide(method: InstallMethod): GuideContent {
         accent: 'teal',
         steps: [
           <>
-            상단 도구막대의 공유 버튼{' '}
-            <IconChip>
-              <Share className={chipIcon} />
-            </IconChip>{' '}
-            을 클릭하세요
+            상단 도구막대의 공유 버튼 <Sym accent="teal">⬆</Sym> 을 클릭하세요
           </>,
           <>
             <span className={strong}>'Dock에 추가'</span> 를 선택하세요
