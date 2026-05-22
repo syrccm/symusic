@@ -1,12 +1,14 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Loader2, Music, Pause, Play, Share2, Youtube } from 'lucide-react';
+import { ArrowRight, Loader2, Music, Pause, Play, Share2, Smartphone, Youtube } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSongs, type Song } from '@/hooks/useSongs';
 import { useShare } from '@/hooks/useShare';
 import { PlayPromptModal } from '@/components/PlayPromptModal';
+import { InstallGuideModal } from '@/components/InstallGuideModal';
+import { detectInstallMethod, type InstallMethod } from '@/utils/deviceDetect';
 import { trackInstall, trackShare, trackSongPlay } from '@/utils/analyticsTracker';
 
 const NOT_FOUND_GRACE_MS = 3000;
@@ -35,6 +37,7 @@ export default function SimpleSongPlayer() {
   const [duration, setDuration] = useState(0);
   const [promptingPlay, setPromptingPlay] = useState(false);
   const [isSharePressed, setIsSharePressed] = useState(false);
+  const [installGuide, setInstallGuide] = useState<InstallMethod | null>(null);
 
   // 곡 검색 — songs 도착 후 매칭, grace 윈도우 후에도 없으면 notFound
   // 한 번 매칭되면 onSnapshot 재호출(캐시→서버)로 songs가 새 참조로 바뀌어도
@@ -158,17 +161,24 @@ export default function SimpleSongPlayer() {
     shareSong({ id: song.id, title: song.title });
   };
 
-  const handleInstallClick = async (e: React.MouseEvent<HTMLAnchorElement>) => {
-    // Race condition 방지: <a target="_blank">로 새 탭이 열리는 사이/Android에서
-    // Play Store 앱 인텐트가 페이지를 인터셉트하면서 Firestore 요청이 취소되어
-    // 카운트가 누락되던 현상 → 추적 완료 후 직접 window.open 한다.
-    e.preventDefault();
+  const handleInstallClick = async () => {
+    const method = detectInstallMethod();
+
+    // 설치 의도(install-intent)로 기록. Android는 Play Store 앱 인텐트가 페이지를
+    // 인터셉트하면서 Firestore 요청이 취소되므로 redirect 전에 await 한다.
     try {
       await trackInstall();
     } catch (err) {
       console.error('[Analytics] trackInstall failed:', err);
     }
-    window.open(PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
+
+    if (method === 'android') {
+      window.open(PLAY_STORE_URL, '_blank', 'noopener,noreferrer');
+      return;
+    }
+
+    // 그 외 기기/브라우저는 케이스별 설치 안내 모달을 띄운다.
+    setInstallGuide(method);
   };
 
   // 로딩
@@ -365,26 +375,15 @@ export default function SimpleSongPlayer() {
           </CardContent>
         </Card>
 
-        <div className="mt-4 rounded-2xl border border-purple-500/30 bg-gradient-to-b from-purple-900/40 to-slate-900/60 p-5 text-center shadow-lg shadow-purple-900/20">
-          <p className="text-base text-white leading-snug mb-4 break-keep">
-            지금 바로 아래 버튼을 클릭하여<br />
-            '<span className="font-bold text-yellow-200">수영로말씀적용찬양</span>' 앱을 설치하세요
-          </p>
-          <a
-            href={PLAY_STORE_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={handleInstallClick}
-            className="inline-block transition-transform hover:scale-105"
-            aria-label="Google Play에서 수영로말씀적용찬양 앱 받기"
-          >
-            <img
-              src="/google-play-badge-ko.png"
-              alt="Google Play에서 다운로드"
-              className="h-20 mx-auto"
-            />
-          </a>
-        </div>
+        <button
+          type="button"
+          onClick={handleInstallClick}
+          aria-label="스마트폰에 수영로말씀적용찬양 앱 설치하기"
+          className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 py-4 text-[16px] font-medium text-white transition-colors hover:bg-teal-600 active:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
+        >
+          <Smartphone className="h-5 w-5" />
+          스마트폰에 설치하기
+        </button>
 
         <audio ref={audioRef} loop crossOrigin="anonymous" preload="metadata" />
       </div>
@@ -395,6 +394,10 @@ export default function SimpleSongPlayer() {
           onPlay={handleConfirmPlay}
           onCancel={() => setPromptingPlay(false)}
         />
+      )}
+
+      {installGuide && (
+        <InstallGuideModal method={installGuide} onClose={() => setInstallGuide(null)} />
       )}
     </div>
   );
