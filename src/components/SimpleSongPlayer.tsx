@@ -40,7 +40,7 @@ export default function SimpleSongPlayer() {
   const [installGuide, setInstallGuide] = useState<InstallMethod | null>(null);
 
   // iOS는 PWA 설치 절차가 번거로워(Safari 공유→홈 화면 수동 추가) 설치 안내 대신
-  // 곧장 홈으로 보내는 게 낫다. ?ua= 오버라이드와 일관되게 detectInstallMethod로 판별.
+  // 곧장 홈으로 보내는 게 낫다. detectInstallMethod 결과가 ios-* 인지로 판별.
   const [isIOS] = useState(() => detectInstallMethod().startsWith('ios-'));
 
   // 곡 검색 — songs 도착 후 매칭, grace 윈도우 후에도 없으면 notFound

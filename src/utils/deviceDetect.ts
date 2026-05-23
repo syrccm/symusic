@@ -14,23 +14,6 @@ export type InstallMethod =
   | 'pc-safari' // 공유 → Dock에 추가 (macOS)
   | 'pc-other'; // Firefox 등 → Chrome/Edge 권장
 
-// [임시/디버그] ?ua=<method> 쿼리파라미터 오버라이드에 쓰는 유효 값 목록.
-// Record<InstallMethod, true> 라서 위 유니온에 케이스를 추가/삭제하면
-// 여기도 함께 고치지 않는 한 컴파일 에러가 난다(목록 동기화 보장).
-// 카톡 인앱 검증이 끝나면 이 상수와 아래 오버라이드 블록을 함께 제거할 것.
-const FORCEABLE_METHODS: Record<InstallMethod, true> = {
-  'kakao-android': true,
-  'kakao-ios': true,
-  android: true,
-  'ios-safari': true,
-  'ios-chrome': true,
-  'ios-other': true,
-  'pc-chrome': true,
-  'pc-edge': true,
-  'pc-safari': true,
-  'pc-other': true,
-};
-
 /**
  * userAgent를 분석해 어떤 설치 안내가 적합한지 반환한다.
  *
@@ -41,17 +24,6 @@ const FORCEABLE_METHODS: Record<InstallMethod, true> = {
  */
 export function detectInstallMethod(): InstallMethod {
   if (typeof navigator === 'undefined') return 'pc-other';
-
-  // [임시/디버그] ?ua=<method> 로 설치 안내 케이스를 강제한다.
-  // 카톡 인앱처럼 실기기에서만 재현되는 케이스를 일반 브라우저에서 확인하기 위한 용도.
-  // 예: ?ua=kakao-ios , ?ua=kakao-android . 검증이 끝나면 제거할 것.
-  if (typeof location !== 'undefined') {
-    const forced = new URLSearchParams(location.search).get('ua');
-    if (forced && Object.prototype.hasOwnProperty.call(FORCEABLE_METHODS, forced)) {
-      return forced as InstallMethod;
-    }
-  }
-
   const ua = navigator.userAgent || '';
 
   // 0) 카카오톡 인앱 브라우저 — 최우선 판별.
