@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowRight, Loader2, Music, Pause, Play, Share2, Smartphone, Youtube } from 'lucide-react';
+import { ArrowRight, Home, Loader2, Music, Pause, Play, Share2, Smartphone, Youtube } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -38,6 +38,10 @@ export default function SimpleSongPlayer() {
   const [promptingPlay, setPromptingPlay] = useState(false);
   const [isSharePressed, setIsSharePressed] = useState(false);
   const [installGuide, setInstallGuide] = useState<InstallMethod | null>(null);
+
+  // iOS는 PWA 설치 절차가 번거로워(Safari 공유→홈 화면 수동 추가) 설치 안내 대신
+  // 곧장 홈으로 보내는 게 낫다. ?ua= 오버라이드와 일관되게 detectInstallMethod로 판별.
+  const [isIOS] = useState(() => detectInstallMethod().startsWith('ios-'));
 
   // 곡 검색 — songs 도착 후 매칭, grace 윈도우 후에도 없으면 notFound
   // 한 번 매칭되면 onSnapshot 재호출(캐시→서버)로 songs가 새 참조로 바뀌어도
@@ -375,15 +379,27 @@ export default function SimpleSongPlayer() {
           </CardContent>
         </Card>
 
-        <button
-          type="button"
-          onClick={handleInstallClick}
-          aria-label="스마트폰에 수영로말씀적용찬양 앱 설치하기"
-          className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 py-4 text-[16px] font-medium text-white transition-colors hover:bg-teal-600 active:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
-        >
-          <Smartphone className="h-5 w-5" />
-          스마트폰에 설치하기
-        </button>
+        {isIOS ? (
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            aria-label="SY Music 홈페이지로 이동"
+            className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 py-4 text-[16px] font-medium text-white transition-colors hover:bg-teal-600 active:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
+          >
+            <Home className="h-5 w-5" />
+            SY Music 홈으로 이동
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleInstallClick}
+            aria-label="스마트폰에 수영로말씀적용찬양 앱 설치하기"
+            className="mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 py-4 text-[16px] font-medium text-white transition-colors hover:bg-teal-600 active:bg-teal-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
+          >
+            <Smartphone className="h-5 w-5" />
+            스마트폰에 설치하기
+          </button>
+        )}
 
         <audio ref={audioRef} loop crossOrigin="anonymous" preload="metadata" />
       </div>
