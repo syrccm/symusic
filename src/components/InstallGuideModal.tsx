@@ -30,6 +30,40 @@ const strong = 'font-semibold text-white';
 
 function getGuide(method: InstallMethod): GuideContent {
   switch (method) {
+    case 'kakao-android':
+      return {
+        title: '외부 브라우저로 열어주세요',
+        accent: 'teal',
+        steps: [
+          <>
+            화면 하단 또는 우측 하단 <Sym accent="teal">⋮</Sym> 버튼을 탭하세요
+          </>,
+          <>
+            <span className={strong}>'외부 브라우저로 열기'</span> 를 선택하세요
+          </>,
+          <>
+            열린 브라우저에서 <span className={strong}>'스마트폰에 설치하기'</span> 를 다시 탭하세요
+          </>,
+        ],
+      };
+
+    case 'kakao-ios':
+      return {
+        title: '외부 브라우저로 열어주세요',
+        accent: 'teal',
+        steps: [
+          <>
+            하단 우측 <Sym accent="teal">⋯</Sym> 버튼을 탭하세요
+          </>,
+          <>
+            <span className={strong}>'Safari로 열기'</span> 를 선택하세요
+          </>,
+          <>
+            열린 Safari에서 <span className={strong}>'스마트폰에 설치하기'</span> 를 다시 탭하세요
+          </>,
+        ],
+      };
+
     case 'ios-safari':
       return {
         title: '홈 화면에 추가하기',
