@@ -32,6 +32,10 @@
     --ink-soft: #c7b8e6;
     --ink-dim: #8071a0;
     --danger: #ef4444;
+    /* 시각 플래시 강도 (JS 에서 설정) */
+    --flash-opacity: 0.4;
+    --flash-scale: 1.2;
+    --flash-glow: 15px;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -64,6 +68,16 @@
     flex-direction: column;
     gap: 4px;
     position: relative;
+    border-radius: 4px;
+    background-color: transparent;
+    transition: background-color 150ms ease-out;
+  }
+  .wrap.flash {
+    background-color: rgba(255, 255, 255, var(--flash-opacity));
+    transition: background-color 0ms;
+  }
+  .wrap.flash.downbeat-flash {
+    background-color: rgba(20, 184, 166, var(--flash-opacity));
   }
 
   /* 닫기 (우측 상단 absolute) */
@@ -107,13 +121,13 @@
   .dot.active {
     background: var(--teal);
     border-color: var(--teal);
-    box-shadow: 0 0 12px rgba(20, 184, 166, 0.65);
-    transform: scale(1.18);
+    box-shadow: 0 0 var(--flash-glow) rgba(20, 184, 166, 0.65);
+    transform: scale(var(--flash-scale));
   }
   .dot.active.downbeat {
     background: #ffffff;
     border-color: #ffffff;
-    box-shadow: 0 0 14px rgba(255, 255, 255, 0.75);
+    box-shadow: 0 0 var(--flash-glow) rgba(255, 255, 255, 0.75);
   }
 
   /* BPM 표시 (56px) — 카드 박스 없음 */
@@ -124,16 +138,6 @@
     align-items: center;
     justify-content: center;
     text-align: center;
-    border-radius: 10px;
-    transition: background 0.08s ease, box-shadow 0.12s ease;
-  }
-  .bpmRow.flash {
-    background: rgba(167, 139, 250, 0.08);
-    box-shadow: 0 0 14px rgba(167, 139, 250, 0.18) inset;
-  }
-  .bpmRow.flash.downbeat-flash {
-    background: rgba(255, 255, 255, 0.06);
-    box-shadow: 0 0 14px rgba(255, 255, 255, 0.25) inset;
   }
 
   .bpmValue {
@@ -330,34 +334,53 @@
   }
   .segBtn.compact { font-size: 0.88rem; }
 
-  /* 시각 플래시 행 (28px) */
+  /* 시각 플래시 행 (28px) — 강도 슬라이더 */
   .flashRow {
     display: flex;
     align-items: center;
-    justify-content: space-between;
     height: 28px;
     padding: 0 2px;
+    gap: 10px;
   }
   .flashRow .label {
+    flex: 0 0 auto;
     font-size: 0.78rem;
     color: var(--ink-dim);
     letter-spacing: 0.04em;
   }
-  .toggleBtn {
-    border: 1px solid var(--border);
+  .flashSlider {
+    flex: 1;
+    -webkit-appearance: none;
+    appearance: none;
+    height: 5px;
     background: var(--bg-card);
-    color: var(--ink-soft);
+    border: 1px solid var(--border);
     border-radius: 999px;
-    padding: 2px 12px;
-    font-size: 0.74rem;
-    font-weight: 600;
-    cursor: pointer;
-    line-height: 1.4;
+    outline: none;
+    margin: 0;
   }
-  .toggleBtn.on {
-    border-color: var(--teal);
-    color: var(--teal-hot);
-    background: var(--teal-soft);
+  .flashSlider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--teal-hot);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+  }
+  .flashSlider::-moz-range-thumb {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: var(--teal-hot);
+    border: 2px solid var(--bg);
+    cursor: pointer;
+  }
+  .flashValue {
+    flex: 0 0 auto;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    font-variant-numeric: tabular-nums;
+    width: 1.4em;
+    text-align: right;
   }
 
   /* 시작/정지 (48px) */
@@ -441,7 +464,8 @@
 
     <div class="flashRow">
       <span class="label">시각 플래시</span>
-      <button type="button" class="toggleBtn on" id="flashToggle" aria-pressed="true">ON</button>
+      <input type="range" class="flashSlider" id="flashSlider" min="0" max="10" value="5" step="1" aria-label="시각 플래시 강도" />
+      <span class="flashValue" id="flashValue">5</span>
     </div>
 
     <button type="button" class="playBtn" id="playBtn">시작</button>
@@ -488,8 +512,8 @@
   let nextNoteTime = 0;
   let lastDrawnBeat = -1;
 
-  // 시각 플래시
-  let flashEnabled = true;
+  // 시각 플래시 강도 (0~10)
+  let flashIntensity = 5;
 
   // 탭템포
   const tapTimes = []; // 최근 탭 시각 (performance.now)
@@ -622,15 +646,37 @@
   }
 
   // ─── 시각 갱신 ──────────────────────────────────
-  function flashCard(isDown) {
-    if (!flashEnabled) return;
-    const card = $('bpmCard');
-    card.classList.add('flash');
-    if (isDown) card.classList.add('downbeat-flash');
+  function applyFlashVars() {
+    const root = document.documentElement;
+    const op = Math.min(0.8, flashIntensity * 0.08);
+    const sc = Math.min(1.4, 1.0 + flashIntensity * 0.04);
+    const gl = flashIntensity * 3;
+    root.style.setProperty('--flash-opacity', String(op));
+    root.style.setProperty('--flash-scale', String(sc));
+    root.style.setProperty('--flash-glow', gl + 'px');
+  }
+
+  function setFlashIntensity(n) {
+    flashIntensity = Math.max(0, Math.min(10, Number(n) | 0));
+    $('flashValue').textContent = String(flashIntensity);
+    if ($('flashSlider').value !== String(flashIntensity)) {
+      $('flashSlider').value = String(flashIntensity);
+    }
+    applyFlashVars();
+  }
+
+  let wrapEl = null;
+  function flashFire(isDown) {
+    if (flashIntensity === 0) return;
+    if (!wrapEl) wrapEl = document.querySelector('.wrap');
+    // 클래스 reset 후 다음 프레임에 재적용 → fade out transition 재시작
+    wrapEl.classList.remove('flash', 'downbeat-flash');
+    void wrapEl.offsetWidth; // reflow
+    wrapEl.classList.add('flash');
+    if (isDown) wrapEl.classList.add('downbeat-flash');
     setTimeout(() => {
-      card.classList.remove('flash');
-      card.classList.remove('downbeat-flash');
-    }, 90);
+      wrapEl.classList.remove('flash', 'downbeat-flash');
+    }, 30);
   }
 
   function draw() {
@@ -649,7 +695,7 @@
           d.classList.toggle('active', Number(d.dataset.idx) === idx);
         });
       }
-      flashCard(pendingMain.isDown);
+      flashFire(pendingMain.isDown);
     }
     requestAnimationFrame(draw);
   }
@@ -675,9 +721,7 @@
     if (timerID) { clearInterval(timerID); timerID = null; }
     notesInQueue.length = 0;
     document.querySelectorAll('#beats .dot').forEach((d) => d.classList.remove('active'));
-    const card = $('bpmCard');
-    card.classList.remove('flash');
-    card.classList.remove('downbeat-flash');
+    if (wrapEl) wrapEl.classList.remove('flash', 'downbeat-flash');
     const btn = $('playBtn');
     btn.textContent = '시작';
     btn.classList.remove('playing');
@@ -744,19 +788,6 @@
     display.style.display = '';
   }
 
-  // ─── 시각 플래시 토글 ──────────────────────────
-  function toggleFlash() {
-    flashEnabled = !flashEnabled;
-    const t = $('flashToggle');
-    t.classList.toggle('on', flashEnabled);
-    t.textContent = flashEnabled ? 'ON' : 'OFF';
-    t.setAttribute('aria-pressed', flashEnabled ? 'true' : 'false');
-    if (!flashEnabled) {
-      const card = $('bpmCard');
-      card.classList.remove('flash');
-      card.classList.remove('downbeat-flash');
-    }
-  }
 
   // ─── 이벤트 바인딩 ─────────────────────────────
   $('playBtn').addEventListener('click', toggle);
@@ -790,7 +821,7 @@
     b.addEventListener('click', () => setMeter(b.dataset.meter));
   });
 
-  $('flashToggle').addEventListener('click', toggleFlash);
+  $('flashSlider').addEventListener('input', (e) => setFlashIntensity(Number(e.target.value)));
 
   // 키보드 단축키 (input 포커스 중에는 화살표/스페이스는 input이 가져감)
   function isTypingTarget(el) {
@@ -837,6 +868,7 @@
   renderBeats();
   setBpm(bpm);
   setVolume(Math.round(volume * 100));
+  setFlashIntensity(flashIntensity);
 })();
 </script>
 </body>
