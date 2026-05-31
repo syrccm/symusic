@@ -59,7 +59,7 @@
   .wrap {
     max-width: 520px;
     margin: 0 auto;
-    padding: 1rem 1.25rem 2rem;
+    padding: 8px 14px;
   }
 
   /* 헤더 */
@@ -67,8 +67,8 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.25rem 0 0.85rem;
-    margin-bottom: 1rem;
+    padding: 2px 0 6px;
+    margin-bottom: 8px;
     border-bottom: 1px solid var(--border);
   }
   .title {
@@ -96,9 +96,9 @@
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
-    gap: 16px;
-    margin: 0.5rem 0 1.5rem;
-    min-height: 56px;
+    gap: 8px;
+    margin: 4px 0 8px;
+    min-height: 36px;
   }
   .dot {
     width: 36px; height: 36px;
@@ -108,9 +108,9 @@
     transition: transform 0.08s ease, background 0.08s ease, border-color 0.08s ease, box-shadow 0.15s ease;
   }
   .dot.downbeat {
-    width: 44px; height: 44px;
-    border-color: rgba(255, 255, 255, 0.55);
-    border-width: 2.5px;
+    width: 36px; height: 36px;
+    border-color: rgba(255, 255, 255, 0.6);
+    border-width: 3px;
   }
   .dot.active {
     background: var(--teal);
@@ -128,10 +128,10 @@
   .bpmCard {
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 1.1rem 1rem 1rem;
+    border-radius: 14px;
+    padding: 8px 12px;
     text-align: center;
-    margin-bottom: 1rem;
+    margin-bottom: 8px;
     transition: background 0.05s ease, border-color 0.05s ease, box-shadow 0.05s ease;
   }
   .bpmCard.flash {
@@ -146,7 +146,7 @@
   }
 
   .bpmValue {
-    font-size: 4.5rem;
+    font-size: 64px;
     font-weight: 700;
     color: var(--ink);
     line-height: 1;
@@ -159,7 +159,7 @@
   .bpmValue:active { background: rgba(255, 255, 255, 0.04); }
 
   .bpmInput {
-    font-size: 4.5rem;
+    font-size: 64px;
     font-weight: 700;
     color: var(--ink);
     line-height: 1;
@@ -177,22 +177,23 @@
   .bpmInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 
   .bpmUnit {
-    font-size: 0.8rem;
+    font-size: 0.7rem;
     color: var(--ink-dim);
-    margin-top: 0.2rem;
-    letter-spacing: 0.18em;
+    margin-top: 2px;
+    letter-spacing: 0.16em;
   }
   .tempoName {
-    margin-top: 0.45rem;
+    margin-top: 4px;
     color: var(--teal-hot);
-    font-size: 0.95rem;
+    font-size: 0.82rem;
     font-style: italic;
-    min-height: 1.4em;
+    min-height: 1.2em;
     cursor: pointer;
     display: inline-block;
-    padding: 2px 10px;
+    padding: 1px 10px;
     border-radius: 999px;
     transition: background 0.1s ease;
+    line-height: 1.2;
   }
   .tempoName:active { background: var(--teal-soft); }
 
@@ -200,23 +201,23 @@
   .bpmControls {
     display: flex;
     align-items: center;
-    gap: 0.55rem;
-    margin-bottom: 0.85rem;
+    gap: 6px;
+    margin-bottom: 8px;
   }
   .stepBtn {
     flex: 0 0 auto;
-    min-width: 48px; height: 50px;
-    padding: 0 0.5rem;
-    border-radius: 12px;
+    min-width: 42px; height: 40px;
+    padding: 0 0.4rem;
+    border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--ink);
-    font-size: 1.05rem;
+    font-size: 0.95rem;
     font-weight: 700;
     cursor: pointer;
   }
   .stepBtn:active { background: var(--accent-soft); border-color: var(--accent); }
-  .stepBtn.long { min-width: 58px; font-size: 0.95rem; }
+  .stepBtn.long { min-width: 50px; font-size: 0.9rem; }
 
   .slider {
     flex: 1;
@@ -251,18 +252,18 @@
   /* 탭템포 줄 */
   .tapRow {
     display: flex;
-    gap: 0.55rem;
-    margin-bottom: 0.95rem;
+    gap: 6px;
+    margin-bottom: 8px;
   }
   .tapBtn {
     flex: 3;
-    min-height: 52px;
-    padding: 0.9rem 0;
-    border-radius: 12px;
+    height: 44px;
+    padding: 0;
+    border-radius: 10px;
     border: 1px solid rgba(45, 212, 191, 0.55);
     background: rgba(20, 184, 166, 0.16);
     color: var(--teal-hot);
-    font-size: 1.05rem;
+    font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.04em;
@@ -275,13 +276,13 @@
   }
   .resetTapBtn {
     flex: 1;
-    min-height: 52px;
-    padding: 0 0.9rem;
-    border-radius: 12px;
+    height: 44px;
+    padding: 0 0.6rem;
+    border-radius: 10px;
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--ink-soft);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     cursor: pointer;
   }
   .resetTapBtn:active { background: var(--accent-soft); }
@@ -290,46 +291,49 @@
   .volumeRow {
     display: flex;
     align-items: center;
-    gap: 0.65rem;
-    margin-bottom: 0.85rem;
+    gap: 8px;
+    margin-bottom: 8px;
+    height: 36px;
   }
   .volumeRow .label {
     flex: 0 0 auto;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--ink-dim);
-    width: 2.8rem;
+    width: 2.4rem;
   }
   .volumeRow .pct {
     flex: 0 0 auto;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--ink-soft);
-    width: 3rem;
+    width: 2.8rem;
     text-align: right;
     font-variant-numeric: tabular-nums;
   }
 
   /* 섹션 */
   .section {
-    margin-bottom: 0.95rem;
+    margin-bottom: 8px;
   }
   .sectionLabel {
-    font-size: 0.8rem;
+    font-size: 0.75rem;
     color: var(--ink-dim);
-    margin-bottom: 0.45rem;
-    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+    letter-spacing: 0.06em;
     display: flex;
     align-items: center;
     justify-content: space-between;
+    min-height: 22px;
   }
   .toggleBtn {
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--ink-soft);
     border-radius: 999px;
-    padding: 4px 12px;
-    font-size: 0.75rem;
+    padding: 2px 10px;
+    font-size: 0.72rem;
     font-weight: 600;
     cursor: pointer;
+    line-height: 1.5;
   }
   .toggleBtn.on {
     border-color: var(--teal);
@@ -337,25 +341,28 @@
     background: var(--teal-soft);
   }
 
+  /* 시각 플래시는 다른 섹션과 달리 한 줄 (라벨+토글)이므로 추가 여백 없음 */
+  .section.inline { margin-bottom: 10px; }
+
   /* 세그먼트 (subdivision, 박자) */
   .segGroup {
     display: flex;
-    gap: 0.45rem;
+    gap: 6px;
   }
   .meterGrid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 0.45rem;
+    gap: 6px;
   }
   .segBtn {
     flex: 1;
-    min-height: 48px;
-    padding: 0.75rem 0;
-    border-radius: 11px;
+    height: 40px;
+    padding: 0;
+    border-radius: 9px;
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--ink-soft);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
   }
@@ -364,39 +371,39 @@
     border-color: var(--accent-bright);
     color: var(--ink);
   }
-  .segBtn.compact { font-size: 0.92rem; min-height: 48px; }
+  .segBtn.compact { font-size: 0.88rem; height: 40px; }
 
   /* 시작/정지 */
   .playBtn {
     width: 100%;
-    min-height: 60px;
-    padding: 1.1rem 0;
-    border-radius: 16px;
+    height: 52px;
+    padding: 0;
+    border-radius: 14px;
     border: none;
     background: linear-gradient(135deg, var(--teal), var(--teal-hot));
     color: white;
-    font-size: 1.2rem;
+    font-size: 1.1rem;
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.06em;
-    box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+    box-shadow: 0 4px 16px rgba(20, 184, 166, 0.4);
     transition: transform 0.05s ease, box-shadow 0.15s ease, background 0.15s ease;
-    margin-top: 0.35rem;
+    margin-top: 4px;
   }
   .playBtn:active { transform: scale(0.98); }
   .playBtn.playing {
     background: linear-gradient(135deg, #0d8c80, #0f766e);
-    box-shadow: 0 6px 20px rgba(13, 140, 128, 0.45);
+    box-shadow: 0 4px 16px rgba(13, 140, 128, 0.45);
   }
 
   /* 단축키 안내 */
   .hints {
-    margin-top: 1rem;
-    padding-top: 0.85rem;
+    margin-top: 10px;
+    padding-top: 8px;
     border-top: 1px dashed var(--border);
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--ink-dim);
-    line-height: 1.7;
+    line-height: 1.6;
     text-align: center;
   }
   .hints kbd {
@@ -411,39 +418,16 @@
     margin: 0 1px;
   }
 
-  /* 모바일 최적화 */
+  /* 모바일: 키보드가 없으므로 단축키 안내 숨김, 본문 패딩 최소화 */
   @media (max-width: 640px) {
-    .wrap { padding: 0.85rem 1rem 1.25rem; }
-
-    .topbar { padding: 0.25rem 0 0.75rem; margin-bottom: 0.85rem; }
-
-    .beats { gap: 14px; margin: 0.35rem 0 1.25rem; min-height: 60px; }
-    .dot { width: 40px; height: 40px; }
-    .dot.downbeat { width: 50px; height: 50px; }
-
-    .bpmCard { padding: 1rem 0.85rem 0.9rem; margin-bottom: 0.9rem; border-radius: 16px; }
-    .bpmValue, .bpmInput { font-size: 4rem; }
-
-    .bpmControls { gap: 0.4rem; margin-bottom: 0.9rem; }
-    .stepBtn { min-width: 50px; height: 52px; font-size: 1rem; padding: 0 0.4rem; }
-    .stepBtn.long { min-width: 54px; font-size: 0.95rem; }
-
-    .tapBtn, .resetTapBtn { min-height: 54px; font-size: 1.05rem; }
-
-    .segBtn { min-height: 50px; }
-
-    .playBtn { min-height: 64px; font-size: 1.2rem; padding: 1.15rem 0; }
-
-    .section { margin-bottom: 0.85rem; }
-
-    /* 단축키 안내는 모바일에서 숨김 (키보드 없음) */
     .hints { display: none; }
+    .wrap { padding: 6px 12px; }
   }
 
   @media (max-width: 380px) {
-    .meterGrid { grid-template-columns: repeat(4, 1fr); gap: 0.35rem; }
-    .stepBtn { min-width: 46px; height: 50px; font-size: 0.95rem; }
-    .bpmValue, .bpmInput { font-size: 3.6rem; }
+    .meterGrid { gap: 5px; }
+    .stepBtn { min-width: 38px; padding: 0 0.2rem; }
+    .bpmValue, .bpmInput { font-size: 56px; }
   }
 </style>
 </head>
