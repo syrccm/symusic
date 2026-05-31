@@ -9,25 +9,29 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="메트로놈">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#1a1a2e">
+<meta name="theme-color" content="#14081f">
 <meta name="format-detection" content="telephone=no">
 
-<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%231a1a2e'/><text x='90' y='118' text-anchor='middle' font-size='110' fill='%238b5cf6' font-family='serif' font-weight='bold'>♩</text></svg>">
+<link rel="icon" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'><rect width='180' height='180' rx='40' fill='%233A0D6E'/><text x='90' y='118' text-anchor='middle' font-size='110' fill='%2314b8a6' font-family='serif' font-weight='bold'>♩</text></svg>">
 
 <style>
   :root {
-    --bg: #0f0f1e;
-    --bg-soft: #1a1a2e;
-    --bg-card: #221f3a;
-    --ink: #f1f1ff;
-    --ink-soft: #b8b3d6;
-    --ink-dim: #6e6890;
-    --accent: #8b5cf6;
-    --accent-hot: #a78bfa;
-    --accent-soft: rgba(139, 92, 246, 0.18);
-    --border: #2e2a4a;
-    --downbeat: #fbbf24;
-    --beat: #8b5cf6;
+    --bg: #14081f;
+    --bg-card: #251042;
+    --bg-soft: #1c0c2e;
+    --border: #3a1f5e;
+    --accent: #4A1290;
+    --accent-hot: #6b21a8;
+    --accent-deep: #3A0D6E;
+    --accent-bright: #a78bfa;
+    --accent-soft: rgba(74, 18, 144, 0.28);
+    --teal: #14b8a6;
+    --teal-hot: #2dd4bf;
+    --teal-soft: rgba(20, 184, 166, 0.22);
+    --ink: #f1ecff;
+    --ink-soft: #c7b8e6;
+    --ink-dim: #8071a0;
+    --danger: #ef4444;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -45,8 +49,8 @@
 
   body {
     background:
-      radial-gradient(ellipse at top, rgba(139, 92, 246, 0.12), transparent 60%),
-      radial-gradient(ellipse at bottom, rgba(167, 139, 250, 0.08), transparent 60%),
+      radial-gradient(ellipse at top, rgba(74, 18, 144, 0.28), transparent 60%),
+      radial-gradient(ellipse at bottom, rgba(20, 184, 166, 0.10), transparent 60%),
       var(--bg);
     padding-top: env(safe-area-inset-top, 0px);
     padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -58,21 +62,21 @@
     padding: 1rem 1.25rem 2rem;
   }
 
+  /* 헤더 */
   .topbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 0.5rem 0 1rem;
-    margin-bottom: 1.25rem;
+    padding: 0.25rem 0 0.85rem;
+    margin-bottom: 1rem;
     border-bottom: 1px solid var(--border);
   }
-
   .title {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 600;
     letter-spacing: 0.02em;
   }
-  .title span { color: var(--accent-hot); }
+  .title span { color: var(--teal-hot); }
 
   .closeBtn {
     width: 36px; height: 36px;
@@ -89,9 +93,10 @@
   /* 박자 시각화 */
   .beats {
     display: flex;
+    flex-wrap: wrap;
     justify-content: center;
-    gap: 14px;
-    margin: 0.5rem 0 1.5rem;
+    gap: 12px;
+    margin: 0.25rem 0 1.25rem;
     min-height: 28px;
   }
   .dot {
@@ -99,69 +104,111 @@
     border-radius: 50%;
     background: var(--bg-card);
     border: 1.5px solid var(--border);
-    transition: transform 0.08s ease, background 0.08s ease, border-color 0.08s ease;
+    transition: transform 0.07s ease, background 0.07s ease, border-color 0.07s ease;
   }
-  .dot.downbeat { border-color: var(--downbeat); }
+  .dot.downbeat { border-color: var(--teal); }
   .dot.active {
-    background: var(--beat);
-    border-color: var(--beat);
-    transform: scale(1.35);
+    background: var(--accent-bright);
+    border-color: var(--accent-bright);
+    transform: scale(1.4);
   }
   .dot.active.downbeat {
-    background: var(--downbeat);
-    border-color: var(--downbeat);
+    background: var(--teal);
+    border-color: var(--teal);
   }
 
-  /* BPM 디스플레이 */
+  /* BPM 카드 (플래시 대상) */
   .bpmCard {
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 18px;
-    padding: 1.25rem 1rem;
+    padding: 1.1rem 1rem 1rem;
     text-align: center;
-    margin-bottom: 1.25rem;
+    margin-bottom: 1rem;
+    transition: background 0.05s ease, border-color 0.05s ease, box-shadow 0.05s ease;
   }
+  .bpmCard.flash {
+    background: var(--accent-soft);
+    border-color: var(--accent-bright);
+    box-shadow: 0 0 24px rgba(167, 139, 250, 0.35);
+  }
+  .bpmCard.flash.downbeat-flash {
+    background: var(--teal-soft);
+    border-color: var(--teal);
+    box-shadow: 0 0 24px rgba(20, 184, 166, 0.45);
+  }
+
   .bpmValue {
     font-size: 4.5rem;
     font-weight: 700;
     color: var(--ink);
     line-height: 1;
     letter-spacing: -0.02em;
+    cursor: pointer;
+    display: inline-block;
+    padding: 0 0.25rem;
+    border-radius: 8px;
   }
+  .bpmValue:active { background: rgba(255, 255, 255, 0.04); }
+
+  .bpmInput {
+    font-size: 4.5rem;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    background: transparent;
+    border: none;
+    outline: none;
+    text-align: center;
+    width: 5.5em;
+    max-width: 100%;
+    font-family: inherit;
+    -moz-appearance: textfield;
+  }
+  .bpmInput::-webkit-outer-spin-button,
+  .bpmInput::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
   .bpmUnit {
-    font-size: 0.85rem;
+    font-size: 0.8rem;
     color: var(--ink-dim);
-    margin-top: 0.25rem;
-    letter-spacing: 0.15em;
+    margin-top: 0.2rem;
+    letter-spacing: 0.18em;
   }
   .tempoName {
-    margin-top: 0.5rem;
-    color: var(--accent-hot);
+    margin-top: 0.45rem;
+    color: var(--teal-hot);
     font-size: 0.95rem;
     font-style: italic;
     min-height: 1.4em;
+    cursor: pointer;
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 999px;
+    transition: background 0.1s ease;
   }
+  .tempoName:active { background: var(--teal-soft); }
 
   /* BPM 컨트롤 */
   .bpmControls {
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    margin-bottom: 1rem;
+    gap: 0.55rem;
+    margin-bottom: 0.85rem;
   }
   .stepBtn {
     flex: 0 0 auto;
-    width: 48px; height: 48px;
+    width: 46px; height: 46px;
     border-radius: 12px;
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--ink);
-    font-size: 1.4rem;
+    font-size: 1.35rem;
     font-weight: 700;
     cursor: pointer;
   }
   .stepBtn:active { background: var(--accent-soft); border-color: var(--accent); }
-  .stepBtn.long { width: 56px; font-size: 0.95rem; font-weight: 600; }
+  .stepBtn.long { width: 54px; font-size: 0.9rem; font-weight: 600; }
 
   .slider {
     flex: 1;
@@ -177,48 +224,134 @@
     -webkit-appearance: none;
     width: 22px; height: 22px;
     border-radius: 50%;
-    background: var(--accent-hot);
+    background: var(--accent-bright);
     border: 2px solid var(--bg);
     cursor: pointer;
   }
   .slider::-moz-range-thumb {
     width: 22px; height: 22px;
     border-radius: 50%;
-    background: var(--accent-hot);
+    background: var(--accent-bright);
     border: 2px solid var(--bg);
     cursor: pointer;
   }
+  .slider.teal::-webkit-slider-thumb { background: var(--teal-hot); }
+  .slider.teal::-moz-range-thumb { background: var(--teal-hot); }
 
-  /* 박자표 선택 */
-  .section {
-    margin-bottom: 1.25rem;
-  }
-  .sectionLabel {
-    font-size: 0.85rem;
-    color: var(--ink-dim);
-    margin-bottom: 0.5rem;
-    letter-spacing: 0.08em;
-  }
-  .segGroup {
+  /* 탭템포 줄 */
+  .tapRow {
     display: flex;
     gap: 0.5rem;
+    margin-bottom: 0.85rem;
   }
-  .segBtn {
+  .tapBtn {
     flex: 1;
     padding: 0.85rem 0;
+    border-radius: 12px;
+    border: 1px solid var(--teal);
+    background: linear-gradient(135deg, var(--teal), var(--teal-hot));
+    color: white;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.04em;
+    box-shadow: 0 3px 12px rgba(20, 184, 166, 0.25);
+    transition: transform 0.05s ease;
+  }
+  .tapBtn:active { transform: scale(0.98); }
+  .tapBtn.flashing {
+    background: linear-gradient(135deg, var(--teal-hot), #5eead4);
+  }
+  .resetTapBtn {
+    flex: 0 0 auto;
+    padding: 0.85rem 0.9rem;
     border-radius: 12px;
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--ink-soft);
-    font-size: 1.05rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+  .resetTapBtn:active { background: var(--accent-soft); }
+
+  /* 볼륨 줄 */
+  .volumeRow {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+  }
+  .volumeRow .label {
+    flex: 0 0 auto;
+    font-size: 0.85rem;
+    color: var(--ink-dim);
+    width: 2.8rem;
+  }
+  .volumeRow .pct {
+    flex: 0 0 auto;
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    width: 3rem;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 섹션 */
+  .section {
+    margin-bottom: 0.95rem;
+  }
+  .sectionLabel {
+    font-size: 0.8rem;
+    color: var(--ink-dim);
+    margin-bottom: 0.45rem;
+    letter-spacing: 0.08em;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .toggleBtn {
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--ink-soft);
+    border-radius: 999px;
+    padding: 4px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .toggleBtn.on {
+    border-color: var(--teal);
+    color: var(--teal-hot);
+    background: var(--teal-soft);
+  }
+
+  /* 세그먼트 (subdivision, 박자) */
+  .segGroup {
+    display: flex;
+    gap: 0.45rem;
+  }
+  .meterGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.45rem;
+  }
+  .segBtn {
+    flex: 1;
+    padding: 0.75rem 0;
+    border-radius: 11px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    color: var(--ink-soft);
+    font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
   }
   .segBtn.active {
     background: var(--accent-soft);
-    border-color: var(--accent);
-    color: var(--accent-hot);
+    border-color: var(--accent-bright);
+    color: var(--ink);
   }
+  .segBtn.compact { font-size: 0.88rem; padding: 0.65rem 0; }
 
   /* 시작/정지 */
   .playBtn {
@@ -226,19 +359,42 @@
     padding: 1.05rem 0;
     border-radius: 16px;
     border: none;
-    background: linear-gradient(135deg, var(--accent), var(--accent-hot));
+    background: linear-gradient(135deg, var(--accent-deep), var(--accent-hot));
     color: white;
     font-size: 1.15rem;
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.05em;
-    box-shadow: 0 6px 20px rgba(139, 92, 246, 0.35);
+    box-shadow: 0 6px 20px rgba(74, 18, 144, 0.45);
     transition: transform 0.05s ease, box-shadow 0.15s ease;
+    margin-top: 0.25rem;
   }
   .playBtn:active { transform: scale(0.98); }
   .playBtn.playing {
-    background: linear-gradient(135deg, #ef4444, #f97316);
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.35);
+    background: linear-gradient(135deg, var(--danger), #f97316);
+    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+  }
+
+  /* 단축키 안내 */
+  .hints {
+    margin-top: 1rem;
+    padding-top: 0.85rem;
+    border-top: 1px dashed var(--border);
+    font-size: 0.72rem;
+    color: var(--ink-dim);
+    line-height: 1.7;
+    text-align: center;
+  }
+  .hints kbd {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    margin: 0 1px;
   }
 </style>
 </head>
@@ -251,30 +407,73 @@
 
     <div class="beats" id="beats"></div>
 
-    <div class="bpmCard">
-      <div class="bpmValue"><span id="bpmValue">100</span></div>
+    <div class="bpmCard" id="bpmCard">
+      <div>
+        <span class="bpmValue" id="bpmValue" title="클릭하여 직접 입력">100</span>
+        <input type="number" class="bpmInput" id="bpmInput" min="40" max="208" value="100" style="display:none;" />
+      </div>
       <div class="bpmUnit">BPM</div>
-      <div class="tempoName" id="tempoName">Andante</div>
+      <div class="tempoName" id="tempoName" title="클릭하여 해당 빠르기로 이동">Andante</div>
     </div>
 
     <div class="bpmControls">
       <button type="button" class="stepBtn long" id="dec10">−10</button>
       <button type="button" class="stepBtn" id="dec1">−</button>
-      <input type="range" class="slider" id="bpmSlider" min="40" max="208" value="100" step="1">
+      <input type="range" class="slider" id="bpmSlider" min="40" max="208" value="100" step="1" aria-label="BPM 슬라이더">
       <button type="button" class="stepBtn" id="inc1">+</button>
       <button type="button" class="stepBtn long" id="inc10">+10</button>
     </div>
 
+    <div class="tapRow">
+      <button type="button" class="tapBtn" id="tapBtn">탭템포 (T)</button>
+      <button type="button" class="resetTapBtn" id="resetTapBtn">초기화</button>
+    </div>
+
+    <div class="volumeRow">
+      <div class="label">볼륨</div>
+      <input type="range" class="slider teal" id="volumeSlider" min="0" max="100" value="80" step="1" aria-label="볼륨 슬라이더">
+      <div class="pct" id="volumeValue">80%</div>
+    </div>
+
     <div class="section">
-      <div class="sectionLabel">박자</div>
-      <div class="segGroup" id="meterGroup">
-        <button type="button" class="segBtn" data-beats="2">2/4</button>
-        <button type="button" class="segBtn" data-beats="3">3/4</button>
-        <button type="button" class="segBtn active" data-beats="4">4/4</button>
+      <div class="sectionLabel"><span>세분음</span></div>
+      <div class="segGroup" id="subGroup">
+        <button type="button" class="segBtn active" data-sub="1">1</button>
+        <button type="button" class="segBtn" data-sub="2">♪♪</button>
+        <button type="button" class="segBtn" data-sub="3">3연음</button>
+        <button type="button" class="segBtn" data-sub="4">16분</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sectionLabel"><span>박자</span></div>
+      <div class="meterGrid" id="meterGroup">
+        <button type="button" class="segBtn compact" data-meter="2/4">2/4</button>
+        <button type="button" class="segBtn compact" data-meter="3/4">3/4</button>
+        <button type="button" class="segBtn compact active" data-meter="4/4">4/4</button>
+        <button type="button" class="segBtn compact" data-meter="5/4">5/4</button>
+        <button type="button" class="segBtn compact" data-meter="6/4">6/4</button>
+        <button type="button" class="segBtn compact" data-meter="7/4">7/4</button>
+        <button type="button" class="segBtn compact" data-meter="8/4">8/4</button>
+        <button type="button" class="segBtn compact" data-meter="6/8">6/8</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sectionLabel">
+        <span>시각 플래시</span>
+        <button type="button" class="toggleBtn on" id="flashToggle" aria-pressed="true">ON</button>
       </div>
     </div>
 
     <button type="button" class="playBtn" id="playBtn">시작</button>
+
+    <div class="hints">
+      <kbd>Space</kbd> 시작/정지 ·
+      <kbd>↑</kbd><kbd>↓</kbd> BPM ±1 ·
+      <kbd>Shift</kbd>+<kbd>↑</kbd><kbd>↓</kbd> ±5 ·
+      <kbd>T</kbd> 탭템포
+    </div>
   </div>
 
 <script>
@@ -283,117 +482,213 @@
 
   const $ = (id) => document.getElementById(id);
 
-  // 상태
+  // ─── 상태 ───────────────────────────────────────
   let audioCtx = null;
+  let masterGain = null;
   let bpm = 100;
-  let beatsPerBar = 4;
+  let volume = 0.80;
   let isPlaying = false;
-  let currentBeat = 0;
-  let nextNoteTime = 0;
   let timerID = null;
-  const notesInQueue = [];
+  const notesInQueue = []; // { beat, sub, time, isDownbeat }
   const SCHEDULE_AHEAD = 0.1; // sec
   const LOOKAHEAD = 25; // ms
+
+  // 박자(meter)
+  const METERS = {
+    '2/4': { beats: 2, downbeats: [0] },
+    '3/4': { beats: 3, downbeats: [0] },
+    '4/4': { beats: 4, downbeats: [0] },
+    '5/4': { beats: 5, downbeats: [0] },
+    '6/4': { beats: 6, downbeats: [0] },
+    '7/4': { beats: 7, downbeats: [0] },
+    '8/4': { beats: 8, downbeats: [0] },
+    '6/8': { beats: 6, downbeats: [0, 3] },
+  };
+  let meterId = '4/4';
+  function meter() { return METERS[meterId]; }
+  function isDownbeat(i) { return meter().downbeats.indexOf(i) !== -1; }
+
+  // 세분음(1~4)
+  let subdivisions = 1;
+
+  // 위치
+  let currentBeat = 0;   // 0..beats-1
+  let currentSub = 0;    // 0..subdivisions-1
+  let nextNoteTime = 0;
   let lastDrawnBeat = -1;
 
-  // 빠르기 이름 (관용 구간)
-  function tempoLabel(b) {
-    if (b < 60) return 'Largo';
-    if (b < 76) return 'Adagio';
-    if (b < 108) return 'Andante';
-    if (b < 120) return 'Moderato';
-    if (b < 156) return 'Allegro';
-    if (b < 176) return 'Vivace';
-    return 'Presto';
-  }
+  // 시각 플래시
+  let flashEnabled = true;
 
-  // 박자 점 렌더링
+  // 탭템포
+  const tapTimes = []; // 최근 탭 시각 (performance.now)
+  const TAP_KEEP = 6;
+  const TAP_RESET_MS = 2000;
+
+  // ─── 빠르기 이름 ────────────────────────────────
+  const TEMPO_TABLE = [
+    { name: 'Largo',    max: 60,  jump: 40 },
+    { name: 'Adagio',   max: 76,  jump: 60 },
+    { name: 'Andante',  max: 108, jump: 76 },
+    { name: 'Moderato', max: 120, jump: 108 },
+    { name: 'Allegro',  max: 156, jump: 120 },
+    { name: 'Vivace',   max: 176, jump: 156 },
+    { name: 'Presto',   max: 999, jump: 176 },
+  ];
+  function tempoEntry(b) {
+    for (const t of TEMPO_TABLE) if (b < t.max) return t;
+    return TEMPO_TABLE[TEMPO_TABLE.length - 1];
+  }
+  function tempoLabel(b) { return tempoEntry(b).name; }
+
+  // ─── 박자 점 렌더링 ─────────────────────────────
   function renderBeats() {
     const root = $('beats');
     root.innerHTML = '';
-    for (let i = 0; i < beatsPerBar; i++) {
+    for (let i = 0; i < meter().beats; i++) {
       const d = document.createElement('div');
-      d.className = 'dot' + (i === 0 ? ' downbeat' : '');
+      d.className = 'dot' + (isDownbeat(i) ? ' downbeat' : '');
       d.dataset.idx = String(i);
       root.appendChild(d);
     }
     lastDrawnBeat = -1;
   }
 
-  function setBpm(v) {
-    bpm = Math.max(40, Math.min(208, Math.round(v)));
+  // ─── BPM ────────────────────────────────────────
+  function setBpm(v, opts) {
+    const next = Math.max(40, Math.min(208, Math.round(v)));
+    if (Number.isNaN(next)) return;
+    bpm = next;
     $('bpmValue').textContent = String(bpm);
     $('tempoName').textContent = tempoLabel(bpm);
-    if ($('bpmSlider').value !== String(bpm)) $('bpmSlider').value = String(bpm);
+    if (!opts || !opts.fromSlider) $('bpmSlider').value = String(bpm);
+    if (!opts || !opts.fromInput)  $('bpmInput').value  = String(bpm);
   }
 
-  function setBeats(n) {
-    beatsPerBar = n;
+  function setMeter(id) {
+    if (!METERS[id]) return;
+    meterId = id;
     document.querySelectorAll('#meterGroup .segBtn').forEach((b) => {
-      b.classList.toggle('active', Number(b.dataset.beats) === n);
+      b.classList.toggle('active', b.dataset.meter === id);
     });
     currentBeat = 0;
+    currentSub = 0;
     renderBeats();
   }
 
-  // Web Audio: 짧은 클릭음 (다운비트 = 더 높은 주파수)
-  function scheduleClick(beatIndex, time) {
-    if (!audioCtx) return;
+  function setSubdivisions(n) {
+    subdivisions = Math.max(1, Math.min(4, Number(n) || 1));
+    document.querySelectorAll('#subGroup .segBtn').forEach((b) => {
+      b.classList.toggle('active', Number(b.dataset.sub) === subdivisions);
+    });
+    currentSub = 0;
+  }
+
+  // ─── Web Audio ──────────────────────────────────
+  function ensureAudio() {
+    if (!audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AC();
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = volume;
+      masterGain.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  }
+
+  function setVolume(pct) {
+    volume = Math.max(0, Math.min(1, pct / 100));
+    $('volumeValue').textContent = Math.round(volume * 100) + '%';
+    if ($('volumeSlider').value !== String(Math.round(volume * 100))) {
+      $('volumeSlider').value = String(Math.round(volume * 100));
+    }
+    if (masterGain) masterGain.gain.setTargetAtTime(volume, audioCtx.currentTime, 0.01);
+  }
+
+  // 클릭음: downbeat / 메인박 / 세분음 차등
+  function scheduleClick(beatIdx, subIdx, time) {
+    if (!audioCtx || !masterGain) return;
     const osc = audioCtx.createOscillator();
     const gain = audioCtx.createGain();
     osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.frequency.value = beatIndex === 0 ? 1500 : 1000;
-    osc.type = 'square';
+    gain.connect(masterGain);
+
+    const isMain = subIdx === 0;
+    const isDown = isMain && isDownbeat(beatIdx);
+
+    let freq, peak, duration;
+    if (isDown)      { freq = 1600; peak = 0.55; duration = 0.06; osc.type = 'square'; }
+    else if (isMain) { freq = 1100; peak = 0.40; duration = 0.05; osc.type = 'square'; }
+    else             { freq = 700;  peak = 0.18; duration = 0.03; osc.type = 'triangle'; }
+
+    osc.frequency.value = freq;
     gain.gain.setValueAtTime(0.0001, time);
-    gain.gain.exponentialRampToValueAtTime(0.4, time + 0.001);
-    gain.gain.exponentialRampToValueAtTime(0.0001, time + 0.05);
+    gain.gain.exponentialRampToValueAtTime(peak, time + 0.001);
+    gain.gain.exponentialRampToValueAtTime(0.0001, time + duration);
     osc.start(time);
-    osc.stop(time + 0.06);
-    notesInQueue.push({ beat: beatIndex, time });
+    osc.stop(time + duration + 0.02);
+
+    notesInQueue.push({ beat: beatIdx, sub: subIdx, time, isDown });
   }
 
-  function advanceNote() {
+  function advance() {
     const secondsPerBeat = 60.0 / bpm;
-    nextNoteTime += secondsPerBeat;
-    currentBeat = (currentBeat + 1) % beatsPerBar;
+    const secondsPerSub = secondsPerBeat / subdivisions;
+    nextNoteTime += secondsPerSub;
+    currentSub += 1;
+    if (currentSub >= subdivisions) {
+      currentSub = 0;
+      currentBeat = (currentBeat + 1) % meter().beats;
+    }
   }
 
   function scheduler() {
     if (!audioCtx) return;
     while (nextNoteTime < audioCtx.currentTime + SCHEDULE_AHEAD) {
-      scheduleClick(currentBeat, nextNoteTime);
-      advanceNote();
+      scheduleClick(currentBeat, currentSub, nextNoteTime);
+      advance();
     }
+  }
+
+  // ─── 시각 갱신 ──────────────────────────────────
+  function flashCard(isDown) {
+    if (!flashEnabled) return;
+    const card = $('bpmCard');
+    card.classList.add('flash');
+    if (isDown) card.classList.add('downbeat-flash');
+    setTimeout(() => {
+      card.classList.remove('flash');
+      card.classList.remove('downbeat-flash');
+    }, 90);
   }
 
   function draw() {
     if (!isPlaying) return;
     const now = audioCtx ? audioCtx.currentTime : 0;
-    let visualBeat = lastDrawnBeat;
+    let pendingMain = null;
     while (notesInQueue.length && notesInQueue[0].time <= now) {
-      visualBeat = notesInQueue[0].beat;
-      notesInQueue.shift();
+      const n = notesInQueue.shift();
+      if (n.sub === 0) pendingMain = n; // 메인 박만 시각 처리
     }
-    if (visualBeat !== lastDrawnBeat) {
-      lastDrawnBeat = visualBeat;
-      document.querySelectorAll('#beats .dot').forEach((d) => {
-        d.classList.toggle('active', Number(d.dataset.idx) === visualBeat);
-      });
+    if (pendingMain) {
+      const idx = pendingMain.beat;
+      if (idx !== lastDrawnBeat) {
+        lastDrawnBeat = idx;
+        document.querySelectorAll('#beats .dot').forEach((d) => {
+          d.classList.toggle('active', Number(d.dataset.idx) === idx);
+        });
+      }
+      flashCard(pendingMain.isDown);
     }
     requestAnimationFrame(draw);
   }
 
+  // ─── 재생 제어 ──────────────────────────────────
   function start() {
-    if (!audioCtx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      audioCtx = new AC();
-    }
-    if (audioCtx.state === 'suspended') {
-      audioCtx.resume();
-    }
+    ensureAudio();
     isPlaying = true;
     currentBeat = 0;
+    currentSub = 0;
     notesInQueue.length = 0;
     lastDrawnBeat = -1;
     nextNoteTime = audioCtx.currentTime + 0.06;
@@ -406,33 +701,148 @@
 
   function stop() {
     isPlaying = false;
-    if (timerID) {
-      clearInterval(timerID);
-      timerID = null;
-    }
+    if (timerID) { clearInterval(timerID); timerID = null; }
     notesInQueue.length = 0;
     document.querySelectorAll('#beats .dot').forEach((d) => d.classList.remove('active'));
+    const card = $('bpmCard');
+    card.classList.remove('flash');
+    card.classList.remove('downbeat-flash');
     const btn = $('playBtn');
     btn.textContent = '시작';
     btn.classList.remove('playing');
   }
 
-  function toggle() {
-    if (isPlaying) stop();
-    else start();
+  function toggle() { isPlaying ? stop() : start(); }
+
+  // ─── 탭템포 ────────────────────────────────────
+  function tapTempo() {
+    const now = performance.now();
+    const last = tapTimes[tapTimes.length - 1];
+    if (last && now - last > TAP_RESET_MS) {
+      tapTimes.length = 0; // 너무 오래 텀이 벌어지면 초기화
+    }
+    tapTimes.push(now);
+    if (tapTimes.length > TAP_KEEP) tapTimes.shift();
+
+    if (tapTimes.length >= 2) {
+      let sum = 0;
+      for (let i = 1; i < tapTimes.length; i++) sum += tapTimes[i] - tapTimes[i - 1];
+      const avgMs = sum / (tapTimes.length - 1);
+      const newBpm = 60000 / avgMs;
+      setBpm(newBpm);
+    }
+
+    const btn = $('tapBtn');
+    btn.classList.add('flashing');
+    setTimeout(() => btn.classList.remove('flashing'), 90);
   }
 
-  // 이벤트 바인딩
+  function resetTap() {
+    tapTimes.length = 0;
+    const btn = $('tapBtn');
+    btn.classList.add('flashing');
+    setTimeout(() => btn.classList.remove('flashing'), 90);
+  }
+
+  // ─── BPM 직접 입력 ─────────────────────────────
+  function openBpmInput() {
+    const display = $('bpmValue');
+    const input = $('bpmInput');
+    display.style.display = 'none';
+    input.style.display = '';
+    input.value = String(bpm);
+    setTimeout(() => { input.focus(); input.select(); }, 0);
+  }
+  function closeBpmInput(commit) {
+    const display = $('bpmValue');
+    const input = $('bpmInput');
+    if (commit) {
+      const v = Number(input.value);
+      if (!Number.isNaN(v) && v > 0) setBpm(v, { fromInput: true });
+    }
+    input.style.display = 'none';
+    display.style.display = '';
+  }
+
+  // ─── 시각 플래시 토글 ──────────────────────────
+  function toggleFlash() {
+    flashEnabled = !flashEnabled;
+    const t = $('flashToggle');
+    t.classList.toggle('on', flashEnabled);
+    t.textContent = flashEnabled ? 'ON' : 'OFF';
+    t.setAttribute('aria-pressed', flashEnabled ? 'true' : 'false');
+    if (!flashEnabled) {
+      const card = $('bpmCard');
+      card.classList.remove('flash');
+      card.classList.remove('downbeat-flash');
+    }
+  }
+
+  // ─── 이벤트 바인딩 ─────────────────────────────
   $('playBtn').addEventListener('click', toggle);
   $('inc1').addEventListener('click', () => setBpm(bpm + 1));
   $('dec1').addEventListener('click', () => setBpm(bpm - 1));
   $('inc10').addEventListener('click', () => setBpm(bpm + 10));
   $('dec10').addEventListener('click', () => setBpm(bpm - 10));
-  $('bpmSlider').addEventListener('input', (e) => setBpm(Number(e.target.value)));
-  document.querySelectorAll('#meterGroup .segBtn').forEach((b) => {
-    b.addEventListener('click', () => setBeats(Number(b.dataset.beats)));
+  $('bpmSlider').addEventListener('input', (e) => setBpm(Number(e.target.value), { fromSlider: true }));
+
+  $('bpmValue').addEventListener('click', openBpmInput);
+  $('bpmInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); closeBpmInput(true); }
+    else if (e.key === 'Escape') { e.preventDefault(); closeBpmInput(false); }
+  });
+  $('bpmInput').addEventListener('blur', () => closeBpmInput(true));
+
+  $('tempoName').addEventListener('click', () => setBpm(tempoEntry(bpm).jump));
+
+  $('volumeSlider').addEventListener('input', (e) => {
+    ensureAudio();
+    setVolume(Number(e.target.value));
   });
 
+  $('tapBtn').addEventListener('click', tapTempo);
+  $('resetTapBtn').addEventListener('click', resetTap);
+
+  document.querySelectorAll('#subGroup .segBtn').forEach((b) => {
+    b.addEventListener('click', () => setSubdivisions(Number(b.dataset.sub)));
+  });
+  document.querySelectorAll('#meterGroup .segBtn').forEach((b) => {
+    b.addEventListener('click', () => setMeter(b.dataset.meter));
+  });
+
+  $('flashToggle').addEventListener('click', toggleFlash);
+
+  // 키보드 단축키 (input 포커스 중에는 화살표/스페이스는 input이 가져감)
+  function isTypingTarget(el) {
+    if (!el) return false;
+    const tag = el.tagName;
+    return tag === 'INPUT' || tag === 'TEXTAREA' || el.isContentEditable;
+  }
+  window.addEventListener('keydown', (e) => {
+    const typing = isTypingTarget(e.target);
+    const step = e.shiftKey ? 5 : 1;
+
+    // T 는 입력 중이 아닐 때만
+    if (!typing && (e.key === 't' || e.key === 'T')) {
+      e.preventDefault();
+      tapTempo();
+      return;
+    }
+    if (typing) return; // 나머지는 입력 중이면 무시
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      toggle();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setBpm(bpm + step);
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setBpm(bpm - step);
+    }
+  });
+
+  // 닫기
   function closeMe() {
     stop();
     try { window.parent.postMessage('close-metronome', window.location.origin); } catch (e) {}
@@ -446,6 +856,7 @@
   // 초기 렌더
   renderBeats();
   setBpm(bpm);
+  setVolume(Math.round(volume * 100));
 })();
 </script>
 </body>
