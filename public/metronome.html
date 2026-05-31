@@ -95,26 +95,33 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 12px;
-    margin: 0.25rem 0 1.25rem;
-    min-height: 28px;
+    align-items: center;
+    gap: 16px;
+    margin: 0.5rem 0 1.5rem;
+    min-height: 56px;
   }
   .dot {
-    width: 22px; height: 22px;
+    width: 36px; height: 36px;
     border-radius: 50%;
-    background: var(--bg-card);
-    border: 1.5px solid var(--border);
-    transition: transform 0.07s ease, background 0.07s ease, border-color 0.07s ease;
+    background: transparent;
+    border: 2px solid rgba(255, 255, 255, 0.25);
+    transition: transform 0.08s ease, background 0.08s ease, border-color 0.08s ease, box-shadow 0.15s ease;
   }
-  .dot.downbeat { border-color: var(--teal); }
+  .dot.downbeat {
+    width: 44px; height: 44px;
+    border-color: rgba(255, 255, 255, 0.55);
+    border-width: 2.5px;
+  }
   .dot.active {
-    background: var(--accent-bright);
-    border-color: var(--accent-bright);
-    transform: scale(1.4);
-  }
-  .dot.active.downbeat {
     background: var(--teal);
     border-color: var(--teal);
+    box-shadow: 0 0 18px rgba(20, 184, 166, 0.65), 0 0 4px rgba(20, 184, 166, 0.4);
+    transform: scale(1.15);
+  }
+  .dot.active.downbeat {
+    background: #ffffff;
+    border-color: #ffffff;
+    box-shadow: 0 0 22px rgba(255, 255, 255, 0.7), 0 0 6px rgba(255, 255, 255, 0.5);
   }
 
   /* BPM 카드 (플래시 대상) */
@@ -198,23 +205,24 @@
   }
   .stepBtn {
     flex: 0 0 auto;
-    width: 46px; height: 46px;
+    min-width: 48px; height: 50px;
+    padding: 0 0.5rem;
     border-radius: 12px;
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--ink);
-    font-size: 1.35rem;
+    font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
   }
   .stepBtn:active { background: var(--accent-soft); border-color: var(--accent); }
-  .stepBtn.long { width: 54px; font-size: 0.9rem; font-weight: 600; }
+  .stepBtn.long { min-width: 58px; font-size: 0.95rem; }
 
   .slider {
     flex: 1;
     -webkit-appearance: none;
     appearance: none;
-    height: 6px;
+    height: 8px;
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 999px;
@@ -222,18 +230,20 @@
   }
   .slider::-webkit-slider-thumb {
     -webkit-appearance: none;
-    width: 22px; height: 22px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     background: var(--accent-bright);
     border: 2px solid var(--bg);
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   }
   .slider::-moz-range-thumb {
-    width: 22px; height: 22px;
+    width: 26px; height: 26px;
     border-radius: 50%;
     background: var(--accent-bright);
     border: 2px solid var(--bg);
     cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
   }
   .slider.teal::-webkit-slider-thumb { background: var(--teal-hot); }
   .slider.teal::-moz-range-thumb { background: var(--teal-hot); }
@@ -241,35 +251,37 @@
   /* 탭템포 줄 */
   .tapRow {
     display: flex;
-    gap: 0.5rem;
-    margin-bottom: 0.85rem;
+    gap: 0.55rem;
+    margin-bottom: 0.95rem;
   }
   .tapBtn {
-    flex: 1;
-    padding: 0.85rem 0;
+    flex: 3;
+    min-height: 52px;
+    padding: 0.9rem 0;
     border-radius: 12px;
-    border: 1px solid var(--teal);
-    background: linear-gradient(135deg, var(--teal), var(--teal-hot));
-    color: white;
-    font-size: 1rem;
+    border: 1px solid rgba(45, 212, 191, 0.55);
+    background: rgba(20, 184, 166, 0.16);
+    color: var(--teal-hot);
+    font-size: 1.05rem;
     font-weight: 700;
     cursor: pointer;
     letter-spacing: 0.04em;
-    box-shadow: 0 3px 12px rgba(20, 184, 166, 0.25);
-    transition: transform 0.05s ease;
+    transition: transform 0.05s ease, background 0.1s ease;
   }
-  .tapBtn:active { transform: scale(0.98); }
+  .tapBtn:active { transform: scale(0.98); background: rgba(20, 184, 166, 0.28); }
   .tapBtn.flashing {
-    background: linear-gradient(135deg, var(--teal-hot), #5eead4);
+    background: rgba(20, 184, 166, 0.38);
+    color: #ffffff;
   }
   .resetTapBtn {
-    flex: 0 0 auto;
-    padding: 0.85rem 0.9rem;
+    flex: 1;
+    min-height: 52px;
+    padding: 0 0.9rem;
     border-radius: 12px;
     border: 1px solid var(--border);
     background: var(--bg-card);
     color: var(--ink-soft);
-    font-size: 0.85rem;
+    font-size: 0.9rem;
     cursor: pointer;
   }
   .resetTapBtn:active { background: var(--accent-soft); }
@@ -337,6 +349,7 @@
   }
   .segBtn {
     flex: 1;
+    min-height: 48px;
     padding: 0.75rem 0;
     border-radius: 11px;
     border: 1px solid var(--border);
@@ -351,28 +364,29 @@
     border-color: var(--accent-bright);
     color: var(--ink);
   }
-  .segBtn.compact { font-size: 0.88rem; padding: 0.65rem 0; }
+  .segBtn.compact { font-size: 0.92rem; min-height: 48px; }
 
   /* 시작/정지 */
   .playBtn {
     width: 100%;
-    padding: 1.05rem 0;
+    min-height: 60px;
+    padding: 1.1rem 0;
     border-radius: 16px;
     border: none;
-    background: linear-gradient(135deg, var(--accent-deep), var(--accent-hot));
+    background: linear-gradient(135deg, var(--teal), var(--teal-hot));
     color: white;
-    font-size: 1.15rem;
+    font-size: 1.2rem;
     font-weight: 700;
     cursor: pointer;
-    letter-spacing: 0.05em;
-    box-shadow: 0 6px 20px rgba(74, 18, 144, 0.45);
-    transition: transform 0.05s ease, box-shadow 0.15s ease;
-    margin-top: 0.25rem;
+    letter-spacing: 0.06em;
+    box-shadow: 0 6px 20px rgba(20, 184, 166, 0.4);
+    transition: transform 0.05s ease, box-shadow 0.15s ease, background 0.15s ease;
+    margin-top: 0.35rem;
   }
   .playBtn:active { transform: scale(0.98); }
   .playBtn.playing {
-    background: linear-gradient(135deg, var(--danger), #f97316);
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+    background: linear-gradient(135deg, #0d8c80, #0f766e);
+    box-shadow: 0 6px 20px rgba(13, 140, 128, 0.45);
   }
 
   /* 단축키 안내 */
@@ -396,6 +410,41 @@
     color: var(--ink-soft);
     margin: 0 1px;
   }
+
+  /* 모바일 최적화 */
+  @media (max-width: 640px) {
+    .wrap { padding: 0.85rem 1rem 1.25rem; }
+
+    .topbar { padding: 0.25rem 0 0.75rem; margin-bottom: 0.85rem; }
+
+    .beats { gap: 14px; margin: 0.35rem 0 1.25rem; min-height: 60px; }
+    .dot { width: 40px; height: 40px; }
+    .dot.downbeat { width: 50px; height: 50px; }
+
+    .bpmCard { padding: 1rem 0.85rem 0.9rem; margin-bottom: 0.9rem; border-radius: 16px; }
+    .bpmValue, .bpmInput { font-size: 4rem; }
+
+    .bpmControls { gap: 0.4rem; margin-bottom: 0.9rem; }
+    .stepBtn { min-width: 50px; height: 52px; font-size: 1rem; padding: 0 0.4rem; }
+    .stepBtn.long { min-width: 54px; font-size: 0.95rem; }
+
+    .tapBtn, .resetTapBtn { min-height: 54px; font-size: 1.05rem; }
+
+    .segBtn { min-height: 50px; }
+
+    .playBtn { min-height: 64px; font-size: 1.2rem; padding: 1.15rem 0; }
+
+    .section { margin-bottom: 0.85rem; }
+
+    /* 단축키 안내는 모바일에서 숨김 (키보드 없음) */
+    .hints { display: none; }
+  }
+
+  @media (max-width: 380px) {
+    .meterGrid { grid-template-columns: repeat(4, 1fr); gap: 0.35rem; }
+    .stepBtn { min-width: 46px; height: 50px; font-size: 0.95rem; }
+    .bpmValue, .bpmInput { font-size: 3.6rem; }
+  }
 </style>
 </head>
 <body>
@@ -418,9 +467,9 @@
 
     <div class="bpmControls">
       <button type="button" class="stepBtn long" id="dec10">−10</button>
-      <button type="button" class="stepBtn" id="dec1">−</button>
+      <button type="button" class="stepBtn long" id="dec1">−1</button>
       <input type="range" class="slider" id="bpmSlider" min="40" max="208" value="100" step="1" aria-label="BPM 슬라이더">
-      <button type="button" class="stepBtn" id="inc1">+</button>
+      <button type="button" class="stepBtn long" id="inc1">+1</button>
       <button type="button" class="stepBtn long" id="inc10">+10</button>
     </div>
 
@@ -438,10 +487,10 @@
     <div class="section">
       <div class="sectionLabel"><span>세분음</span></div>
       <div class="segGroup" id="subGroup">
-        <button type="button" class="segBtn active" data-sub="1">1</button>
-        <button type="button" class="segBtn" data-sub="2">♪♪</button>
+        <button type="button" class="segBtn active" data-sub="1">1박</button>
+        <button type="button" class="segBtn" data-sub="2">2분할</button>
         <button type="button" class="segBtn" data-sub="3">3연음</button>
-        <button type="button" class="segBtn" data-sub="4">16분</button>
+        <button type="button" class="segBtn" data-sub="4">4분할</button>
       </div>
     </div>
 
