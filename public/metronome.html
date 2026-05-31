@@ -80,6 +80,20 @@
     background-color: rgba(20, 184, 166, var(--flash-opacity));
   }
 
+  /* 디버그 상태 표시 (좌측 상단, 확인 후 제거 가능) */
+  .debugInfo {
+    position: absolute;
+    top: 10px;
+    left: 14px;
+    z-index: 6;
+    font-size: 9.5px;
+    color: var(--ink-dim);
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    pointer-events: none;
+    letter-spacing: 0;
+    line-height: 1;
+  }
+
   /* 닫기 (우측 상단 absolute) */
   .closeBtn {
     position: absolute;
@@ -493,6 +507,7 @@
 <body>
   <div class="wrap">
     <button type="button" class="closeBtn" id="closeBtn" aria-label="닫기">✕</button>
+    <div class="debugInfo" id="debugInfo">audio: ?</div>
 
     <div class="tabs" role="tablist">
       <button type="button" class="tab active" data-tab="metronome" role="tab" aria-selected="true">메트로놈</button>
@@ -692,31 +707,73 @@
     currentSub = 0;
   }
 
-  // ─── Web Audio ──────────────────────────────────
+  // ─── Web Audio (iOS Safari 안전 unlock) ─────────
   let audioUnlocked = false;
 
-  async function ensureAudio() {
-    if (!audioCtx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
+  function updateDebug() {
+    const el = document.getElementById('debugInfo');
+    if (!el) return;
+    const st = audioCtx ? audioCtx.state : 'null';
+    el.textContent = 'audio: ' + st + ' · unlocked: ' + (audioUnlocked ? 'Y' : 'N');
+  }
+
+  // 핵심: 사용자 제스처 동기 흐름 안에서 audioCtx 생성 + 무음 버퍼 재생 + resume.
+  // 절대 await 하지 말 것 (await 건너면 iOS는 unlock 신호 거부).
+  function unlockAudio() {
+    if (audioCtx) {
+      // 이미 있으면 resume 만 보강
+      if (audioCtx.state === 'suspended') {
+        try { audioCtx.resume(); } catch (e) {}
+      }
+      updateDebug();
+      return;
+    }
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    try {
       audioCtx = new AC();
+    } catch (e) {
+      return;
+    }
+
+    // 1 sample 무음 버퍼 즉시 재생 (사용자 제스처 동기 호출)
+    try {
+      const buf = audioCtx.createBuffer(1, 1, 22050);
+      const src = audioCtx.createBufferSource();
+      src.buffer = buf;
+      src.connect(audioCtx.destination);
+      src.start(0);
+    } catch (e) {}
+
+    // 마스터 게인 (메트로놈용)
+    try {
       masterGain = audioCtx.createGain();
       masterGain.gain.value = volume;
       masterGain.connect(audioCtx.destination);
-    }
+    } catch (e) {}
+
     if (audioCtx.state === 'suspended') {
-      try { await audioCtx.resume(); } catch (e) {}
+      try { audioCtx.resume(); } catch (e) {}
     }
-    // iOS 무음 모드/잠금 해제: 1 sample 무음 버퍼 한 번 재생
-    if (!audioUnlocked) {
-      try {
-        const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
-        const src = audioCtx.createBufferSource();
-        src.buffer = buf;
-        src.connect(audioCtx.destination);
-        src.start(0);
-      } catch (e) {}
-      audioUnlocked = true;
+
+    try { audioCtx.addEventListener('statechange', updateDebug); } catch (e) {}
+    audioUnlocked = true;
+    updateDebug();
+  }
+
+  // 페이지 어디든 첫 사용자 제스처에 한 번 발화 (글로벌 보험)
+  document.addEventListener('touchstart', unlockAudio, { once: true, passive: true });
+  document.addEventListener('touchend',   unlockAudio, { once: true, passive: true });
+  document.addEventListener('mousedown',  unlockAudio, { once: true });
+  document.addEventListener('click',      unlockAudio, { once: true });
+
+  // start/startDrone 가 호출할 동기 ensureAudio (boilerplate)
+  function ensureAudio() {
+    if (!audioCtx) unlockAudio();
+    if (audioCtx && audioCtx.state === 'suspended') {
+      try { audioCtx.resume(); } catch (e) {}
     }
+    updateDebug();
   }
 
   function setVolume(pct) {
@@ -829,8 +886,8 @@
   }
 
   // ─── 재생 제어 ──────────────────────────────────
-  async function start() {
-    await ensureAudio();
+  function start() {
+    ensureAudio();
     if (!audioCtx) return;
     isPlaying = true;
     currentBeat = 0;
@@ -1068,9 +1125,13 @@
     return f;
   }
 
-  async function startDrone(stringId) {
-    await ensureAudio();
+  function startDrone(stringId) {
+    ensureAudio();
     if (!audioCtx) return;
+    // 보강: 매 터치마다 resume 명시 호출 (iOS Safari)
+    if (audioCtx.state === 'suspended') {
+      try { audioCtx.resume(); } catch (e) {}
+    }
     ensureDroneOutput();
     if (activeDrones.has(stringId)) return;
 
