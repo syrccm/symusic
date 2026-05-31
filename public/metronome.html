@@ -80,20 +80,6 @@
     background-color: rgba(20, 184, 166, var(--flash-opacity));
   }
 
-  /* 디버그 상태 표시 (좌측 상단, 확인 후 제거 가능) */
-  .debugInfo {
-    position: absolute;
-    top: 10px;
-    left: 14px;
-    z-index: 6;
-    font-size: 9.5px;
-    color: var(--ink-dim);
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    pointer-events: none;
-    letter-spacing: 0;
-    line-height: 1;
-  }
-
   /* 닫기 (우측 상단 absolute) */
   .closeBtn {
     position: absolute;
@@ -314,9 +300,6 @@
     font-variant-numeric: tabular-nums;
   }
 
-  /* 섹션 (배경/카드 없음, 간격은 .wrap의 gap이 담당) */
-  .section { display: contents; }
-
   /* 세분음/박자 영역 직접 높이 지정 */
   .segGroup {
     display: flex;
@@ -507,7 +490,6 @@
 <body>
   <div class="wrap">
     <button type="button" class="closeBtn" id="closeBtn" aria-label="닫기">✕</button>
-    <div class="debugInfo" id="debugInfo">audio: ?</div>
 
     <div class="tabs" role="tablist">
       <button type="button" class="tab active" data-tab="metronome" role="tab" aria-selected="true">메트로놈</button>
@@ -708,24 +690,13 @@
   }
 
   // ─── Web Audio (iOS Safari 안전 unlock) ─────────
-  let audioUnlocked = false;
-
-  function updateDebug() {
-    const el = document.getElementById('debugInfo');
-    if (!el) return;
-    const st = audioCtx ? audioCtx.state : 'null';
-    el.textContent = 'audio: ' + st + ' · unlocked: ' + (audioUnlocked ? 'Y' : 'N');
-  }
-
   // 핵심: 사용자 제스처 동기 흐름 안에서 audioCtx 생성 + 무음 버퍼 재생 + resume.
   // 절대 await 하지 말 것 (await 건너면 iOS는 unlock 신호 거부).
   function unlockAudio() {
     if (audioCtx) {
-      // 이미 있으면 resume 만 보강
       if (audioCtx.state === 'suspended') {
         try { audioCtx.resume(); } catch (e) {}
       }
-      updateDebug();
       return;
     }
     const AC = window.AudioContext || window.webkitAudioContext;
@@ -755,10 +726,6 @@
     if (audioCtx.state === 'suspended') {
       try { audioCtx.resume(); } catch (e) {}
     }
-
-    try { audioCtx.addEventListener('statechange', updateDebug); } catch (e) {}
-    audioUnlocked = true;
-    updateDebug();
   }
 
   // 페이지 어디든 첫 사용자 제스처에 한 번 발화 (글로벌 보험)
@@ -767,13 +734,11 @@
   document.addEventListener('mousedown',  unlockAudio, { once: true });
   document.addEventListener('click',      unlockAudio, { once: true });
 
-  // start/startDrone 가 호출할 동기 ensureAudio (boilerplate)
   function ensureAudio() {
     if (!audioCtx) unlockAudio();
     if (audioCtx && audioCtx.state === 'suspended') {
       try { audioCtx.resume(); } catch (e) {}
     }
-    updateDebug();
   }
 
   function setVolume(pct) {
