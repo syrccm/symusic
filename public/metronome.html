@@ -578,8 +578,8 @@
 
       <div class="volumeRow">
         <div class="label">볼륨</div>
-        <input type="range" class="slider teal" id="droneVolumeSlider" min="0" max="100" value="60" step="1" aria-label="드론 볼륨">
-        <div class="pct" id="droneVolumeValue">60%</div>
+        <input type="range" class="slider teal" id="droneVolumeSlider" min="0" max="100" value="100" step="1" aria-label="드론 볼륨">
+        <div class="pct" id="droneVolumeValue">100%</div>
       </div>
     </div><!-- /panel-drone -->
   </div>
@@ -693,7 +693,9 @@
   }
 
   // ─── Web Audio ──────────────────────────────────
-  function ensureAudio() {
+  let audioUnlocked = false;
+
+  async function ensureAudio() {
     if (!audioCtx) {
       const AC = window.AudioContext || window.webkitAudioContext;
       audioCtx = new AC();
@@ -701,7 +703,20 @@
       masterGain.gain.value = volume;
       masterGain.connect(audioCtx.destination);
     }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
+    if (audioCtx.state === 'suspended') {
+      try { await audioCtx.resume(); } catch (e) {}
+    }
+    // iOS 무음 모드/잠금 해제: 1 sample 무음 버퍼 한 번 재생
+    if (!audioUnlocked) {
+      try {
+        const buf = audioCtx.createBuffer(1, 1, audioCtx.sampleRate);
+        const src = audioCtx.createBufferSource();
+        src.buffer = buf;
+        src.connect(audioCtx.destination);
+        src.start(0);
+      } catch (e) {}
+      audioUnlocked = true;
+    }
   }
 
   function setVolume(pct) {
@@ -814,8 +829,9 @@
   }
 
   // ─── 재생 제어 ──────────────────────────────────
-  function start() {
-    ensureAudio();
+  async function start() {
+    await ensureAudio();
+    if (!audioCtx) return;
     isPlaying = true;
     currentBeat = 0;
     currentSub = 0;
@@ -972,17 +988,70 @@
     mid:  { E: 82.41,  A: 110.00, D: 146.83, G: 196.00 },
     high: { E: 164.81, A: 220.00, D: 293.66, G: 392.00 },
   };
-  const HARMONICS = [
-    { ratio: 1, gain: 1.00 },
-    { ratio: 2, gain: 0.50 },
-    { ratio: 3, gain: 0.25 },
-    { ratio: 4, gain: 0.12 },
-    { ratio: 5, gain: 0.06 },
+
+  // 표준 배음 패턴
+  const HARM_STD  = [
+    { ratio: 1, gain: 1.00 }, { ratio: 2, gain: 0.50 },
+    { ratio: 3, gain: 0.25 }, { ratio: 4, gain: 0.12 }, { ratio: 5, gain: 0.06 },
   ];
+  // 중-저음 보정 (기본음 살짝 누르고 2배음 살림)
+  const HARM_MID  = [
+    { ratio: 1, gain: 0.70 }, { ratio: 2, gain: 0.70 },
+    { ratio: 3, gain: 0.35 }, { ratio: 4, gain: 0.15 }, { ratio: 5, gain: 0.08 },
+  ];
+  // 매우 저음(E1, A1): 기본음 0.4, 2배음 1.0, 3배음 0.6 — 스피커 재생대역 강조
+  const HARM_DEEP = [
+    { ratio: 1, gain: 0.40 }, { ratio: 2, gain: 1.00 },
+    { ratio: 3, gain: 0.60 }, { ratio: 4, gain: 0.20 }, { ratio: 5, gain: 0.10 },
+  ];
+
+  // 옥타브 × 현 → { 사용할 배음 패턴, 마스터 boost 배수 }
+  const STRING_PROFILE = {
+    low: {
+      E: { harm: HARM_DEEP, boost: 3.0 }, // E1 41Hz
+      A: { harm: HARM_DEEP, boost: 2.5 }, // A1 55Hz
+      D: { harm: HARM_MID,  boost: 1.8 }, // D2 73Hz
+      G: { harm: HARM_MID,  boost: 1.3 }, // G2 98Hz
+    },
+    mid: {
+      E: { harm: HARM_MID, boost: 2.0 }, // E2 82Hz
+      A: { harm: HARM_MID, boost: 1.5 }, // A2 110Hz
+      D: { harm: HARM_STD, boost: 1.2 }, // D3 147Hz
+      G: { harm: HARM_STD, boost: 1.0 }, // G3 196Hz
+    },
+    high: {
+      E: { harm: HARM_STD, boost: 1.0 },
+      A: { harm: HARM_STD, boost: 1.0 },
+      D: { harm: HARM_STD, boost: 1.0 },
+      G: { harm: HARM_STD, boost: 1.0 },
+    },
+  };
+
+  // 드론 마스터(boost 곱 위해 게인 곱 작게) — 합산·boost 클리핑 방지 위해 compressor 거침
+  const DRONE_BASE_GAIN = 0.10;
+
   let droneOctave = 'mid';
   let droneTimbre = 'bass';
-  let droneVolume = 0.60;
+  let droneVolume = 1.00;
+  let droneOutput = null;
+  let droneCompressor = null;
   const activeDrones = new Map(); // stringId → nodes
+
+  function ensureDroneOutput() {
+    if (!audioCtx) return;
+    if (droneOutput) return;
+    droneOutput = audioCtx.createGain();
+    droneOutput.gain.value = 1.0;
+    // 보정 boost로 인한 클리핑 방지
+    droneCompressor = audioCtx.createDynamicsCompressor();
+    droneCompressor.threshold.value = -10;
+    droneCompressor.knee.value = 8;
+    droneCompressor.ratio.value = 6;
+    droneCompressor.attack.value = 0.003;
+    droneCompressor.release.value = 0.1;
+    droneOutput.connect(droneCompressor);
+    droneCompressor.connect(audioCtx.destination);
+  }
 
   function makeTimbreFilter(ctx, timbre) {
     if (timbre === 'clean') return null;
@@ -999,21 +1068,26 @@
     return f;
   }
 
-  function startDrone(stringId) {
-    ensureAudio();
+  async function startDrone(stringId) {
+    await ensureAudio();
     if (!audioCtx) return;
+    ensureDroneOutput();
     if (activeDrones.has(stringId)) return;
 
     const fundamental = STRING_FREQS[droneOctave][stringId];
     if (!fundamental) return;
+    const profile = STRING_PROFILE[droneOctave][stringId];
+    const harmonics = profile.harm;
+    const boost = profile.boost;
 
     const now = audioCtx.currentTime;
 
-    // 1) 배음 합성 (sine osc × 5 → 각 gain → mixer)
+    // 1) 배음 합성 (string·옥타브별 패턴 적용)
     const mixer = audioCtx.createGain();
     mixer.gain.value = 1;
     const oscList = [];
-    HARMONICS.forEach((h) => {
+    const harmGains = [];
+    harmonics.forEach((h) => {
       const osc = audioCtx.createOscillator();
       osc.type = 'sine';
       osc.frequency.value = fundamental * h.ratio;
@@ -1023,6 +1097,7 @@
       g.connect(mixer);
       osc.start(now);
       oscList.push(osc);
+      harmGains.push(g);
     });
 
     // 2) 음색 필터
@@ -1040,14 +1115,13 @@
     envelope.gain.linearRampToValueAtTime(0.7, now + 0.01 + 0.15);
     preEnv.connect(envelope);
 
-    // 4) 드론 마스터 (드론 볼륨, 배음 합산 누름)
+    // 4) 드론 마스터 (볼륨 × boost) → compressor → destination
     const droneMaster = audioCtx.createGain();
-    droneMaster.gain.value = droneVolume * 0.22;
+    droneMaster.gain.value = droneVolume * DRONE_BASE_GAIN * boost;
     envelope.connect(droneMaster);
-    // 메트로놈과 별도 path로 출력
-    droneMaster.connect(audioCtx.destination);
+    droneMaster.connect(droneOutput);
 
-    activeDrones.set(stringId, { oscList, mixer, filter, envelope, droneMaster });
+    activeDrones.set(stringId, { oscList, harmGains, mixer, filter, envelope, droneMaster, boost });
 
     const btn = document.querySelector('.stringBtn[data-string="' + stringId + '"]');
     if (btn) btn.classList.add('playing');
@@ -1090,8 +1164,9 @@
       $('droneVolumeSlider').value = String(Math.round(droneVolume * 100));
     }
     if (audioCtx) {
+      const now = audioCtx.currentTime;
       for (const drone of activeDrones.values()) {
-        drone.droneMaster.gain.setTargetAtTime(droneVolume * 0.22, audioCtx.currentTime, 0.02);
+        drone.droneMaster.gain.setTargetAtTime(droneVolume * DRONE_BASE_GAIN * drone.boost, now, 0.02);
       }
     }
   }
@@ -1102,15 +1177,21 @@
     document.querySelectorAll('#droneOctave .segBtn').forEach((b) => {
       b.classList.toggle('active', b.dataset.octave === oct);
     });
-    // 활성 음 주파수 즉시 갱신
+    // 활성 음의 주파수·배음 게인·boost 모두 갱신
     if (audioCtx) {
       const now = audioCtx.currentTime;
       for (const [id, drone] of activeDrones.entries()) {
         const f = STRING_FREQS[oct][id];
-        if (!f) continue;
+        const profile = STRING_PROFILE[oct][id];
+        if (!f || !profile) continue;
         drone.oscList.forEach((osc, i) => {
-          osc.frequency.setTargetAtTime(f * HARMONICS[i].ratio, now, 0.02);
+          osc.frequency.setTargetAtTime(f * profile.harm[i].ratio, now, 0.02);
         });
+        drone.harmGains.forEach((g, i) => {
+          g.gain.setTargetAtTime(profile.harm[i].gain, now, 0.02);
+        });
+        drone.boost = profile.boost;
+        drone.droneMaster.gain.setTargetAtTime(droneVolume * DRONE_BASE_GAIN * profile.boost, now, 0.02);
       }
     }
   }
