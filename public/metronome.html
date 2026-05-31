@@ -406,10 +406,87 @@
     box-shadow: 0 4px 16px rgba(13, 140, 128, 0.45);
   }
 
+  /* 탭 (36px) */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    height: 36px;
+    border-bottom: 1px solid var(--border);
+    padding-right: 40px; /* 닫기 버튼 공간 */
+  }
+  .tab {
+    flex: 0 0 auto;
+    height: 36px;
+    padding: 0 14px;
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.1s ease, border-color 0.1s ease;
+  }
+  .tab.active {
+    color: #ffffff;
+    border-bottom-color: var(--teal);
+  }
+  .tab:active { color: var(--teal-hot); }
+
+  /* 패널 */
+  .panel {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .panel[hidden] { display: none; }
+
+  /* 드론 음 */
+  .hint {
+    font-size: 0.78rem;
+    color: var(--ink-dim);
+    text-align: center;
+    padding: 4px 0;
+    height: 24px;
+    line-height: 16px;
+  }
+  .stringGrid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    height: 72px;
+  }
+  .stringBtn {
+    height: 72px;
+    border-radius: 12px;
+    border: 1px solid var(--accent);
+    background: linear-gradient(135deg, var(--accent-deep), var(--accent-hot));
+    color: white;
+    font-size: 1.7rem;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.08s ease, box-shadow 0.1s ease, transform 0.04s ease;
+    touch-action: manipulation;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    box-shadow: 0 3px 10px rgba(74, 18, 144, 0.35);
+  }
+  .stringBtn.playing,
+  .stringBtn:active {
+    background: linear-gradient(135deg, var(--teal), var(--teal-hot));
+    border-color: var(--teal-hot);
+    box-shadow: 0 0 22px rgba(20, 184, 166, 0.6);
+    transform: scale(0.97);
+  }
+
   @media (max-width: 380px) {
     .meterGrid { gap: 5px; }
     .stepBtn { min-width: 40px; padding: 0 0.2rem; }
     .bpmValue, .bpmInput { font-size: 42px; }
+    .stringBtn { font-size: 1.5rem; }
   }
 </style>
 </head>
@@ -417,6 +494,12 @@
   <div class="wrap">
     <button type="button" class="closeBtn" id="closeBtn" aria-label="닫기">✕</button>
 
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab active" data-tab="metronome" role="tab" aria-selected="true">메트로놈</button>
+      <button type="button" class="tab" data-tab="drone" role="tab" aria-selected="false">드론 음</button>
+    </div>
+
+    <div class="panel" id="panel-metronome">
     <div class="beats" id="beats"></div>
 
     <div class="bpmRow" id="bpmCard">
@@ -469,6 +552,36 @@
     </div>
 
     <button type="button" class="playBtn" id="playBtn">시작</button>
+    </div><!-- /panel-metronome -->
+
+    <div class="panel" id="panel-drone" hidden>
+      <p class="hint">버튼을 누르는 동안 해당 음이 울립니다</p>
+
+      <div class="stringGrid">
+        <button type="button" class="stringBtn" data-string="E">E</button>
+        <button type="button" class="stringBtn" data-string="A">A</button>
+        <button type="button" class="stringBtn" data-string="D">D</button>
+        <button type="button" class="stringBtn" data-string="G">G</button>
+      </div>
+
+      <div class="segGroup" id="droneOctave">
+        <button type="button" class="segBtn" data-octave="low">낮음</button>
+        <button type="button" class="segBtn active" data-octave="mid">보통</button>
+        <button type="button" class="segBtn" data-octave="high">높음</button>
+      </div>
+
+      <div class="segGroup" id="droneTimbre">
+        <button type="button" class="segBtn active" data-timbre="bass">베이스</button>
+        <button type="button" class="segBtn" data-timbre="clean">클린</button>
+        <button type="button" class="segBtn" data-timbre="warm">따뜻하게</button>
+      </div>
+
+      <div class="volumeRow">
+        <div class="label">볼륨</div>
+        <input type="range" class="slider teal" id="droneVolumeSlider" min="0" max="100" value="60" step="1" aria-label="드론 볼륨">
+        <div class="pct" id="droneVolumeValue">60%</div>
+      </div>
+    </div><!-- /panel-drone -->
   </div>
 
 <script>
@@ -853,16 +966,217 @@
     }
   });
 
+  // ─── 드론 음 ────────────────────────────────────
+  const STRING_FREQS = {
+    low:  { E: 41.20,  A: 55.00,  D: 73.42,  G: 98.00  },
+    mid:  { E: 82.41,  A: 110.00, D: 146.83, G: 196.00 },
+    high: { E: 164.81, A: 220.00, D: 293.66, G: 392.00 },
+  };
+  const HARMONICS = [
+    { ratio: 1, gain: 1.00 },
+    { ratio: 2, gain: 0.50 },
+    { ratio: 3, gain: 0.25 },
+    { ratio: 4, gain: 0.12 },
+    { ratio: 5, gain: 0.06 },
+  ];
+  let droneOctave = 'mid';
+  let droneTimbre = 'bass';
+  let droneVolume = 0.60;
+  const activeDrones = new Map(); // stringId → nodes
+
+  function makeTimbreFilter(ctx, timbre) {
+    if (timbre === 'clean') return null;
+    const f = ctx.createBiquadFilter();
+    if (timbre === 'bass') {
+      f.type = 'lowshelf';
+      f.frequency.value = 200;
+      f.gain.value = 8; // +8dB
+    } else if (timbre === 'warm') {
+      f.type = 'lowpass';
+      f.frequency.value = 800;
+      f.Q.value = 0.8;
+    }
+    return f;
+  }
+
+  function startDrone(stringId) {
+    ensureAudio();
+    if (!audioCtx) return;
+    if (activeDrones.has(stringId)) return;
+
+    const fundamental = STRING_FREQS[droneOctave][stringId];
+    if (!fundamental) return;
+
+    const now = audioCtx.currentTime;
+
+    // 1) 배음 합성 (sine osc × 5 → 각 gain → mixer)
+    const mixer = audioCtx.createGain();
+    mixer.gain.value = 1;
+    const oscList = [];
+    HARMONICS.forEach((h) => {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = fundamental * h.ratio;
+      const g = audioCtx.createGain();
+      g.gain.value = h.gain;
+      osc.connect(g);
+      g.connect(mixer);
+      osc.start(now);
+      oscList.push(osc);
+    });
+
+    // 2) 음색 필터
+    let preEnv = mixer;
+    const filter = makeTimbreFilter(audioCtx, droneTimbre);
+    if (filter) {
+      mixer.connect(filter);
+      preEnv = filter;
+    }
+
+    // 3) ADSR envelope: attack 10ms → decay 150ms → sustain 0.7
+    const envelope = audioCtx.createGain();
+    envelope.gain.setValueAtTime(0, now);
+    envelope.gain.linearRampToValueAtTime(1.0, now + 0.01);
+    envelope.gain.linearRampToValueAtTime(0.7, now + 0.01 + 0.15);
+    preEnv.connect(envelope);
+
+    // 4) 드론 마스터 (드론 볼륨, 배음 합산 누름)
+    const droneMaster = audioCtx.createGain();
+    droneMaster.gain.value = droneVolume * 0.22;
+    envelope.connect(droneMaster);
+    // 메트로놈과 별도 path로 출력
+    droneMaster.connect(audioCtx.destination);
+
+    activeDrones.set(stringId, { oscList, mixer, filter, envelope, droneMaster });
+
+    const btn = document.querySelector('.stringBtn[data-string="' + stringId + '"]');
+    if (btn) btn.classList.add('playing');
+  }
+
+  function stopDrone(stringId) {
+    const drone = activeDrones.get(stringId);
+    if (!drone) return;
+    activeDrones.delete(stringId);
+
+    const now = audioCtx.currentTime;
+    // Release 250ms (현재 게인에서 0으로 선형)
+    const env = drone.envelope.gain;
+    env.cancelScheduledValues(now);
+    env.setValueAtTime(env.value, now);
+    env.linearRampToValueAtTime(0, now + 0.25);
+
+    // release 끝나면 오실레이터 stop + disconnect
+    drone.oscList.forEach((o) => { try { o.stop(now + 0.27); } catch (e) {} });
+    setTimeout(() => {
+      drone.oscList.forEach((o) => { try { o.disconnect(); } catch (e) {} });
+      try { drone.mixer.disconnect(); } catch (e) {}
+      if (drone.filter) { try { drone.filter.disconnect(); } catch (e) {} }
+      try { drone.envelope.disconnect(); } catch (e) {}
+      try { drone.droneMaster.disconnect(); } catch (e) {}
+    }, 320);
+
+    const btn = document.querySelector('.stringBtn[data-string="' + stringId + '"]');
+    if (btn) btn.classList.remove('playing');
+  }
+
+  function stopAllDrones() {
+    for (const id of Array.from(activeDrones.keys())) stopDrone(id);
+  }
+
+  function setDroneVolume(pct) {
+    droneVolume = Math.max(0, Math.min(1, pct / 100));
+    $('droneVolumeValue').textContent = Math.round(droneVolume * 100) + '%';
+    if ($('droneVolumeSlider').value !== String(Math.round(droneVolume * 100))) {
+      $('droneVolumeSlider').value = String(Math.round(droneVolume * 100));
+    }
+    if (audioCtx) {
+      for (const drone of activeDrones.values()) {
+        drone.droneMaster.gain.setTargetAtTime(droneVolume * 0.22, audioCtx.currentTime, 0.02);
+      }
+    }
+  }
+
+  function setDroneOctave(oct) {
+    if (!STRING_FREQS[oct]) return;
+    droneOctave = oct;
+    document.querySelectorAll('#droneOctave .segBtn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.octave === oct);
+    });
+    // 활성 음 주파수 즉시 갱신
+    if (audioCtx) {
+      const now = audioCtx.currentTime;
+      for (const [id, drone] of activeDrones.entries()) {
+        const f = STRING_FREQS[oct][id];
+        if (!f) continue;
+        drone.oscList.forEach((osc, i) => {
+          osc.frequency.setTargetAtTime(f * HARMONICS[i].ratio, now, 0.02);
+        });
+      }
+    }
+  }
+
+  function setDroneTimbre(t) {
+    droneTimbre = t;
+    document.querySelectorAll('#droneTimbre .segBtn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.timbre === t);
+    });
+    // 활성 음은 다음 누름부터 새 음색 적용 (필터 동적 교체는 click 노이즈 위험)
+  }
+
+  // 현 버튼: 누르는 동안 재생
+  document.querySelectorAll('.stringBtn').forEach((btn) => {
+    const id = btn.dataset.string;
+    const begin = (e) => { e.preventDefault(); startDrone(id); };
+    const end = (e) => { if (e && e.cancelable) e.preventDefault(); stopDrone(id); };
+    btn.addEventListener('mousedown', begin);
+    btn.addEventListener('mouseup', end);
+    btn.addEventListener('mouseleave', end);
+    btn.addEventListener('touchstart', begin, { passive: false });
+    btn.addEventListener('touchend', end);
+    btn.addEventListener('touchcancel', end);
+  });
+  document.querySelectorAll('#droneOctave .segBtn').forEach((b) => {
+    b.addEventListener('click', () => setDroneOctave(b.dataset.octave));
+  });
+  document.querySelectorAll('#droneTimbre .segBtn').forEach((b) => {
+    b.addEventListener('click', () => setDroneTimbre(b.dataset.timbre));
+  });
+  $('droneVolumeSlider').addEventListener('input', (e) => {
+    ensureAudio();
+    setDroneVolume(Number(e.target.value));
+  });
+
+  // ─── 탭 전환 ────────────────────────────────────
+  function switchTab(name) {
+    // 다른 탭으로 가면 해당 탭 사운드 정지
+    if (name !== 'metronome' && isPlaying) stop();
+    if (name !== 'drone') stopAllDrones();
+
+    document.querySelectorAll('.tab').forEach((t) => {
+      const on = t.dataset.tab === name;
+      t.classList.toggle('active', on);
+      t.setAttribute('aria-selected', on ? 'true' : 'false');
+    });
+    document.querySelectorAll('.panel').forEach((p) => {
+      p.hidden = p.id !== ('panel-' + name);
+    });
+  }
+  document.querySelectorAll('.tab').forEach((t) => {
+    t.addEventListener('click', () => switchTab(t.dataset.tab));
+  });
+
   // 닫기
   function closeMe() {
     stop();
+    stopAllDrones();
     try { window.parent.postMessage('close-metronome', window.location.origin); } catch (e) {}
   }
   $('closeBtn').addEventListener('click', closeMe);
 
   // 페이지 벗어날 때 정리
-  window.addEventListener('pagehide', stop);
-  window.addEventListener('beforeunload', stop);
+  function cleanup() { stop(); stopAllDrones(); }
+  window.addEventListener('pagehide', cleanup);
+  window.addEventListener('beforeunload', cleanup);
 
   // 초기 렌더
   renderBeats();
