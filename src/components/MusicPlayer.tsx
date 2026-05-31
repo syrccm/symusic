@@ -175,10 +175,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // Analytics dialog (관리자 모드 전용)
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
 
-  // 햄버거 메뉴 + 카포·조옮김 / 기타조율기 모달
+  // 햄버거 메뉴 + 카포·조옮김 모달
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isGitaOpen, setIsGitaOpen] = useState(false);
-  const [isTunerOpen, setIsTunerOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 메뉴 외부 클릭 시 닫기
@@ -193,14 +192,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMenuOpen]);
 
-  // 카포·조옮김 / 기타조율기 iframe에서 보내는 close 메시지 수신
+  // 카포·조옮김 iframe에서 보내는 close 메시지 수신
   useEffect(() => {
     const handleMessage = (e: MessageEvent) => {
       if (e.origin !== window.location.origin) return;
       if (e.data === 'close-gita') {
         setIsGitaOpen(false);
-      } else if (e.data === 'close-tuner') {
-        setIsTunerOpen(false);
       }
     };
     window.addEventListener('message', handleMessage);
@@ -1442,17 +1439,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     type="button"
                     onClick={() => {
-                      setIsTunerOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    🎵 기타조율기
-                  </button>
-                  <div className="h-px bg-purple-500/30" />
-                  <button
-                    type="button"
-                    onClick={() => {
                       toast('🎹 메트로놈은 준비 중입니다.');
                       setIsMenuOpen(false);
                     }}
@@ -2606,25 +2592,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         </div>
       )}
 
-      {isTunerOpen && (
-        <div className="fixed inset-0 z-[100] bg-slate-900">
-          <button
-            type="button"
-            onClick={() => setIsTunerOpen(false)}
-            aria-label="기타조율기 닫기"
-            title="닫기"
-            className="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-slate-800/90 hover:bg-slate-700 text-white flex items-center justify-center shadow-lg border border-purple-500/30"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <iframe
-            src="/tuner.html"
-            title="기타조율기"
-            allow="microphone; camera"
-            className="w-full h-full border-0"
-          />
-        </div>
-      )}
     </div>
   );
 }
