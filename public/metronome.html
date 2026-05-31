@@ -1084,8 +1084,9 @@
     },
   };
 
-  // 드론 마스터(boost 곱 위해 게인 곱 작게) — 합산·boost 클리핑 방지 위해 compressor 거침
-  const DRONE_BASE_GAIN = 0.10;
+  // 드론 마스터 게인 계수 — 메트로놈 클릭음과 체감 음량 매칭
+  // (클리핑은 뒤단 DynamicsCompressor 가 흡수)
+  const DRONE_BASE_GAIN = 0.40;
 
   let droneOctave = 'mid';
   let droneTimbre = 'bass';
@@ -1099,11 +1100,11 @@
     if (droneOutput) return;
     droneOutput = audioCtx.createGain();
     droneOutput.gain.value = 1.0;
-    // 보정 boost로 인한 클리핑 방지
+    // boost·배음 합산으로 인한 클리핑 흡수 (압축 약하게 — 음량 확보)
     droneCompressor = audioCtx.createDynamicsCompressor();
-    droneCompressor.threshold.value = -10;
+    droneCompressor.threshold.value = -6;
     droneCompressor.knee.value = 8;
-    droneCompressor.ratio.value = 6;
+    droneCompressor.ratio.value = 4;
     droneCompressor.attack.value = 0.003;
     droneCompressor.release.value = 0.1;
     droneOutput.connect(droneCompressor);
