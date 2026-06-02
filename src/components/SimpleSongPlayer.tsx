@@ -8,6 +8,7 @@ import { useSongs, type Song } from '@/hooks/useSongs';
 import { useShare } from '@/hooks/useShare';
 import { PlayPromptModal } from '@/components/PlayPromptModal';
 import { InstallGuideModal } from '@/components/InstallGuideModal';
+import CatechismRefs from '@/components/CatechismRefs';
 import { detectInstallMethod, type InstallMethod } from '@/utils/deviceDetect';
 import { trackInstall, trackShare, trackSongPlay } from '@/utils/analyticsTracker';
 
@@ -324,6 +325,10 @@ export default function SimpleSongPlayer() {
                 </p>
               )}
             </div>
+
+            {song.catechismRefs && song.catechismRefs.length > 0 && (
+              <CatechismRefs refs={song.catechismRefs} />
+            )}
 
             <div className="space-y-1">
               <div

@@ -23,6 +23,8 @@ export interface Song {
   moods?: string[];
   /** 상황 분류 생성 시각 (ISO 문자열) */
   moodsGeneratedAt?: string;
+  /** 매핑된 웨스트민스터 소요리문답 번호 목록 (1~107) */
+  catechismRefs?: number[];
   created_at: string;
 }
 

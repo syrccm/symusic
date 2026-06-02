@@ -1,0 +1,800 @@
+[
+  {
+    "songId": "56R4b8Z5OHLW56iLH14W",
+    "title": "위기 상황을 뚫는 기도",
+    "matched": [
+      {
+        "number": 98,
+        "question": "기도는 무엇인가?",
+        "reason": "위기 가운데 부르짖어 기도하는 곡으로 기도의 정의와 직결"
+      },
+      {
+        "number": 106,
+        "question": "여섯째 간구에서 우리는 무엇을 위하여 기도하는가?",
+        "reason": "막힌 상황·악에서 구하시기를 구하는 간구가 핵심"
+      },
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "상황을 다스리고 보호하시는 섭리(방패·피난처)를 고백"
+      }
+    ]
+  },
+  {
+    "songId": "6iTHMH31buA6UoLBY0tc",
+    "title": "성령이 살리시네",
+    "matched": [
+      {
+        "number": 33,
+        "question": "의롭다 칭하심(칭의)이 무엇인가?",
+        "reason": "'그리스도 안에 정죄함이 없다'는 칭의 고백(롬8:1)"
+      },
+      {
+        "number": 34,
+        "question": "양자로 삼는 것이 무엇인가?",
+        "reason": "성령으로 자녀 삼아 '아버지라 부르짖음'은 양자됨"
+      },
+      {
+        "number": 30,
+        "question": "성령께서는 그리스도께서 사신 구속을 우리에게 어떻게 적용하시는가?",
+        "reason": "성령이 구속을 적용하여 살리심을 노래"
+      }
+    ]
+  },
+  {
+    "songId": "7O8WGo0wyVaQi7TReElx",
+    "title": "특새(1) 사랑의 길 걷는다",
+    "matched": [
+      {
+        "number": 25,
+        "question": "그리스도께서 어떻게 제사장의 직분을 행하시는가?",
+        "reason": "십자가에서 조건 없이 구원하신 그리스도의 속죄 사랑이 출발점"
+      },
+      {
+        "number": 42,
+        "question": "십계명의 요지는 무엇인가?",
+        "reason": "받은 사랑으로 원수까지 사랑함 — 이웃 사랑 계명"
+      }
+    ]
+  },
+  {
+    "songId": "8deo85PLh8elU8y3NySb",
+    "title": "나를 보내소서",
+    "matched": [
+      {
+        "number": 1,
+        "question": "사람의 제일 되는 목적은 무엇인가?",
+        "reason": "주의 영광을 뵙고 그를 영화롭게 하려 헌신(사6)"
+      },
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "'내가 여기 있나이다' 보내심에 순종하는 의무"
+      }
+    ]
+  },
+  {
+    "songId": "9J191yTtD0PIIhlBUDdR",
+    "title": "먼저 화목하라",
+    "matched": [
+      {
+        "number": 69,
+        "question": "제 육 계명이 금하는 것이 무엇인가?",
+        "reason": "분노·멸시가 곧 살인이라는 제6계명의 금함(마5)"
+      },
+      {
+        "number": 42,
+        "question": "십계명의 요지는 무엇인가?",
+        "reason": "형제와 화목하라 — 이웃 사랑 계명"
+      }
+    ]
+  },
+  {
+    "songId": "A8qHq1GSwmA7G5lmw5P3",
+    "title": "그 사랑으로 사네",
+    "matched": [
+      {
+        "number": 42,
+        "question": "십계명의 요지는 무엇인가?",
+        "reason": "하나님 사랑과 이웃 사랑의 삼중주(마22:37-40)"
+      },
+      {
+        "number": 35,
+        "question": "거룩하게 하심(성화)이 무엇인가?",
+        "reason": "받은 사랑이 흘러 이웃을 품는 성화의 삶"
+      }
+    ]
+  },
+  {
+    "songId": "Ador7Bc0kjl90LokLcxp",
+    "title": "마음을 지키리",
+    "matched": [
+      {
+        "number": 72,
+        "question": "제 칠 계명이 금하는 것이 무엇인가?",
+        "reason": "보고 품는 음욕까지 금하는 제7계명(마5:28)"
+      },
+      {
+        "number": 71,
+        "question": "제 칠 계명이 요구하는 것이 무엇인가?",
+        "reason": "마음과 행동의 순결을 지키는 제7계명 요구"
+      }
+    ]
+  },
+  {
+    "songId": "B49p7YoiKCpPsdJIwKhP",
+    "title": "화평케 하는 자",
+    "matched": [
+      {
+        "number": 42,
+        "question": "십계명의 요지는 무엇인가?",
+        "reason": "원수까지 품는 이웃 사랑으로 화평케 함"
+      },
+      {
+        "number": 69,
+        "question": "제 육 계명이 금하는 것이 무엇인가?",
+        "reason": "다툼 대신 화해 — 제6계명이 지향하는 화목"
+      }
+    ]
+  },
+  {
+    "songId": "B79KM958MuLT8hsnmwzv",
+    "title": "경건의 길",
+    "matched": [
+      {
+        "number": 89,
+        "question": "말씀이 어떻게 구원을 얻기에 유효하게 되는가?",
+        "reason": "말씀으로 살게 하는 말씀의 능력(딤전4)"
+      },
+      {
+        "number": 98,
+        "question": "기도는 무엇인가?",
+        "reason": "기도로 숨 쉬게 하는 기도의 삶"
+      }
+    ]
+  },
+  {
+    "songId": "CchuWpzczShiQckHHm26",
+    "title": "주님은 나를 아시네",
+    "matched": [
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "나를 아시고 붙들어 이끄시는 하나님의 섭리"
+      },
+      {
+        "number": 36,
+        "question": "의롭다 하심과 양자로 삼으신 것과 거룩하게 하심에 수반되거나 여기서 흘러나오는 이생에서의 유익이 무엇인가?",
+        "reason": "위로·평안과 약속을 반드시 이루심에 대한 확신"
+      }
+    ]
+  },
+  {
+    "songId": "CqpjtbTx5TQJC2FslwdU",
+    "title": "특새(5) 일상의 순교로 살게 하소서",
+    "matched": [
+      {
+        "number": 35,
+        "question": "거룩하게 하심(성화)이 무엇인가?",
+        "reason": "날마다 죄(자아)에 죽고 의에 사는 성화"
+      },
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "조용한 순종으로 삶 전체를 드림"
+      }
+    ]
+  },
+  {
+    "songId": "E4n6yWeKc6vJtrKleXhU",
+    "title": "나의 이름 부르신 주",
+    "matched": [
+      {
+        "number": 26,
+        "question": "그리스도께서 어떻게 왕의 직분을 행하시는가?",
+        "reason": "이름 불러 지키고 인도하시는 목자 — 왕의 직분"
+      },
+      {
+        "number": 31,
+        "question": "유효한 부르심은 무엇인가?",
+        "reason": "이름 불러 따르게 하시는 유효한 부르심"
+      }
+    ]
+  },
+  {
+    "songId": "EGU6fv4d7SoyZNJMn54e",
+    "title": "부활로 사네",
+    "matched": [
+      {
+        "number": 28,
+        "question": "그리스도의 높아지심이 어떠한가?",
+        "reason": "사망을 이기고 다시 사신 그리스도의 부활(높아지심)"
+      },
+      {
+        "number": 38,
+        "question": "신자가 부활할 때에는 그리스도에게서 무슨 유익을 받는가?",
+        "reason": "신자가 부활로 누리는 죽음 너머의 생명"
+      }
+    ]
+  },
+  {
+    "songId": "HXz3QAAF2rzpD4LBJytK",
+    "title": "주 손에 있네",
+    "matched": [
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "내 길과 때가 주 손에 있다는 섭리 고백"
+      },
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "멈추라/가라 하심에 순종"
+      }
+    ]
+  },
+  {
+    "songId": "IlDcXXMLqA9RZuj2kL4G",
+    "title": "돌을 내려놓게 하소서",
+    "matched": [
+      {
+        "number": 105,
+        "question": "다섯째 간구에서 우리는 무엇을 위하여 기도하는가?",
+        "reason": "정죄를 내려놓음 — 용서받은 자로서 남을 용서(다섯째 간구)"
+      },
+      {
+        "number": 87,
+        "question": "생명에 이르는 회개가 무엇인가?",
+        "reason": "내 죄를 보고 돌이키는 회개"
+      }
+    ]
+  },
+  {
+    "songId": "L1b2xydNcOTfBjojD8uO",
+    "title": "나의 눈을 주께",
+    "matched": [
+      {
+        "number": 1,
+        "question": "사람의 제일 되는 목적은 무엇인가?",
+        "reason": "시선을 주께 고정하여 그를 영화롭게 함(계4:11)"
+      },
+      {
+        "number": 46,
+        "question": "제 일 계명이 요구하는 것이 무엇인가?",
+        "reason": "오직 하나님만 경배·바라봄 — 제1계명 요구"
+      }
+    ]
+  },
+  {
+    "songId": "NJfe6B87OyBNIkDkXLIU",
+    "title": "주와 함께",
+    "matched": [
+      {
+        "number": 36,
+        "question": "의롭다 하심과 양자로 삼으신 것과 거룩하게 하심에 수반되거나 여기서 흘러나오는 이생에서의 유익이 무엇인가?",
+        "reason": "주 안에서 누리는 참 안식과 평안(마11:28)"
+      },
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "내 속도까지 아시고 동행·인도하시는 섭리"
+      }
+    ]
+  },
+  {
+    "songId": "NdCDz5ligllgCz8yPWKW",
+    "title": "주께로 돌아갑니다",
+    "matched": [
+      {
+        "number": 87,
+        "question": "생명에 이르는 회개가 무엇인가?",
+        "reason": "처음 자리로 돌이키는 회개"
+      },
+      {
+        "number": 85,
+        "question": "우리가 죄를 인하여 하나님께 받을 진노와 저주를 피하게 하려고 하나님이 우리에게 요구하시는 것이 무엇인가?",
+        "reason": "진노를 피해 믿음과 회개로 주께 돌아옴"
+      }
+    ]
+  },
+  {
+    "songId": "OV2eOAuFDkfJ6VgZEQcU",
+    "title": "은혜 안에 머물다",
+    "matched": [
+      {
+        "number": 33,
+        "question": "의롭다 칭하심(칭의)이 무엇인가?",
+        "reason": "노력이 아닌 오직 은혜·믿음으로 받는 칭의"
+      },
+      {
+        "number": 86,
+        "question": "예수 그리스도를 믿는 것이 무엇인가?",
+        "reason": "기도할 힘조차 없는 나를 그리스도께 의지함 — 믿음"
+      }
+    ]
+  },
+  {
+    "songId": "OllRCQT7uKs9olhGUDTy",
+    "title": "의를 위해 사는 길",
+    "matched": [
+      {
+        "number": 102,
+        "question": "둘째 간구에서 우리는 무엇을 위하여 기도하는가?",
+        "reason": "박해 속에서도 임하는 하나님 나라(둘째 간구)"
+      },
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "좁은 길을 택해 주의 뜻에 순종"
+      }
+    ]
+  },
+  {
+    "songId": "PJvMH3MICfR3zf1sO45d",
+    "title": "그 손이 일하시네",
+    "matched": [
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "보이지 않게 일하시고 붙드시는 하나님의 섭리"
+      },
+      {
+        "number": 8,
+        "question": "하나님은 어떻게 그의 작정을 실행하시는가?",
+        "reason": "창조·섭리로 자기 뜻을 이루어 가심"
+      }
+    ]
+  },
+  {
+    "songId": "SW452o43MXXdKoTY4s5H",
+    "title": "사슴이 시냇물을 찾듯이",
+    "matched": [
+      {
+        "number": 1,
+        "question": "사람의 제일 되는 목적은 무엇인가?",
+        "reason": "영혼이 하나님을 갈망하며 즐거워함(시42)"
+      },
+      {
+        "number": 36,
+        "question": "의롭다 하심과 양자로 삼으신 것과 거룩하게 하심에 수반되거나 여기서 흘러나오는 이생에서의 유익이 무엇인가?",
+        "reason": "낙심 중에도 누리는 위로와 찬송의 소망"
+      }
+    ]
+  },
+  {
+    "songId": "UoQnci6Ev1WjHXmRKXFA",
+    "title": "듣겠나이다",
+    "matched": [
+      {
+        "number": 90,
+        "question": "말씀을 어떻게 읽고 들어야 구원을 얻기에 유효하게 되는가?",
+        "reason": "말씀을 경청하고 마음에 받는 자세(삼상3)"
+      },
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "들은 말씀을 따라 순종"
+      }
+    ]
+  },
+  {
+    "songId": "WOrwdW2kXE8cuEMkCV7a",
+    "title": "라합의 기도",
+    "matched": [
+      {
+        "number": 86,
+        "question": "예수 그리스도를 믿는 것이 무엇인가?",
+        "reason": "안전이 아닌 말씀·약속을 붙드는 믿음"
+      },
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "무너질 성 안에서도 지키시는 하나님의 보호(섭리)"
+      }
+    ]
+  },
+  {
+    "songId": "Wgjan8AXVxOM6dGnLhog",
+    "title": "내 생각에 임하소서",
+    "matched": [
+      {
+        "number": 102,
+        "question": "둘째 간구에서 우리는 무엇을 위하여 기도하는가?",
+        "reason": "생각의 격전지에 주의 나라가 임하기를 구함"
+      },
+      {
+        "number": 26,
+        "question": "그리스도께서 어떻게 왕의 직분을 행하시는가?",
+        "reason": "원수의 통치를 깨뜨려 다스리시는 왕의 직분"
+      },
+      {
+        "number": 106,
+        "question": "여섯째 간구에서 우리는 무엇을 위하여 기도하는가?",
+        "reason": "악한 통치·시험에서 건지심을 구함"
+      }
+    ]
+  },
+  {
+    "songId": "X6J1YPf6omJ4zC0umPuA",
+    "title": "사랑으로 알게 하소서",
+    "matched": [
+      {
+        "number": 42,
+        "question": "십계명의 요지는 무엇인가?",
+        "reason": "서로 사랑하라는 새 계명(요13:34)"
+      },
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "주가 주신 계명에 순종"
+      }
+    ]
+  },
+  {
+    "songId": "Ycu9YZu2P0roP0VBioVE",
+    "title": "주의 경계 안에",
+    "matched": [
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "지키고 보호하시는 울타리 같은 섭리"
+      },
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "주의 뜻 따라 경계 안에 사는 순종"
+      }
+    ]
+  },
+  {
+    "songId": "YgCG2VMhY3HKQcl1fGxG",
+    "title": "주기도문",
+    "matched": [
+      {
+        "number": 99,
+        "question": "하나님께서 우리의 기도를 지도하시려고 어떠한 규칙을 주셨는가?",
+        "reason": "그리스도께서 가르치신 기도의 본 — 주기도"
+      },
+      {
+        "number": 100,
+        "question": "주기도의 서언은 우리에게 무엇을 가르치는가?",
+        "reason": "'하늘에 계신 우리 아버지여' 서언"
+      },
+      {
+        "number": 98,
+        "question": "기도는 무엇인가?",
+        "reason": "하나님께 소원을 올려드리는 기도"
+      }
+    ]
+  },
+  {
+    "songId": "bByKk9CgkFBsv4lDlbkZ",
+    "title": "사랑은 자란다",
+    "matched": [
+      {
+        "number": 42,
+        "question": "십계명의 요지는 무엇인가?",
+        "reason": "사랑이 으뜸 — 사랑 장(고전13)의 계명적 핵심"
+      },
+      {
+        "number": 35,
+        "question": "거룩하게 하심(성화)이 무엇인가?",
+        "reason": "주의 사랑으로 점점 자라가는 성화"
+      }
+    ]
+  },
+  {
+    "songId": "bXE79fNN6k4afMuYpwm4",
+    "title": "나는 주의 사랑",
+    "matched": [
+      {
+        "number": 1,
+        "question": "사람의 제일 되는 목적은 무엇인가?",
+        "reason": "오직 주를 사랑하고 영원히 즐거워함"
+      },
+      {
+        "number": 20,
+        "question": "하나님은 모든 인류가 죄와 비참의 상태에서 멸망하게 버려두셨는가?",
+        "reason": "주의 것으로 택함받아 은혜 언약 안에 속함"
+      }
+    ]
+  },
+  {
+    "songId": "bagxS5XHowvvFb7dEKjP",
+    "title": "겸손의 길",
+    "matched": [
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "겸손히 순종하며 걷는 길(벧전5)"
+      },
+      {
+        "number": 35,
+        "question": "거룩하게 하심(성화)이 무엇인가?",
+        "reason": "낮아질수록 은혜로 세워지는 성화"
+      }
+    ]
+  },
+  {
+    "songId": "dPamevHc5dVOXvkyqYUK",
+    "title": "Merry Christmas 나의 왕은 예수",
+    "matched": [
+      {
+        "number": 22,
+        "question": "하나님의 아들이신 그리스도께서 어떻게 사람이 되셨는가?",
+        "reason": "동정녀에게 나신 그리스도의 성육신"
+      },
+      {
+        "number": 21,
+        "question": "하나님이 선택하신 자의 구속자가 누구신가?",
+        "reason": "참 하나님이자 참 사람이신 구속자"
+      },
+      {
+        "number": 26,
+        "question": "그리스도께서 어떻게 왕의 직분을 행하시는가?",
+        "reason": "평화의 왕으로 오심 — 왕의 직분"
+      }
+    ]
+  },
+  {
+    "songId": "dgsGFWJD4M81rNfeSEQo",
+    "title": "위험한 열심",
+    "matched": [
+      {
+        "number": 33,
+        "question": "의롭다 칭하심(칭의)이 무엇인가?",
+        "reason": "자기 의를 버리고 오직 그리스도의 의로 받는 칭의"
+      },
+      {
+        "number": 87,
+        "question": "생명에 이르는 회개가 무엇인가?",
+        "reason": "헛된 열심을 회개하고 십자가만 붙듦"
+      }
+    ]
+  },
+  {
+    "songId": "ecv90pWOIjKYMrJSHHox",
+    "title": "주님 닮기까지",
+    "matched": [
+      {
+        "number": 35,
+        "question": "거룩하게 하심(성화)이 무엇인가?",
+        "reason": "장성한 분량까지 자라가는 성화"
+      },
+      {
+        "number": 1,
+        "question": "사람의 제일 되는 목적은 무엇인가?",
+        "reason": "주를 닮아 그 기쁨이 되는 삶의 목적"
+      }
+    ]
+  },
+  {
+    "songId": "gnccj7XCXBL3H7O2cWbM",
+    "title": "특새(2) 겸손의 길 걷는다",
+    "matched": [
+      {
+        "number": 27,
+        "question": "그리스도의 낮아지심이 어떠한가?",
+        "reason": "스스로 낮아지신 그리스도(빌2)를 따름 — 낮아지심"
+      },
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "주처럼 낮아져 섬기는 순종"
+      }
+    ]
+  },
+  {
+    "songId": "h2zF2TIrboRLy28jfv8j",
+    "title": "처음 사랑 지키소서",
+    "matched": [
+      {
+        "number": 1,
+        "question": "사람의 제일 되는 목적은 무엇인가?",
+        "reason": "식어가는 처음 사랑(하나님 사랑)을 다시 회복"
+      },
+      {
+        "number": 36,
+        "question": "의롭다 하심과 양자로 삼으신 것과 거룩하게 하심에 수반되거나 여기서 흘러나오는 이생에서의 유익이 무엇인가?",
+        "reason": "타협 않고 끝까지 견디게 하심"
+      }
+    ]
+  },
+  {
+    "songId": "kt9kojEDFcQHVDxu9W0S",
+    "title": "주는 나의 목자",
+    "matched": [
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "푸른 풀밭·물가로 인도·보존하시는 섭리(시23)"
+      },
+      {
+        "number": 26,
+        "question": "그리스도께서 어떻게 왕의 직분을 행하시는가?",
+        "reason": "양을 지키고 인도하시는 목자 — 왕의 직분"
+      }
+    ]
+  },
+  {
+    "songId": "lMZ2q8HflhisyLNJpwxf",
+    "title": "빛은 어둠을 이긴다",
+    "matched": [
+      {
+        "number": 1,
+        "question": "사람의 제일 되는 목적은 무엇인가?",
+        "reason": "빛으로 살아 하나님께 영광 돌림(마5:16)"
+      },
+      {
+        "number": 101,
+        "question": "첫째 간구에서 우리는 무엇을 위하여 기도하는가?",
+        "reason": "삶으로 주의 이름을 거룩히 — 첫째 간구"
+      }
+    ]
+  },
+  {
+    "songId": "mcN3aw6IuUW7mHG4Td9z",
+    "title": "Merry Christmas 왕이 오셨네",
+    "matched": [
+      {
+        "number": 22,
+        "question": "하나님의 아들이신 그리스도께서 어떻게 사람이 되셨는가?",
+        "reason": "왕으로 오신 그리스도의 성육신"
+      },
+      {
+        "number": 26,
+        "question": "그리스도께서 어떻게 왕의 직분을 행하시는가?",
+        "reason": "평화의 왕 — 왕의 직분"
+      }
+    ]
+  },
+  {
+    "songId": "on1I73gyV1702lCUjsYE",
+    "title": "이미 왔네",
+    "matched": [
+      {
+        "number": 102,
+        "question": "둘째 간구에서 우리는 무엇을 위하여 기도하는가?",
+        "reason": "이미 임한, 그리고 임할 하나님 나라(둘째 간구)"
+      },
+      {
+        "number": 28,
+        "question": "그리스도의 높아지심이 어떠한가?",
+        "reason": "다시 오실 주를 소망함(마라나타) — 재림"
+      }
+    ]
+  },
+  {
+    "songId": "otz79WVw3wozVkTuZ3Nc",
+    "title": "내리막길에서 주를 만나네",
+    "matched": [
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "내리막·광야에서도 이끄시는 섭리"
+      },
+      {
+        "number": 36,
+        "question": "의롭다 하심과 양자로 삼으신 것과 거룩하게 하심에 수반되거나 여기서 흘러나오는 이생에서의 유익이 무엇인가?",
+        "reason": "상한 영혼을 살리시는 위로"
+      }
+    ]
+  },
+  {
+    "songId": "pn3HPiko1uwpsGIYH3Yo",
+    "title": "격전지에서 승리하라",
+    "matched": [
+      {
+        "number": 26,
+        "question": "그리스도께서 어떻게 왕의 직분을 행하시는가?",
+        "reason": "우리의 원수를 정복하시는 왕의 직분(엡6 승리)"
+      },
+      {
+        "number": 106,
+        "question": "여섯째 간구에서 우리는 무엇을 위하여 기도하는가?",
+        "reason": "악·시험에서 건지심을 구함"
+      },
+      {
+        "number": 98,
+        "question": "기도는 무엇인가?",
+        "reason": "말씀과 함께 기도로 싸움"
+      }
+    ]
+  },
+  {
+    "songId": "qr33D48d8YLQIvQy6RI9",
+    "title": "갑자기 멈추게 하실 때",
+    "matched": [
+      {
+        "number": 11,
+        "question": "하나님의 섭리의 사역은 무엇인가?",
+        "reason": "내 시간·방향·속도가 주 손에 있다는 섭리"
+      },
+      {
+        "number": 36,
+        "question": "의롭다 하심과 양자로 삼으신 것과 거룩하게 하심에 수반되거나 여기서 흘러나오는 이생에서의 유익이 무엇인가?",
+        "reason": "멈춤 속에서 누리는 평안과 회복"
+      }
+    ]
+  },
+  {
+    "songId": "rC2UiVxv3qknI2q0h1EM",
+    "title": "특새(4) 순종의 길 걷게 하소서",
+    "matched": [
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "말씀 따라 사는 순종의 의무(히5:8)"
+      },
+      {
+        "number": 27,
+        "question": "그리스도의 낮아지심이 어떠한가?",
+        "reason": "고난으로 순종을 배우신 그리스도를 따름"
+      }
+    ]
+  },
+  {
+    "songId": "yJsYksOKFPH2DG9dC7YU",
+    "title": "거짓을 끊으리라",
+    "matched": [
+      {
+        "number": 77,
+        "question": "제 구 계명이 요구하는 것은 무엇인가?",
+        "reason": "진실함과 명예를 보존하라는 제9계명 요구"
+      },
+      {
+        "number": 78,
+        "question": "제 구 계명이 금하는 것이 무엇인가?",
+        "reason": "거짓을 금하는 제9계명(마5:33-37)"
+      }
+    ]
+  },
+  {
+    "songId": "yyA7llanh9Nav9TcJlhd",
+    "title": "놓지 않으리",
+    "matched": [
+      {
+        "number": 98,
+        "question": "기도는 무엇인가?",
+        "reason": "밤새 붙들고 구하는 야곱의 기도(창32)"
+      },
+      {
+        "number": 86,
+        "question": "예수 그리스도를 믿는 것이 무엇인가?",
+        "reason": "약한 나를 안으시는 주를 붙드는 믿음"
+      }
+    ]
+  },
+  {
+    "songId": "z8FfPoaF85HMcxMWTFPo",
+    "title": "주를 보네",
+    "matched": [
+      {
+        "number": 86,
+        "question": "예수 그리스도를 믿는 것이 무엇인가?",
+        "reason": "보이지 않는 것을 바라보는 믿음(히11)"
+      },
+      {
+        "number": 1,
+        "question": "사람의 제일 되는 목적은 무엇인가?",
+        "reason": "상황 너머 주께 시선 고정 — 그를 바라봄"
+      }
+    ]
+  },
+  {
+    "songId": "z8VjTeqnwgcXhxz1hCJN",
+    "title": "특새(3) 나를 부인하게 하소서",
+    "matched": [
+      {
+        "number": 39,
+        "question": "하나님께서 사람에게 요구하시는 의무가 무엇인가?",
+        "reason": "자기를 부인하고 주를 따르는 순종(마16:24)"
+      },
+      {
+        "number": 35,
+        "question": "거룩하게 하심(성화)이 무엇인가?",
+        "reason": "내 안의 나를 죽이는 성화"
+      }
+    ]
+  }
+]

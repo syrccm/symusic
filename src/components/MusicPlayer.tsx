@@ -30,6 +30,8 @@ import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 import { NoticePanel } from '@/components/NoticePanel';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import { generateAndSaveTags } from '@/lib/autoTags';
+import CatechismMatcher from '@/components/CatechismMatcher';
+import CatechismRefs from '@/components/CatechismRefs';
 import {
   Play,
   Pause,
@@ -229,7 +231,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     category: '',
     description: '',
     youtubeUrl: '',
-    lyrics: ''
+    lyrics: '',
+    catechismRefs: [] as number[]
   });
 
   // Edit song state
@@ -239,7 +242,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     category: '',
     description: '',
     youtubeUrl: '',
-    lyrics: ''
+    lyrics: '',
+    catechismRefs: [] as number[]
   });
 
   // Audio ref
@@ -513,6 +517,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         songData.lyrics = newSong.lyrics.trim();
       }
 
+      if (newSong.catechismRefs && newSong.catechismRefs.length > 0) {
+        songData.catechismRefs = newSong.catechismRefs;
+      }
+
       console.log('🎵 [AddSong] songData 준비 완료:', songData);
 
       if (isOfflineMode || !db) {
@@ -545,7 +553,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         category: '',
         description: '',
         youtubeUrl: '',
-        lyrics: ''
+        lyrics: '',
+        catechismRefs: []
       });
       console.log('✅ [AddSong] 폼 초기화 완료');
 
@@ -599,6 +608,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         updatedData.lyrics = editSongData.lyrics.trim();
       }
 
+      // 매핑은 빈 배열도 저장하여 관리자의 해제가 반영되도록 한다.
+      updatedData.catechismRefs = editSongData.catechismRefs;
+
       if (isOfflineMode || !db) {
         setSongsLocal((prev) =>
           prev.map((s) => (s.id === editingSong.id ? { ...s, ...updatedData } : s))
@@ -620,7 +632,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       }
 
       setEditingSong(null);
-      setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '' });
+      setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
 
     } catch (error: any) {
       console.error('❌ [UpdateSong] 수정 오류:', error);
@@ -795,7 +807,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       category: song.category,
       description: song.description || '',
       youtubeUrl: song.youtubeUrl || '',
-      lyrics: song.lyrics || ''
+      lyrics: song.lyrics || '',
+      catechismRefs: Array.isArray(song.catechismRefs) ? song.catechismRefs : []
     });
     setActiveAdminTab('manage');
   };
@@ -1865,6 +1878,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         <div className="whitespace-pre-line text-white leading-relaxed text-center text-base break-keep">
                           {currentSong.lyrics}
                         </div>
+                        {currentSong.catechismRefs && currentSong.catechismRefs.length > 0 && (
+                          <CatechismRefs refs={currentSong.catechismRefs} className="mt-3" />
+                        )}
                         <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
                           {currentSong.youtubeUrl && (
                             <Button
@@ -2375,6 +2391,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   />
                 </div>
 
+                <CatechismMatcher
+                  title={newSong.title}
+                  lyrics={newSong.lyrics}
+                  value={newSong.catechismRefs}
+                  onChange={(next) => setNewSong({ ...newSong, catechismRefs: next })}
+                />
+
                 <div className="flex space-x-2">
                   <Button
                     onClick={handleAddSong}
@@ -2396,7 +2419,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setNewSong({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '' });
+                      setNewSong({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
                     }}
                     className="flex-1"
                     disabled={isAddingSong}
@@ -2417,7 +2440,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         size="sm"
                         onClick={() => {
                           setEditingSong(null);
-                          setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '' });
+                          setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
                         }}
                         className="text-gray-400 hover:text-white"
                       >
@@ -2481,6 +2504,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       />
                     </div>
 
+                    <CatechismMatcher
+                      title={editSongData.title}
+                      lyrics={editSongData.lyrics}
+                      value={editSongData.catechismRefs}
+                      onChange={(next) => setEditSongData({ ...editSongData, catechismRefs: next })}
+                    />
+
                     <div className="flex space-x-2">
                       <Button
                         onClick={handleUpdateSong}
@@ -2493,7 +2523,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         variant="outline"
                         onClick={() => {
                           setEditingSong(null);
-                          setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '' });
+                          setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
                         }}
                         className="flex-1"
                       >

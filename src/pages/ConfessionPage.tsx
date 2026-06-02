@@ -7,10 +7,11 @@ import { confession, type ConfessionChapter } from '@/data/westminsterConfession
 
 type TabKey = 'shorter' | 'larger' | 'confession';
 
+// 신앙고백서가 상위 문서이므로 가장 먼저 표시
 const TABS: { key: TabKey; label: string }[] = [
+  { key: 'confession', label: '신앙고백서' },
   { key: 'shorter', label: '소요리문답' },
   { key: 'larger', label: '대요리문답' },
-  { key: 'confession', label: '신앙고백서' },
 ];
 
 // 검색 정규화: 공백 제거 + 소문자
@@ -114,7 +115,7 @@ function ChapterRow({ item }: { item: ConfessionChapter }) {
 
 export default function ConfessionPage() {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<TabKey>('shorter');
+  const [tab, setTab] = useState<TabKey>('confession');
   const [query, setQuery] = useState('');
 
   const q = norm(query);
