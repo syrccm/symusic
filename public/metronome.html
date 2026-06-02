@@ -544,8 +544,8 @@
 
     <div class="flashRow">
       <span class="label">시각 플래시</span>
-      <input type="range" class="flashSlider" id="flashSlider" min="0" max="10" value="5" step="1" aria-label="시각 플래시 강도" />
-      <span class="flashValue" id="flashValue">5</span>
+      <input type="range" class="flashSlider" id="flashSlider" min="0" max="10" value="0" step="1" aria-label="시각 플래시 강도" />
+      <span class="flashValue" id="flashValue">0</span>
     </div>
 
     <button type="button" class="playBtn" id="playBtn">시작</button>
@@ -622,8 +622,8 @@
   let nextNoteTime = 0;
   let lastDrawnBeat = -1;
 
-  // 시각 플래시 강도 (0~10)
-  let flashIntensity = 5;
+  // 시각 플래시 강도 (0~10) — 기본값은 항상 0(비활성)으로 시작
+  let flashIntensity = 0;
 
   // 탭템포
   const tapTimes = []; // 최근 탭 시각 (performance.now)
