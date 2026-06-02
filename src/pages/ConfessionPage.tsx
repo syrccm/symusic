@@ -144,7 +144,12 @@ function ChapterRow({
   );
 }
 
-export default function ConfessionPage() {
+interface ConfessionPageProps {
+  /** 오버레이로 띄울 때 닫기 콜백. 없으면 라우트 모드(뒤로가기). */
+  onClose?: () => void;
+}
+
+export default function ConfessionPage({ onClose }: ConfessionPageProps = {}) {
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>('confession');
   const [query, setQuery] = useState('');
@@ -201,7 +206,7 @@ export default function ConfessionPage() {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => (onClose ? onClose() : navigate('/'))}
               aria-label="뒤로가기"
               className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
             >

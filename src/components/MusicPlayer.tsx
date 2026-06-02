@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { db, auth } from '@/lib/firebase';
 import {
   collection,
@@ -32,6 +31,7 @@ import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import { generateAndSaveTags } from '@/lib/autoTags';
 import CatechismMatcher from '@/components/CatechismMatcher';
 import CatechismRefs from '@/components/CatechismRefs';
+import ConfessionPage from '@/pages/ConfessionPage';
 import {
   Play,
   Pause,
@@ -118,8 +118,6 @@ interface MusicPlayerProps {
 }
 
 export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) {
-  const navigate = useNavigate();
-
   // Songs (Firestore + LS 캐시) — 훅으로 추출
   const { songs, loading, isOfflineMode, setSongsLocal } = useSongs();
 
@@ -185,6 +183,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isGitaOpen, setIsGitaOpen] = useState(false);
   const [isMetronomeOpen, setIsMetronomeOpen] = useState(false);
+  // 신앙고백문답: 라우트 이동 대신 오버레이로 띄워 MusicPlayer 언마운트(=음악 정지)를 막는다.
+  const [isConfessionOpen, setIsConfessionOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 메뉴 외부 클릭 시 닫기
@@ -1470,7 +1470,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     type="button"
                     onClick={() => {
-                      navigate('/confession');
+                      setIsConfessionOpen(true);
                       setIsMenuOpen(false);
                     }}
                     className="flex w-full items-center gap-2 text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
@@ -2657,6 +2657,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             title="메트로놈"
             className="w-full h-full border-0"
           />
+        </div>
+      )}
+
+      {/* 신앙고백문답: 오버레이로 표시 (음악 계속 재생 — MusicPlayer 언마운트 안 됨) */}
+      {isConfessionOpen && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <ConfessionPage onClose={() => setIsConfessionOpen(false)} />
         </div>
       )}
 
