@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BookOpen, ChevronDown } from 'lucide-react';
 import { shorterCatechism } from '@/data/westminsterShorter';
+import BibleVerseModal from '@/components/BibleVerseModal';
 
 interface CatechismRefsProps {
   refs?: number[];
@@ -24,6 +25,9 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
     () => new Set(items.length ? [items[0].number] : [])
   );
 
+  // 클릭한 성경 구절(개역한글 모달)
+  const [verseRef, setVerseRef] = useState<string | null>(null);
+
   if (items.length === 0) return null;
 
   const toggle = (n: number) =>
@@ -36,6 +40,7 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
   const single = items.length === 1;
 
   return (
+    <>
     <div
       className={`rounded-2xl p-4 text-left ${className}`}
       style={{ backgroundColor: '#3A0D6E' }}
@@ -90,6 +95,20 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
                     <p className="text-base leading-relaxed text-white break-keep">
                       “{item.answer}”
                     </p>
+                    {item.references.length > 0 && (
+                      <div className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1">
+                        {item.references.map((ref, i) => (
+                          <button
+                            key={`${item.number}-${i}`}
+                            type="button"
+                            onClick={() => setVerseRef(ref)}
+                            className="cursor-pointer text-xs text-teal-300 underline underline-offset-2 transition-colors hover:text-teal-200"
+                          >
+                            {ref}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -98,5 +117,11 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
         })}
       </div>
     </div>
+    <BibleVerseModal
+      open={verseRef !== null}
+      onOpenChange={(o) => !o && setVerseRef(null)}
+      refString={verseRef}
+    />
+    </>
   );
 }
