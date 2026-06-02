@@ -5,6 +5,7 @@ import { shorterCatechism, type CatechismItem } from '@/data/westminsterShorter'
 import { largerCatechism } from '@/data/westminsterLarger';
 import { confession, type ConfessionChapter } from '@/data/westminsterConfession';
 import BibleVerseModal from '@/components/BibleVerseModal';
+import { refHasValidVerse } from '@/utils/bibleParser';
 
 type TabKey = 'shorter' | 'larger' | 'confession';
 
@@ -25,10 +26,12 @@ function ReferenceList({
   references: string[];
   onRefClick: (ref: string) => void;
 }) {
-  if (!references || references.length === 0) return null;
+  // 실제 존재하는 절을 가진 참조만 노출 (잘못된 참조 버튼은 숨김)
+  const validRefs = (references ?? []).filter(refHasValidVerse);
+  if (validRefs.length === 0) return null;
   return (
     <div className="mt-3 flex flex-wrap gap-x-2.5 gap-y-1">
-      {references.map((ref, i) => (
+      {validRefs.map((ref, i) => (
         <button
           key={i}
           type="button"

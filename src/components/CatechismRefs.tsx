@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { BookOpen, ChevronDown } from 'lucide-react';
 import { shorterCatechism } from '@/data/westminsterShorter';
 import BibleVerseModal from '@/components/BibleVerseModal';
+import { refHasValidVerse } from '@/utils/bibleParser';
 
 interface CatechismRefsProps {
   refs?: number[];
@@ -95,20 +96,25 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
                     <p className="text-base leading-relaxed text-white break-keep">
                       “{item.answer}”
                     </p>
-                    {item.references.length > 0 && (
-                      <div className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1">
-                        {item.references.map((ref, i) => (
-                          <button
-                            key={`${item.number}-${i}`}
-                            type="button"
-                            onClick={() => setVerseRef(ref)}
-                            className="cursor-pointer text-xs text-teal-300 underline underline-offset-2 transition-colors hover:text-teal-200"
-                          >
-                            {ref}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    {(() => {
+                      // 실제 존재하는 절을 가진 참조만 노출 (잘못된 참조 버튼은 숨김)
+                      const validRefs = item.references.filter(refHasValidVerse);
+                      if (validRefs.length === 0) return null;
+                      return (
+                        <div className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1">
+                          {validRefs.map((ref, i) => (
+                            <button
+                              key={`${item.number}-${i}`}
+                              type="button"
+                              onClick={() => setVerseRef(ref)}
+                              className="cursor-pointer text-xs text-teal-300 underline underline-offset-2 transition-colors hover:text-teal-200"
+                            >
+                              {ref}
+                            </button>
+                          ))}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>

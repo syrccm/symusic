@@ -1,4 +1,5 @@
 import { isKnownBook } from '@/data/bibleBookMap';
+import { verseCounts } from '@/data/bibleVerseCounts';
 
 // krv.json 구조: { [책약어]: { [장]: { [절]: 본문 } } }
 export type KrvData = Record<string, Record<string, Record<string, string>>>;
@@ -86,6 +87,25 @@ export function parseRef(ref: string): VerseSegment[] {
   }
 
   return segments;
+}
+
+/**
+ * 절이 실제로 존재하는지 절 수 인덱스로 동기 확인(본문 로딩 불필요).
+ * 잘못된 참조(예: "시 162:8" — 시편은 150편)를 UI 노출 전에 걸러내는 데 사용.
+ */
+export function verseExists(book: string, chapter: number, verse: number): boolean {
+  const max = verseCounts[book]?.[String(chapter)];
+  return typeof max === 'number' && verse >= 1 && verse <= max;
+}
+
+/** 참조 문자열에 실제 존재하는 절이 하나라도 있으면 true. (없으면 버튼 자체를 숨김) */
+export function refHasValidVerse(ref: string): boolean {
+  return parseRef(ref).some((seg) => {
+    for (let v = seg.verseStart; v <= seg.verseEnd; v++) {
+      if (verseExists(seg.book, seg.chapter, v)) return true;
+    }
+    return false;
+  });
 }
 
 /** 로드된 krv 데이터에서 단일 절 본문을 반환. 없으면 null. */
