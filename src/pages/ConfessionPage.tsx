@@ -4,6 +4,7 @@ import { ArrowLeft, ChevronDown, Search } from 'lucide-react';
 import { shorterCatechism, type CatechismItem } from '@/data/westminsterShorter';
 import { largerCatechism } from '@/data/westminsterLarger';
 import { confession, type ConfessionChapter } from '@/data/westminsterConfession';
+import BibleVerseModal from '@/components/BibleVerseModal';
 
 type TabKey = 'shorter' | 'larger' | 'confession';
 
@@ -17,17 +18,38 @@ const TABS: { key: TabKey; label: string }[] = [
 // 검색 정규화: 공백 제거 + 소문자
 const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 
-function ReferenceList({ references }: { references: string[] }) {
+function ReferenceList({
+  references,
+  onRefClick,
+}: {
+  references: string[];
+  onRefClick: (ref: string) => void;
+}) {
   if (!references || references.length === 0) return null;
   return (
-    <p className="mt-3 text-xs leading-relaxed text-teal-300/80">
-      {references.join(' · ')}
-    </p>
+    <div className="mt-3 flex flex-wrap gap-x-2.5 gap-y-1">
+      {references.map((ref, i) => (
+        <button
+          key={i}
+          type="button"
+          onClick={() => onRefClick(ref)}
+          className="cursor-pointer text-xs leading-relaxed text-teal-300 underline underline-offset-2 transition-colors hover:text-teal-200"
+        >
+          {ref}
+        </button>
+      ))}
+    </div>
   );
 }
 
 // 문답(소요리/대요리) 아코디언 항목
-function CatechismRow({ item }: { item: CatechismItem }) {
+function CatechismRow({
+  item,
+  onRefClick,
+}: {
+  item: CatechismItem;
+  onRefClick: (ref: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-purple-400/20 bg-black/15 overflow-hidden">
@@ -57,7 +79,7 @@ function CatechismRow({ item }: { item: CatechismItem }) {
         <div className="overflow-hidden">
           <div className="border-t border-purple-400/15 px-4 py-3.5 pl-[3.75rem]">
             <p className="text-[15px] leading-relaxed text-gray-200">{item.answer}</p>
-            <ReferenceList references={item.references} />
+            <ReferenceList references={item.references} onRefClick={onRefClick} />
           </div>
         </div>
       </div>
@@ -66,7 +88,13 @@ function CatechismRow({ item }: { item: CatechismItem }) {
 }
 
 // 신앙고백서 장(chapter) 아코디언 항목
-function ChapterRow({ item }: { item: ConfessionChapter }) {
+function ChapterRow({
+  item,
+  onRefClick,
+}: {
+  item: ConfessionChapter;
+  onRefClick: (ref: string) => void;
+}) {
   const [open, setOpen] = useState(false);
   return (
     <div className="rounded-xl border border-purple-400/20 bg-black/15 overflow-hidden">
@@ -102,7 +130,7 @@ function ChapterRow({ item }: { item: ConfessionChapter }) {
                 </span>
                 <div className="flex-1">
                   <p className="text-[15px] leading-relaxed text-gray-200">{sec.text}</p>
-                  <ReferenceList references={sec.references} />
+                  <ReferenceList references={sec.references} onRefClick={onRefClick} />
                 </div>
               </div>
             ))}
@@ -117,6 +145,8 @@ export default function ConfessionPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<TabKey>('confession');
   const [query, setQuery] = useState('');
+  // 클릭한 성경 구절(개역한글 모달)
+  const [verseRef, setVerseRef] = useState<string | null>(null);
 
   const q = norm(query);
 
@@ -227,15 +257,27 @@ export default function ConfessionPage() {
           ) : (
             <div className="space-y-2.5 pb-10">
               {tab === 'shorter' &&
-                filteredShorter.map((it) => <CatechismRow key={it.number} item={it} />)}
+                filteredShorter.map((it) => (
+                  <CatechismRow key={it.number} item={it} onRefClick={setVerseRef} />
+                ))}
               {tab === 'larger' &&
-                filteredLarger.map((it) => <CatechismRow key={it.number} item={it} />)}
+                filteredLarger.map((it) => (
+                  <CatechismRow key={it.number} item={it} onRefClick={setVerseRef} />
+                ))}
               {tab === 'confession' &&
-                filteredConfession.map((ch) => <ChapterRow key={ch.chapter} item={ch} />)}
+                filteredConfession.map((ch) => (
+                  <ChapterRow key={ch.chapter} item={ch} onRefClick={setVerseRef} />
+                ))}
             </div>
           )}
         </main>
       </div>
+
+      <BibleVerseModal
+        open={verseRef !== null}
+        onOpenChange={(o) => !o && setVerseRef(null)}
+        refString={verseRef}
+      />
     </div>
   );
 }
