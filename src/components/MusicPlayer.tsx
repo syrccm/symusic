@@ -1415,7 +1415,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <div className="relative flex flex-col min-h-screen max-w-md mx-auto">
+      <div className="relative flex flex-col h-screen max-w-md mx-auto">
 
         {/* ===== 헤더 ===== */}
         <header className="sticky top-0 z-30 bg-slate-900/85 backdrop-blur border-b border-purple-500/20">
@@ -1558,7 +1558,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
         {/* ===== 본문 (탭별 화면) ===== */}
         <main
-          className="flex-1 overflow-y-auto"
+          className="flex-1 min-h-0 overflow-y-auto scrollbar-visible"
           style={{ paddingBottom: 88 }}
         >
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
@@ -1807,7 +1807,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 </CardContent>
               </Card>
 
-              {/* 3. 가사 영역 — 페이지 스크롤(내부 스크롤 없음) */}
+              {/* 3. 가사 영역 — 본문(main) 스크롤 영역 안에서 함께 스크롤 */}
               <Card className="bg-slate-800/50 border-slate-700">
                 <CardHeader className="px-2 pt-2 pb-0 sm:px-2 sm:pt-2 sm:pb-0">
                   <CardTitle className="text-base text-white flex items-center space-x-2">
