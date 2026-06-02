@@ -1444,84 +1444,88 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               </Button>
 
               {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-52 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg overflow-hidden z-50">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsGitaOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    🎸 카포·조옮김
-                  </button>
-                  <div className="h-px bg-purple-500/30" />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMetronomeOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    🎹 메트로놈
-                  </button>
-                  <div className="h-px bg-purple-500/30" />
+                <div className="absolute right-0 top-full mt-1 w-52 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg overflow-hidden z-50 py-1">
+                  {/* ── 1단: 신앙 (메인, 강조) ── */}
+                  <p className="px-3 pt-1 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">신앙</p>
                   <button
                     type="button"
                     onClick={() => {
                       setIsConfessionOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="flex w-full items-center gap-2 text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
                   >
                     <BookOpen className="h-5 w-5 shrink-0 text-teal-400" />
                     신앙고백문답
                   </button>
-                  <div className="h-px bg-purple-500/30" />
+
+                  {/* ── 2단: 음악 기능 ── */}
+                  <div className="my-1 h-px bg-white/20" />
+                  <p className="px-3 pt-0.5 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">음악</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsGitaOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                  >
+                    🎸 카포·조옮김
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMetronomeOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                  >
+                    🎹 메트로놈
+                  </button>
+
+                  {/* ── 3단: 관리 / 기타 ── */}
+                  <div className="my-1 h-px bg-white/20" />
+                  <p className="px-3 pt-0.5 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">관리</p>
                   <button
                     type="button"
                     onClick={() => {
                       setIsAboutOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
                   >
                     ℹ️ 개발자 정보
                   </button>
 
                   {isAdminRoute && isAdmin && (
                     <>
-                      <div className="h-px bg-purple-500/30" />
                       <button
                         type="button"
                         onClick={() => {
                           handleAdminManagementAccess();
                           setIsMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
+                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
                       >
                         ⚙️ 곡 관리
                       </button>
-                      <div className="h-px bg-purple-500/30" />
                       <button
                         type="button"
                         onClick={() => {
                           setIsAnalyticsOpen(true);
                           setIsMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
+                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
                       >
                         📊 통계
                       </button>
-                      <div className="h-px bg-purple-500/30" />
                       <button
                         type="button"
                         onClick={() => {
                           handleAdminLogout();
                           setIsMenuOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2.5 text-base text-red-300 hover:bg-red-500/10 transition-colors"
+                        className="w-full text-left px-3 py-2.5 text-sm text-red-300 hover:bg-red-500/10 transition-colors"
                       >
                         🚪 로그아웃
                       </button>
@@ -1529,19 +1533,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   )}
 
                   {isAdminRoute && !isAdmin && (
-                    <>
-                      <div className="h-px bg-purple-500/30" />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleAdminManagementAccess();
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
-                      >
-                        🔐 관리자 로그인
-                      </button>
-                    </>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        handleAdminManagementAccess();
+                        setIsMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    >
+                      🔐 관리자 로그인
+                    </button>
                   )}
                 </div>
               )}
