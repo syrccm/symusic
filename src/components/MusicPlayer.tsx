@@ -2065,7 +2065,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           key={m.label}
                           type="button"
                           onClick={() => setSelectedMood(active ? null : m.label)}
-                          className={`px-2 py-3 rounded-md text-base transition-colors ${
+                          className={`px-2 py-3 rounded-md text-sm leading-snug break-keep transition-colors sm:text-base ${
                             active
                               ? 'bg-purple-600 text-white'
                               : 'bg-slate-700/40 text-gray-300 hover:bg-purple-900/40'
