@@ -98,8 +98,9 @@ function CatechismRow({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="border-t border-purple-400/15 px-4 py-3.5 pl-[3.75rem]">
-            <p className="text-[15px] leading-relaxed text-gray-200">{item.answer}</p>
+          {/* 본문: 다크모드 통일 (#111827 + 흰 글자) */}
+          <div className="bg-[#111827] px-4 py-4 text-base leading-relaxed text-white">
+            <p>{item.answer}</p>
             <ReferenceList references={item.references} onRefClick={onRefClick} />
           </div>
         </div>
@@ -143,14 +144,15 @@ function ChapterRow({
         }`}
       >
         <div className="overflow-hidden">
-          <div className="space-y-4 border-t border-purple-400/15 px-4 py-3.5">
+          {/* 본문: 다크모드 통일 (#111827 + 흰 글자) */}
+          <div className="space-y-4 bg-[#111827] px-4 py-4 text-base leading-relaxed text-white">
             {item.sections.map((sec) => (
               <div key={sec.number} className="flex gap-3">
-                <span className="mt-0.5 shrink-0 text-sm font-bold text-teal-400">
+                <span className="mt-0.5 shrink-0 font-bold text-teal-400">
                   {sec.number}.
                 </span>
                 <div className="flex-1">
-                  <p className="text-[15px] leading-relaxed text-gray-200">{sec.text}</p>
+                  <p>{sec.text}</p>
                   <ReferenceList references={sec.references} onRefClick={onRefClick} />
                 </div>
               </div>
