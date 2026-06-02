@@ -90,7 +90,7 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
               >
                 <div className="overflow-hidden">
                   <div className="px-3.5 pb-3.5">
-                    <p className="mb-1.5 text-xs leading-relaxed text-purple-200/80">
+                    <p className="mb-1.5 text-base leading-relaxed text-purple-200/80">
                       {item.question}
                     </p>
                     <p className="text-base leading-relaxed text-white break-keep">

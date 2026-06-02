@@ -1879,7 +1879,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           {currentSong.lyrics}
                         </div>
                         {currentSong.catechismRefs && currentSong.catechismRefs.length > 0 && (
-                          <CatechismRefs refs={currentSong.catechismRefs} className="mt-3" />
+                          <CatechismRefs refs={currentSong.catechismRefs} className="mt-8" />
                         )}
                         <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
                           {currentSong.youtubeUrl && (
