@@ -1879,7 +1879,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           {currentSong.lyrics}
                         </div>
                         {currentSong.catechismRefs && currentSong.catechismRefs.length > 0 && (
-                          <CatechismRefs refs={currentSong.catechismRefs} className="mt-8" />
+                          <>
+                            {/* 가사 ↔ 신앙고백 카드 시각적 구분선 */}
+                            <div className="mt-10 border-t border-slate-600" />
+                            <CatechismRefs refs={currentSong.catechismRefs} className="mt-6" />
+                          </>
                         )}
                         <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
                           {currentSong.youtubeUrl && (
