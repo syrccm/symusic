@@ -210,7 +210,8 @@
   .stepBtn.long { min-width: 46px; font-size: 0.85rem; }
 
   .slider {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0; /* flex 안에서 내재 너비 이하로 줄어들도록 (우측 버튼 잘림 방지) */
     -webkit-appearance: none;
     appearance: none;
     height: 8px;
@@ -346,7 +347,8 @@
     letter-spacing: 0.04em;
   }
   .flashSlider {
-    flex: 1;
+    flex: 1 1 0;
+    min-width: 0;
     -webkit-appearance: none;
     appearance: none;
     height: 5px;
@@ -481,7 +483,9 @@
 
   @media (max-width: 380px) {
     .meterGrid { gap: 5px; }
-    .stepBtn { min-width: 40px; padding: 0 0.2rem; }
+    .bpmControls { gap: 4px; }
+    /* .long 까지 함께 지정해야 특정성에 밀리지 않고 실제로 줄어든다 */
+    .stepBtn, .stepBtn.long { min-width: 36px; padding: 0 0.2rem; font-size: 0.8rem; }
     .bpmValue, .bpmInput { font-size: 42px; }
     .stringBtn { font-size: 1.5rem; }
   }
