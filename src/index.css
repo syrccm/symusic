@@ -151,3 +151,13 @@
 .scrollbar-visible::-webkit-scrollbar-corner {
   background: transparent;
 }
+
+/* 스크롤은 가능하되 스크롤바를 완전히 숨긴다(가사 영역 등).
+   터치/휠 스크롤은 그대로 동작한다. */
+.scrollbar-hide {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* 구형 Edge/IE */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none; /* Chrome/Safari */
+}

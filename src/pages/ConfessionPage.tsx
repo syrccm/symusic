@@ -382,7 +382,7 @@ interface ConfessionPageProps {
 
 export default function ConfessionPage({ onClose }: ConfessionPageProps = {}) {
   const navigate = useNavigate();
-  const [tab, setTab] = useState<TabKey>('shorter');
+  const [tab, setTab] = useState<TabKey>('confession');
   const [query, setQuery] = useState('');
   // 클릭한 성경 구절(개역한글 모달)
   const [verseRef, setVerseRef] = useState<string | null>(null);

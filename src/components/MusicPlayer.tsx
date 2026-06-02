@@ -1558,7 +1558,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
         {/* ===== 본문 (탭별 화면) ===== */}
         <main
-          className="flex-1 min-h-0 overflow-y-auto scrollbar-visible"
+          className="flex-1 min-h-0 overflow-y-auto scrollbar-hide"
           style={{ paddingBottom: 88 }}
         >
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
