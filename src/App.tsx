@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Index from './pages/Index';
 import NotFound from './pages/NotFound';
+import ConfessionPage from './pages/ConfessionPage';
 import SimpleSongPlayer from './components/SimpleSongPlayer';
 import { trackVisit } from './utils/analyticsTracker';
 
@@ -23,6 +24,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/song/:songId" element={<SimpleSongPlayer />} />
+            <Route path="/confession" element={<ConfessionPage />} />
             <Route path="/0691" element={<Index isAdminRoute />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

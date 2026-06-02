@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { db, auth } from '@/lib/firebase';
 import {
   collection,
@@ -52,7 +53,8 @@ import {
   Search,
   Bell,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  BookOpen
 } from 'lucide-react';
 
 // Types
@@ -114,6 +116,8 @@ interface MusicPlayerProps {
 }
 
 export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) {
+  const navigate = useNavigate();
+
   // Songs (Firestore + LS 캐시) — 훅으로 추출
   const { songs, loading, isOfflineMode, setSongsLocal } = useSongs();
 
@@ -1448,6 +1452,18 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     className="w-full text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
                   >
                     🎹 메트로놈
+                  </button>
+                  <div className="h-px bg-purple-500/30" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      navigate('/confession');
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 text-left px-3 py-2.5 text-base text-gray-100 hover:bg-purple-500/20 transition-colors"
+                  >
+                    <BookOpen className="h-5 w-5 shrink-0 text-teal-400" />
+                    신앙고백문답
                   </button>
                   <div className="h-px bg-purple-500/30" />
                   <button
