@@ -172,9 +172,9 @@ function DocHeader({ title, desc }: { title: string; desc: string }) {
   );
 }
 
-// 소개 본문(흰 배경)에서 핵심 단어만 강조 — 섹션당 2~3개
+// 소개 본문(어두운 배경)에서 핵심 단어만 강조 — 섹션당 2~3개
 const B = ({ children }: { children: ReactNode }) => (
-  <b className="font-bold text-gray-900">{children}</b>
+  <b className="font-bold text-white">{children}</b>
 );
 
 // 소개 탭 아코디언 섹션 (참고: 김중락 박사(캠브리지) · 주간기독신문)
@@ -356,9 +356,9 @@ function IntroTab() {
                 }`}
               >
                 <div className="overflow-hidden">
-                  {/* 본문만 흰 배경 + 검정 글자로 가독성 강화. 카드 rounded-xl
-                      overflow-hidden 덕분에 하단 모서리가 자연스럽게 둥글게 연결됨 */}
-                  <div className="space-y-4 bg-white px-4 py-4 text-base leading-relaxed text-gray-900">
+                  {/* 본문만 어두운 배경(#111827) + 흰 글자로 가독성 강화. 카드
+                      rounded-xl overflow-hidden 덕분에 하단 모서리가 자연스럽게 연결됨 */}
+                  <div className="space-y-4 bg-[#111827] px-4 py-4 text-base leading-relaxed text-white">
                     {s.body}
                   </div>
                 </div>

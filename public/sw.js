@@ -1,5 +1,5 @@
 // SY Music Service Worker
-const CACHE_NAME = 'symusic-v5';
+const CACHE_NAME = 'symusic-v6';
 const urlsToCache = [
   '/',
   '/index.html',
