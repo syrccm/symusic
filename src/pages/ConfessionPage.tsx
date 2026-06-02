@@ -1,6 +1,6 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, ChevronDown, Search } from 'lucide-react';
+import { X, ChevronDown, Search } from 'lucide-react';
 import { shorterCatechism, type CatechismItem } from '@/data/westminsterShorter';
 import { largerCatechism } from '@/data/westminsterLarger';
 import { confession, type ConfessionChapter } from '@/data/westminsterConfession';
@@ -432,18 +432,19 @@ export default function ConfessionPage({ onClose }: ConfessionPageProps = {}) {
       style={{ background: 'linear-gradient(160deg, #3A0D6E 0%, #4A1290 100%)' }}
     >
       <div className="mx-auto flex min-h-screen max-w-md flex-col">
-        {/* 헤더 + 뒤로가기 */}
+        {/* 헤더 + 닫기(X) */}
         <header className="sticky top-0 z-20 bg-[#3A0D6E]/95 px-3 pt-3 pb-2 backdrop-blur-sm">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between gap-2">
+            <h1 className="text-lg font-bold">신앙고백문답</h1>
             <button
               type="button"
               onClick={() => (onClose ? onClose() : navigate('/'))}
-              aria-label="뒤로가기"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-white transition-colors hover:bg-white/10"
+              aria-label="닫기"
+              title="닫기"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-purple-500/30 bg-slate-800/90 text-white shadow-lg transition-colors hover:bg-slate-700"
             >
-              <ArrowLeft className="h-6 w-6" />
+              <X className="h-5 w-5" />
             </button>
-            <h1 className="text-lg font-bold">신앙고백문답</h1>
           </div>
 
           {/* 검색창 (소개 탭에서는 숨김) */}
