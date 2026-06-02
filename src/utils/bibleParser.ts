@@ -110,28 +110,39 @@ export function getSegmentVerses(
   return out;
 }
 
-// 개역한글 데이터는 용량이 크므로(약 4.5MB) 동적 import로 지연 로딩하고 캐싱한다.
+// 개역한글 데이터(약 4.5MB)는 public/bible/krv.json 정적 파일로 두고 지연 fetch + 캐싱한다.
+// (해시 에셋/동적 import 대신 고정 경로를 사용해 배포·서비스워커 환경에서도 안정적으로 로드)
+const KRV_URL = `${import.meta.env.BASE_URL}bible/krv.json`;
+const LOAD_TIMEOUT_MS = 25000;
+
 let cache: KrvData | null = null;
 let pending: Promise<KrvData> | null = null;
 
 export async function loadKrv(): Promise<KrvData> {
   if (cache) return cache;
   if (pending) return pending;
-  // ?url 로 받은 정적 에셋 경로를 fetch (브라우저가 캐싱, JS 번들에 포함되지 않음)
-  pending = import('@/data/bible/krv.json?url')
-    .then((m) => fetch(m.default))
-    .then((r) => {
-      if (!r.ok) throw new Error(`krv.json load failed: ${r.status}`);
-      return r.json();
-    })
-    .then((json: KrvData) => {
+
+  pending = (async (): Promise<KrvData> => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), LOAD_TIMEOUT_MS);
+    try {
+      const res = await fetch(KRV_URL, { signal: controller.signal });
+      if (!res.ok) {
+        throw new Error(`성경 데이터 로드 실패 (HTTP ${res.status})`);
+      }
+      const json = (await res.json()) as KrvData;
       cache = json;
-      pending = null;
       return json;
-    })
-    .catch((err) => {
-      pending = null;
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        throw new Error('성경 데이터 로드 시간 초과');
+      }
       throw err;
-    });
+    } finally {
+      clearTimeout(timer);
+      pending = null; // 실패 시 다음 클릭에서 재시도 가능
+    }
+  })();
+
   return pending;
 }
