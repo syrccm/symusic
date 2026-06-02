@@ -579,8 +579,8 @@
 
       <div class="volumeRow">
         <div class="label">볼륨</div>
-        <input type="range" class="slider teal" id="droneVolumeSlider" min="0" max="100" value="100" step="1" aria-label="드론 볼륨">
-        <div class="pct" id="droneVolumeValue">100%</div>
+        <input type="range" class="slider teal" id="droneVolumeSlider" min="0" max="100" value="80" step="1" aria-label="드론 볼륨">
+        <div class="pct" id="droneVolumeValue">80%</div>
       </div>
     </div><!-- /panel-drone -->
   </div>
@@ -1055,11 +1055,12 @@
 
   // 드론 마스터 게인 계수 — 메트로놈 클릭음과 체감 음량 매칭
   // (클리핑은 뒤단 DynamicsCompressor 가 흡수)
-  const DRONE_BASE_GAIN = 0.40;
+  // 0.40 → 1.0 대폭 상향: 슬라이더 70~80%에서 메트로놈 클릭음과 비슷한 음량
+  const DRONE_BASE_GAIN = 1.0;
 
   let droneOctave = 'mid';
   let droneTimbre = 'bass';
-  let droneVolume = 1.00;
+  let droneVolume = 0.80;
   let droneOutput = null;
   let droneCompressor = null;
   const activeDrones = new Map(); // stringId → nodes
@@ -1073,7 +1074,7 @@
     droneCompressor = audioCtx.createDynamicsCompressor();
     droneCompressor.threshold.value = -6;
     droneCompressor.knee.value = 8;
-    droneCompressor.ratio.value = 4;
+    droneCompressor.ratio.value = 3;
     droneCompressor.attack.value = 0.003;
     droneCompressor.release.value = 0.1;
     droneOutput.connect(droneCompressor);
