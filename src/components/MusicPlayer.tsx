@@ -33,6 +33,7 @@ import CatechismMatcher from '@/components/CatechismMatcher';
 import CatechismRefs from '@/components/CatechismRefs';
 import ConfessionPage from '@/pages/ConfessionPage';
 import MinistersPage from '@/pages/MinistersPage';
+import BibleOnPage from '@/pages/BibleOnPage';
 import {
   Play,
   Pause,
@@ -58,7 +59,8 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
-  Users
+  Users,
+  MonitorPlay
 } from 'lucide-react';
 
 // Types
@@ -189,6 +191,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isConfessionOpen, setIsConfessionOpen] = useState(false);
   // 교회를 섬기는분(교역자 안내): 동일하게 오버레이로 표시
   const [isMinistersOpen, setIsMinistersOpen] = useState(false);
+  // 말씀:ON(3분 설교요약 VOD): 동일하게 오버레이로 표시
+  const [isBibleOnOpen, setIsBibleOnOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 메뉴 외부 클릭 시 닫기
@@ -1454,6 +1458,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     type="button"
                     onClick={() => {
+                      setIsBibleOnOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
+                  >
+                    <MonitorPlay className="h-5 w-5 shrink-0 text-teal-400" />
+                    말씀:ON
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
                       setIsConfessionOpen(true);
                       setIsMenuOpen(false);
                     }}
@@ -2692,6 +2707,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       {isMinistersOpen && (
         <div className="fixed inset-0 z-[100] overflow-y-auto">
           <MinistersPage onClose={() => setIsMinistersOpen(false)} />
+        </div>
+      )}
+
+      {/* 말씀:ON: 동일하게 오버레이로 표시 */}
+      {isBibleOnOpen && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <BibleOnPage onClose={() => setIsBibleOnOpen(false)} />
         </div>
       )}
 
