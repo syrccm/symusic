@@ -101,17 +101,22 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
                       const validRefs = item.references.filter(refHasValidVerse);
                       if (validRefs.length === 0) return null;
                       return (
-                        <div className="mt-2.5 flex flex-wrap gap-x-2.5 gap-y-1">
-                          {validRefs.map((ref, i) => (
-                            <button
-                              key={`${item.number}-${i}`}
-                              type="button"
-                              onClick={() => setVerseRef(ref)}
-                              className="cursor-pointer text-xs text-teal-300 underline underline-offset-2 transition-colors hover:text-teal-200"
-                            >
-                              {ref}
-                            </button>
-                          ))}
+                        <div className="mt-2.5">
+                          <p className="mb-2 text-sm text-teal-400">
+                            성경 구절을 클릭하면 본문이 열립니다
+                          </p>
+                          <div className="flex flex-wrap gap-x-2.5 gap-y-1">
+                            {validRefs.map((ref, i) => (
+                              <button
+                                key={`${item.number}-${i}`}
+                                type="button"
+                                onClick={() => setVerseRef(ref)}
+                                className="cursor-pointer rounded px-2 py-1 text-base text-teal-300 underline underline-offset-2 transition-colors hover:bg-white/10 hover:text-teal-200"
+                              >
+                                {ref}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       );
                     })()}
