@@ -18,13 +18,13 @@ interface MinistersData {
   ministers: Minister[];
 }
 
-// 목회자 드롭다운(장로 제외, 직제 순)
+// 목회자 직분(장로 제외, 직제 순)
 const PASTOR_ROLES = ['목사', '강도사', '전임전도사', '교육전도사'] as const;
-// 장로 드롭다운 (시무→은퇴→원로 순)
+// 장로 세부 (시무→은퇴→원로 순)
 const ELDER_SUBROLES = ['시무장로', '은퇴장로', '원로장로'] as const;
 const TEAMS = ['1', '2', '3', '4', '5'] as const;
-const ALL = '전체';
-const UNCLASSIFIED = '미분류';
+const NONE = ''; // 드롭다운 "선택 안 함"
+const ETC = '기타 사역';
 
 // 부서 분류 트리 (중간분류 cat → 소분류 sub + 매칭 키워드).
 // 분류는 "교구 우선 → 트리 정의 순서상 첫 매칭" 규칙. 순서가 우선순위이므로
@@ -114,11 +114,12 @@ const guOf = (dept: string): number | null => {
   return m ? parseInt(m[1], 10) : null;
 };
 
-// 교역자 1명 분류: 교구 우선 → 부서 트리 첫 매칭 → 미분류
+// 교역자(목회자) 1명 분류: 교구 우선 → 부서 트리 첫 매칭 → 기타 사역.
+// ※ 장로는 호출 전에 role로 걸러지므로 절대 여기로 오지 않는다.
 type Classified =
   | { kind: 'team'; team: number; gu: number }
   | { kind: 'dept'; cat: string; sub: string }
-  | { kind: 'unclassified' };
+  | { kind: 'etc' };
 function classify(dept: string): Classified {
   const gu = guOf(dept);
   if (gu != null) return { kind: 'team', team: Math.floor(gu / 10), gu };
@@ -127,7 +128,7 @@ function classify(dept: string): Classified {
       if (kw.some((k) => dept.includes(k))) return { kind: 'dept', cat, sub };
     }
   }
-  return { kind: 'unclassified' };
+  return { kind: 'etc' };
 }
 
 // ISO → "YYYY.MM.DD"
@@ -212,10 +213,10 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<Minister | null>(null);
 
-  // 드롭다운 3개 (기본값 모두 "전체")
-  const [pastorFilter, setPastorFilter] = useState<string>(ALL); // 목회자
-  const [elderFilter, setElderFilter] = useState<string>(ALL); // 장로
-  const [teamFilter, setTeamFilter] = useState<string>(ALL); // 팀별사역(교구/부서/미분류)
+  // 드롭다운 3개 — 기본은 모두 "선택 안 함"(NONE). 한 번에 하나만 활성.
+  const [pastorSel, setPastorSel] = useState<string>(NONE);
+  const [teamSel, setTeamSel] = useState<string>(NONE);
+  const [elderSel, setElderSel] = useState<string>(NONE);
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -232,46 +233,54 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
     };
   }, []);
 
-  // 상호 배타 + 자동 전환 (어떤 드롭다운도 disabled 하지 않음)
+  // 상호 배타: 한 드롭다운 선택 시 나머지 둘 + 검색어 리셋 (한 번에 하나의 기준만)
   const onPastor = (v: string) => {
-    setPastorFilter(v);
-    if (v !== ALL) setElderFilter(ALL);
-  };
-  const onElder = (v: string) => {
-    setElderFilter(v);
-    if (v !== ALL) {
-      setPastorFilter(ALL);
-      setTeamFilter(ALL);
-    }
+    setPastorSel(v);
+    setTeamSel(NONE);
+    setElderSel(NONE);
+    setQuery('');
   };
   const onTeam = (v: string) => {
-    setTeamFilter(v);
-    if (v !== ALL) setElderFilter(ALL);
+    setTeamSel(v);
+    setPastorSel(NONE);
+    setElderSel(NONE);
+    setQuery('');
+  };
+  const onElder = (v: string) => {
+    setElderSel(v);
+    setPastorSel(NONE);
+    setTeamSel(NONE);
+    setQuery('');
+  };
+  // 검색은 독립적: 입력이 있으면 드롭다운 선택을 해제하고 전역 검색
+  const onQuery = (v: string) => {
+    setQuery(v);
+    if (v.trim()) {
+      setPastorSel(NONE);
+      setTeamSel(NONE);
+      setElderSel(NONE);
+    }
   };
 
-  // 인원수 집계 (드롭다운 라벨 병기용)
+  // 인원수 집계 (드롭다운 라벨 병기). 장로는 role로 분리.
   const counts = useMemo(() => {
     const roles: Record<string, number> = {};
     const elders: Record<string, number> = {};
     const teams: Record<string, number> = {};
     const cats: Record<string, number> = {};
-    let elderTotal = 0;
-    let nonElder = 0;
-    let unclassified = 0;
+    let etc = 0;
     data?.ministers.forEach((m) => {
       if (m.role === '장로') {
-        elderTotal += 1;
         if (m.subRole) elders[m.subRole] = (elders[m.subRole] ?? 0) + 1;
         return;
       }
-      nonElder += 1;
       roles[m.role] = (roles[m.role] ?? 0) + 1;
       const c = classify(m.department);
       if (c.kind === 'team') teams[String(c.team)] = (teams[String(c.team)] ?? 0) + 1;
       else if (c.kind === 'dept') cats[c.cat] = (cats[c.cat] ?? 0) + 1;
-      else unclassified += 1;
+      else etc += 1;
     });
-    return { roles, elders, teams, cats, elderTotal, nonElder, unclassified };
+    return { roles, elders, teams, cats, etc };
   }, [data]);
 
   // 정렬 비교자
@@ -282,98 +291,97 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
     ELDER_SUBROLES.indexOf(a.subRole as (typeof ELDER_SUBROLES)[number]) -
       ELDER_SUBROLES.indexOf(b.subRole as (typeof ELDER_SUBROLES)[number]) || a.order - b.order;
 
-  // 최종 표시 결과: 평면 리스트 또는 (교구/소분류) 그룹
+  const hasSelection = Boolean(pastorSel || teamSel || elderSel);
+  const q = norm(query);
+
+  // 표시 결과. mode: 'idle'(안내) | 'flat' | 'grouped'
   const view = useMemo(() => {
-    if (!data) return { mode: 'flat' as const, items: [] as Minister[] };
-    const q = norm(query);
+    if (!data) return { mode: 'idle' as const };
     const matchQ = (m: Minister) =>
-      !q || norm(m.name).includes(q) || norm(m.department).includes(q);
+      norm(m.name).includes(q) || norm(m.department).includes(q);
 
     const elders = data.ministers.filter((m) => m.role === '장로');
-    const pastors = data.ministers.filter((m) => m.role !== '장로');
+    const pastors = data.ministers.filter((m) => m.role !== '장로'); // 목회자 = role 기준
 
-    // 1) 장로 모드
-    if (elderFilter !== ALL) {
-      const items = elders
-        .filter((m) => m.subRole === elderFilter)
-        .filter(matchQ)
-        .sort(byElderOrder);
+    // 1) 검색 (드롭다운 독립) — 이름/부서로 전체(장로 포함) 검색
+    if (q) {
+      const items = [
+        ...pastors.filter(matchQ).sort(byRoleOrder),
+        ...elders.filter(matchQ).sort(byElderOrder),
+      ];
       return { mode: 'flat' as const, items };
     }
 
-    // 2) 목회자 모드 (장로 '전체')
-    let pool = pastors;
-    if (pastorFilter !== ALL) pool = pool.filter((m) => m.role === pastorFilter);
-    pool = pool.filter(matchQ);
-
-    // 2-a) 팀별사역 = 전체
-    if (teamFilter === ALL) {
-      if (pastorFilter === ALL) {
-        return {
-          mode: 'flat' as const,
-          items: [...pool.slice().sort(byRoleOrder), ...elders.filter(matchQ).sort(byElderOrder)],
-        };
-      }
-      return { mode: 'flat' as const, items: pool.slice().sort(byRoleOrder) };
+    // 2) 목회자 직분
+    if (pastorSel) {
+      return { mode: 'flat' as const, items: pastors.filter((m) => m.role === pastorSel).sort(byRoleOrder) };
     }
 
-    // 2-b) 교구(1~5팀) → 교구번호 그룹핑
-    if (TEAMS.includes(teamFilter as (typeof TEAMS)[number])) {
-      const teamNum = parseInt(teamFilter, 10);
-      const inTeam = pool.filter((m) => {
+    // 3) 장로 분류
+    if (elderSel) {
+      return { mode: 'flat' as const, items: elders.filter((m) => m.subRole === elderSel).sort(byElderOrder) };
+    }
+
+    // 4) 팀별사역 (장로 원천 제외: pastors 대상)
+    if (teamSel) {
+      if (TEAMS.includes(teamSel as (typeof TEAMS)[number])) {
+        const teamNum = parseInt(teamSel, 10);
+        const inTeam = pastors.filter((m) => {
+          const c = classify(m.department);
+          return c.kind === 'team' && c.team === teamNum;
+        });
+        const byGu = new Map<number, Minister[]>();
+        inTeam.forEach((m) => {
+          const g = guOf(m.department)!;
+          if (!byGu.has(g)) byGu.set(g, []);
+          byGu.get(g)!.push(m);
+        });
+        const groups = [...byGu.keys()]
+          .sort((a, b) => a - b)
+          .map((g) => ({ title: `${g}교구`, items: byGu.get(g)!.sort(byRoleOrder) }));
+        return { mode: 'grouped' as const, groups };
+      }
+      if (teamSel === ETC) {
+        return {
+          mode: 'flat' as const,
+          items: pastors.filter((m) => classify(m.department).kind === 'etc').sort(byRoleOrder),
+        };
+      }
+      // 부서 중간분류
+      const catDef = DEPT_TREE.find((c) => c.cat === teamSel);
+      const inCat = pastors.filter((m) => {
         const c = classify(m.department);
-        return c.kind === 'team' && c.team === teamNum;
+        return c.kind === 'dept' && c.cat === teamSel;
       });
-      const byGu = new Map<number, Minister[]>();
-      inTeam.forEach((m) => {
-        const g = guOf(m.department)!;
-        if (!byGu.has(g)) byGu.set(g, []);
-        byGu.get(g)!.push(m);
+      if (!catDef || !catHasSubs(teamSel)) {
+        return { mode: 'flat' as const, items: inCat.sort(byRoleOrder) };
+      }
+      const bySub = new Map<string, Minister[]>();
+      inCat.forEach((m) => {
+        const c = classify(m.department);
+        const sub = c.kind === 'dept' ? c.sub || '기타' : '기타';
+        if (!bySub.has(sub)) bySub.set(sub, []);
+        bySub.get(sub)!.push(m);
       });
-      const groups = [...byGu.keys()]
-        .sort((a, b) => a - b)
-        .map((g) => ({ title: `${g}교구`, items: byGu.get(g)!.sort(byRoleOrder) }));
+      const order = catDef.subs.map((s) => s.sub);
+      const groups = order
+        .filter((s) => bySub.has(s))
+        .map((s) => ({ title: s, items: bySub.get(s)!.sort(byRoleOrder) }));
       return { mode: 'grouped' as const, groups };
     }
 
-    // 2-c) 미분류
-    if (teamFilter === UNCLASSIFIED) {
-      const items = pool
-        .filter((m) => classify(m.department).kind === 'unclassified')
-        .sort(byRoleOrder);
-      return { mode: 'flat' as const, items };
-    }
-
-    // 2-d) 부서 중간분류
-    const catDef = DEPT_TREE.find((c) => c.cat === teamFilter);
-    const inCat = pool.filter((m) => {
-      const c = classify(m.department);
-      return c.kind === 'dept' && c.cat === teamFilter;
-    });
-    if (!catDef || !catHasSubs(teamFilter)) {
-      return { mode: 'flat' as const, items: inCat.sort(byRoleOrder) };
-    }
-    // 소분류별 그룹핑 (트리 정의 순서대로)
-    const bySub = new Map<string, Minister[]>();
-    inCat.forEach((m) => {
-      const c = classify(m.department);
-      const sub = c.kind === 'dept' ? c.sub || '기타' : '기타';
-      if (!bySub.has(sub)) bySub.set(sub, []);
-      bySub.get(sub)!.push(m);
-    });
-    const order = catDef.subs.map((s) => s.sub);
-    const groups = order
-      .filter((s) => bySub.has(s))
-      .map((s) => ({ title: s, items: bySub.get(s)!.sort(byRoleOrder) }));
-    return { mode: 'grouped' as const, groups };
-  }, [data, pastorFilter, elderFilter, teamFilter, query]);
+    // 5) 아무 것도 선택/검색 안 됨 → 안내
+    return { mode: 'idle' as const };
+  }, [data, pastorSel, teamSel, elderSel, q]);
 
   const totalShown =
     view.mode === 'flat'
       ? view.items.length
-      : view.groups.reduce((n, g) => n + g.items.length, 0);
+      : view.mode === 'grouped'
+      ? view.groups.reduce((n, g) => n + g.items.length, 0)
+      : 0;
 
-  // 셀렉트 스타일: 활성(전체 아님)이면 teal 강조로 현재 모드를 분명히
+  // 셀렉트 스타일: 활성(선택됨)이면 teal 강조로 현재 보고 있는 기준을 분명히
   const selBase =
     'min-w-0 max-w-full appearance-none rounded-xl border py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-teal-400';
   const selCls = (active: boolean) =>
@@ -404,33 +412,32 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
             </button>
           </div>
 
-          {/* 검색창 (전폭) */}
+          {/* 검색창 (항상 활성, 드롭다운과 독립) */}
           <div className="relative mt-2">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-purple-300" />
             <input
               type="text"
               inputMode="search"
               value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              onChange={(e) => onQuery(e.target.value)}
               placeholder="이름 또는 부서(교구) 검색"
               aria-label="이름 또는 부서 검색"
               className="h-12 w-full rounded-xl border border-purple-400/40 bg-slate-900/40 pl-10 pr-4 text-base text-white placeholder:text-purple-300/70 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
             />
           </div>
 
-          {/* 드롭다운 3개: 좁으면 자동 줄바꿈(flex-wrap), 가로 오버플로 없음.
-              ※ <select>를 <label>로 감싸면 크롬에서 클릭 시 팝업이 즉시 닫히므로
-                 <div> + aria-label 로 둔다. */}
+          {/* 드롭다운 3개 (좌→우: 목회자 / 팀별사역 / 장로). flex-wrap, 가로 오버플로 없음.
+              ※ <select>를 <label>로 감싸면 크롬에서 클릭 시 팝업이 즉시 닫히므로 <div> + aria-label. */}
           <div className="mt-2.5 flex flex-wrap items-center gap-2">
             {/* 목회자 */}
             <div className="relative flex min-w-0 items-center">
               <select
-                value={pastorFilter}
+                value={pastorSel}
                 onChange={(e) => onPastor(e.target.value)}
                 aria-label="목회자 직분 선택"
-                className={selCls(pastorFilter !== ALL)}
+                className={selCls(pastorSel !== NONE)}
               >
-                <option value={ALL}>목회자: 전체 ({counts.nonElder})</option>
+                <option value={NONE}>목회자 ▾</option>
                 {PASTOR_ROLES.map((r) => (
                   <option key={r} value={r}>
                     {r} ({counts.roles[r] ?? 0})
@@ -440,33 +447,15 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
               <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
             </div>
 
-            {/* 장로 */}
+            {/* 팀별사역: 교구(1~5팀) + 부서 9분류 + 기타 사역 (optgroup으로 구분) */}
             <div className="relative flex min-w-0 items-center">
               <select
-                value={elderFilter}
-                onChange={(e) => onElder(e.target.value)}
-                aria-label="장로 분류 선택"
-                className={selCls(elderFilter !== ALL)}
-              >
-                <option value={ALL}>장로: 전체 ({counts.elderTotal})</option>
-                {ELDER_SUBROLES.map((s) => (
-                  <option key={s} value={s}>
-                    {s} ({counts.elders[s] ?? 0})
-                  </option>
-                ))}
-              </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
-            </div>
-
-            {/* 팀별사역: 교구(1~5팀) + 부서 9분류 + 미분류 (optgroup으로 구분) */}
-            <div className="relative flex min-w-0 items-center">
-              <select
-                value={teamFilter}
+                value={teamSel}
                 onChange={(e) => onTeam(e.target.value)}
                 aria-label="팀별사역 선택"
-                className={selCls(teamFilter !== ALL)}
+                className={selCls(teamSel !== NONE)}
               >
-                <option value={ALL}>팀별사역: 전체</option>
+                <option value={NONE}>팀별사역 ▾</option>
                 <optgroup label="교구(팀)">
                   {TEAMS.map((t) => (
                     <option key={t} value={t}>
@@ -482,10 +471,28 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
                   ))}
                 </optgroup>
                 <optgroup label="기타">
-                  <option value={UNCLASSIFIED}>
-                    {UNCLASSIFIED} ({counts.unclassified})
+                  <option value={ETC}>
+                    {ETC} ({counts.etc})
                   </option>
                 </optgroup>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
+            </div>
+
+            {/* 장로 (맨 우측) */}
+            <div className="relative flex min-w-0 items-center">
+              <select
+                value={elderSel}
+                onChange={(e) => onElder(e.target.value)}
+                aria-label="장로 분류 선택"
+                className={selCls(elderSel !== NONE)}
+              >
+                <option value={NONE}>장로 ▾</option>
+                {ELDER_SUBROLES.map((s) => (
+                  <option key={s} value={s}>
+                    {s} ({counts.elders[s] ?? 0})
+                  </option>
+                ))}
               </select>
               <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
             </div>
@@ -501,11 +508,16 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
             </div>
           ) : !data ? (
             <div className="mt-16 text-center text-purple-200/70">불러오는 중…</div>
+          ) : !hasSelection && !q ? (
+            <div className="mt-20 flex flex-col items-center gap-3 px-6 text-center text-purple-200/70">
+              <Search className="h-10 w-10 text-purple-300/40" />
+              <p className="text-base">위에서 항목을 선택하거나 이름으로 검색하세요</p>
+            </div>
           ) : totalShown === 0 ? (
             <div className="mt-16 text-center text-purple-200/70">검색 결과가 없습니다.</div>
           ) : view.mode === 'flat' ? (
             <Grid items={view.items} onSelect={setSelected} />
-          ) : (
+          ) : view.mode === 'grouped' ? (
             <div className="space-y-6">
               {view.groups.map((g) => (
                 <section key={g.title}>
@@ -517,7 +529,7 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
                 </section>
               ))}
             </div>
-          )}
+          ) : null}
 
           {/* 최종 업데이트 + 출처 */}
           {data && (
