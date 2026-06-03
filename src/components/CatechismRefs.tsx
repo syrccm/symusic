@@ -46,14 +46,10 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
       className={`rounded-2xl p-4 text-left ${className}`}
       style={{ backgroundColor: '#3A0D6E' }}
     >
-      {/* 헤더: teal 2px 상·하단 구분선 사이에 흰색 굵은 제목 */}
-      <div className="mb-3 border-t-2" style={{ borderColor: '#14b8a6' }} />
-      <div className="mb-4">
-        <div className="flex items-center gap-1.5">
-          <span aria-hidden="true" className="text-xl">📖</span>
-          <span className="text-xl font-bold text-white">웨스트민스터 신앙고백</span>
-        </div>
-        <div className="mt-3 border-t-2" style={{ borderColor: '#14b8a6' }} />
+      {/* 헤더: 구분선 없이 제목만 (여백으로 자연스럽게 연결) */}
+      <div className="mb-4 flex items-center gap-1.5">
+        <span aria-hidden="true" className="text-xl">📖</span>
+        <span className="text-xl font-bold text-white">웨스트민스터 신앙고백</span>
       </div>
 
       <div className="space-y-2.5">
