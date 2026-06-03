@@ -8,6 +8,8 @@ interface BibleOnItem {
   seq: number;
   youtubeId: string;
   title: string;
+  noteSeq?: number; // 매칭된 말씀나눔지 seq (스크래퍼가 채움)
+  notePdfUrl?: string; // 매칭된 나눔지 PDF 원본 절대 URL (있을 때만 버튼 표시)
 }
 interface BibleOnData {
   updatedAt: string;
@@ -51,6 +53,7 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
   const [data, setData] = useState<BibleOnData | null>(null);
   const [error, setError] = useState(false);
   const [playing, setPlaying] = useState<BibleOnItem | null>(null);
+  const [note, setNote] = useState<BibleOnItem | null>(null); // 말씀나눔지 PDF 뷰어 대상
 
   useEffect(() => {
     let alive = true;
@@ -115,28 +118,41 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
               style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))' }}
             >
               {data.items.map((it) => (
-                <button
-                  key={it.seq}
-                  type="button"
-                  onClick={() => setPlaying(it)}
-                  className="group overflow-hidden rounded-2xl border border-purple-300/20 bg-black/20 text-left transition-colors hover:bg-black/30"
-                >
-                  <div className="relative">
-                    <Thumb id={it.youtubeId} title={it.title} />
-                    {/* 재생 오버레이 */}
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/35">
-                      <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60">
-                        <Play className="h-6 w-6 translate-x-0.5 text-white" fill="white" />
-                      </span>
+                // 카드(영상)와 "말씀나눔지" 버튼은 형제로 배치 — 버튼 중첩(button-in-button) 방지
+                <div key={it.seq} className="flex flex-col">
+                  <button
+                    type="button"
+                    onClick={() => setPlaying(it)}
+                    className="group overflow-hidden rounded-2xl border border-purple-300/20 bg-black/20 text-left transition-colors hover:bg-black/30"
+                  >
+                    <div className="relative">
+                      <Thumb id={it.youtubeId} title={it.title} />
+                      {/* 재생 오버레이 */}
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 transition-colors group-hover:bg-black/35">
+                        <span className="flex h-12 w-12 items-center justify-center rounded-full bg-black/60">
+                          <Play className="h-6 w-6 translate-x-0.5 text-white" fill="white" />
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                  <div className="px-3 py-2.5">
-                    <p className="text-xs font-medium text-teal-300">{it.date}</p>
-                    <p className="mt-0.5 line-clamp-2 text-[15px] font-semibold leading-snug text-white break-keep">
-                      {it.title}
-                    </p>
-                  </div>
-                </button>
+                    <div className="px-3 py-2.5">
+                      <p className="text-xs font-medium text-teal-300">{it.date}</p>
+                      <p className="mt-0.5 line-clamp-2 text-[15px] font-semibold leading-snug text-white break-keep">
+                        {it.title}
+                      </p>
+                    </div>
+                  </button>
+
+                  {/* 말씀나눔지 버튼 — 매칭된 PDF가 있는 항목에만 표시 (영상 아래, 여백으로 분리) */}
+                  {it.notePdfUrl && (
+                    <button
+                      type="button"
+                      onClick={() => setNote(it)}
+                      className="mt-2 flex items-center justify-center gap-1.5 rounded-xl border border-teal-400/40 bg-teal-500/15 py-2 text-sm font-semibold text-teal-100 transition-colors hover:bg-teal-500/25"
+                    >
+                      <span aria-hidden="true">📄</span> 말씀나눔지
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
           )}
@@ -193,6 +209,40 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
                 {playing.title}
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 말씀나눔지 PDF 뷰어 모달 (같은 출처 프록시 → 네이티브 PDF 뷰어로 원본 화질+핀치줌) */}
+      {note?.notePdfUrl && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-2 backdrop-blur-sm sm:p-4"
+          onClick={() => setNote(null)}
+        >
+          <div
+            className="relative flex h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-[#1a0636] shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between gap-2 border-b border-purple-500/20 px-4 py-2.5">
+              <div className="min-w-0">
+                <p className="text-xs font-medium text-teal-300">{note.date} · 말씀나눔지</p>
+                <p className="truncate text-sm font-semibold text-white">{note.title}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setNote(null)}
+                aria-label="닫기"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            <iframe
+              key={note.seq}
+              src={`/api/sermon-note-pdf?url=${encodeURIComponent(note.notePdfUrl)}`}
+              title={`${note.title} 말씀나눔지`}
+              className="h-full w-full flex-1 border-0 bg-white"
+            />
           </div>
         </div>
       )}
