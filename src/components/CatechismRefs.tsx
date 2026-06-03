@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { BookOpen, ChevronDown } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { shorterCatechism } from '@/data/westminsterShorter';
 import BibleVerseModal from '@/components/BibleVerseModal';
 import { refHasValidVerse } from '@/utils/bibleParser';
@@ -46,11 +46,14 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
       className={`rounded-2xl p-4 text-left ${className}`}
       style={{ backgroundColor: '#3A0D6E' }}
     >
-      <div className="flex items-center gap-1.5 pb-3">
-        <BookOpen className="h-4 w-4" style={{ color: '#14b8a6' }} />
-        <span className="text-xs font-medium tracking-wide text-purple-200">
-          웨스트민스터 신앙고백
-        </span>
+      {/* 헤더: teal 2px 상·하단 구분선 사이에 흰색 굵은 제목 */}
+      <div className="mb-3 border-t-2" style={{ borderColor: '#14b8a6' }} />
+      <div className="mb-4">
+        <div className="flex items-center gap-1.5">
+          <span aria-hidden="true" className="text-xl">📖</span>
+          <span className="text-xl font-bold text-white">웨스트민스터 신앙고백</span>
+        </div>
+        <div className="mt-3 border-t-2" style={{ borderColor: '#14b8a6' }} />
       </div>
 
       <div className="space-y-2.5">
