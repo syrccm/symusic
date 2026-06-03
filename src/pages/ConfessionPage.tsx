@@ -49,7 +49,10 @@ function ReferenceList({
   if (validRefs.length === 0) return null;
   return (
     <div className="mt-3">
-      <p className="mb-2 text-sm text-teal-400">성경 구절을 클릭하면 본문이 열립니다</p>
+      <p className="my-3 flex items-center gap-1.5 text-base font-semibold" style={{ color: '#D4AF37' }}>
+        <span aria-hidden="true">📖</span>
+        성경 구절을 클릭하면 본문이 열립니다
+      </p>
       <div className="flex flex-wrap gap-x-2.5 gap-y-1">
         {validRefs.map((ref, i) => (
           <button
