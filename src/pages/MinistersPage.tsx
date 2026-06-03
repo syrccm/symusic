@@ -22,23 +22,113 @@ interface MinistersData {
 const PASTOR_ROLES = ['목사', '강도사', '전임전도사', '교육전도사'] as const;
 // 장로 드롭다운 (시무→은퇴→원로 순)
 const ELDER_SUBROLES = ['시무장로', '은퇴장로', '원로장로'] as const;
-// 팀별사역 드롭다운
 const TEAMS = ['1', '2', '3', '4', '5'] as const;
 const ALL = '전체';
+const UNCLASSIFIED = '미분류';
+
+// 부서 분류 트리 (중간분류 cat → 소분류 sub + 매칭 키워드).
+// 분류는 "교구 우선 → 트리 정의 순서상 첫 매칭" 규칙. 순서가 우선순위이므로
+// 국제사역을 교회학교보다 앞에 둔다(예: "영어청소년부"의 '소년부' 부분문자열 오매칭 방지).
+const DEPT_TREE: { cat: string; subs: { sub: string; kw: string[] }[] }[] = [
+  {
+    cat: '목회행정',
+    subs: [
+      { sub: '목회비서', kw: ['목회비서'] },
+      { sub: '목회행정', kw: ['목회행정', '행정'] },
+      { sub: '로드맵미니스트리', kw: ['로드맵'] },
+    ],
+  },
+  {
+    cat: '국제사역',
+    subs: [
+      { sub: '세계선교', kw: ['세계선교'] },
+      { sub: '일본어예배부', kw: ['일본'] },
+      { sub: '영어청소년부', kw: ['영어청소년'] },
+      { sub: '영어예배부', kw: ['영어예배부'] },
+      { sub: '러시아어예배부', kw: ['러시아'] },
+      { sub: '국제어린이주일학교', kw: ['국제어린이'] },
+      { sub: '인도네시아어예배부', kw: ['인도네시아'] },
+      { sub: '필리핀어예배부', kw: ['필리핀'] },
+      { sub: '캄보디아어예배부', kw: ['캄보디아'] },
+      { sub: '중국어예배부', kw: ['중국'] },
+      { sub: '베트남어예배부', kw: ['베트남'] },
+      { sub: '미얀마어예배부', kw: ['미얀마'] },
+      { sub: '네팔어예배부', kw: ['네팔'] },
+      { sub: '몽골어예배부', kw: ['몽골'] },
+      { sub: '우즈벡어예배부', kw: ['우즈'] },
+    ],
+  },
+  {
+    cat: '긍휼사역',
+    subs: [
+      { sub: '농아부', kw: ['농아'] },
+      { sub: '사랑부', kw: ['사랑부'] },
+      { sub: '상담국', kw: ['상담'] },
+      { sub: '이주민', kw: ['이주민', '난민'] },
+      { sub: '통일선교', kw: ['통일'] },
+    ],
+  },
+  { cat: '찬양국', subs: [{ sub: '', kw: ['찬양국'] }] },
+  { cat: '국내선교', subs: [{ sub: '', kw: ['국내선교'] }] },
+  {
+    cat: '교회학교',
+    subs: [
+      { sub: '영아부', kw: ['영아부'] },
+      { sub: '유아부', kw: ['유아부'] },
+      { sub: '유년부', kw: ['유년부'] },
+      { sub: '유치부', kw: ['유치부'] },
+      { sub: '초등부', kw: ['초등부'] },
+      { sub: '소년부', kw: ['소년부'] },
+      { sub: '중등부', kw: ['중등부'] },
+      { sub: '고등부', kw: ['고등부'] },
+    ],
+  },
+  {
+    cat: '청년국',
+    subs: [
+      { sub: '청년 1팀', kw: ['청년1팀'] },
+      { sub: '청년 2팀', kw: ['청년2팀'] },
+      { sub: '청년 3팀', kw: ['청년3팀'] },
+      { sub: '청년 4팀', kw: ['청년4팀'] },
+    ],
+  },
+  {
+    cat: '협동목사',
+    subs: [
+      { sub: '협동목사', kw: ['협동목사'] },
+      { sub: '서울로교회', kw: ['서울로교회'] },
+    ],
+  },
+  { cat: '목회개발', subs: [{ sub: '', kw: ['목회개발'] }] },
+];
+const DEPT_CATS = DEPT_TREE.map((c) => c.cat);
+const catHasSubs = (cat: string) =>
+  (DEPT_TREE.find((c) => c.cat === cat)?.subs ?? []).some((s) => s.sub !== '');
 
 // 검색 정규화: 공백 제거 + 소문자
 const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 
-// department에서 "○○교구"(십의자리 1~5) 추출 → 교구번호 / 팀(십의자리)
-// 주의: "청년1팀" 등은 '교구' 글자가 없어 매칭되지 않음(=교구 아님)
+// department에서 "○○교구"(십의자리 1~5) 추출
 const guOf = (dept: string): number | null => {
   const m = (dept || '').match(/([1-5]\d)\s*교구/);
   return m ? parseInt(m[1], 10) : null;
 };
-const teamOf = (dept: string): number | null => {
-  const g = guOf(dept);
-  return g ? Math.floor(g / 10) : null;
-};
+
+// 교역자 1명 분류: 교구 우선 → 부서 트리 첫 매칭 → 미분류
+type Classified =
+  | { kind: 'team'; team: number; gu: number }
+  | { kind: 'dept'; cat: string; sub: string }
+  | { kind: 'unclassified' };
+function classify(dept: string): Classified {
+  const gu = guOf(dept);
+  if (gu != null) return { kind: 'team', team: Math.floor(gu / 10), gu };
+  for (const { cat, subs } of DEPT_TREE) {
+    for (const { sub, kw } of subs) {
+      if (kw.some((k) => dept.includes(k))) return { kind: 'dept', cat, sub };
+    }
+  }
+  return { kind: 'unclassified' };
+}
 
 // ISO → "YYYY.MM.DD"
 function fmtDate(iso: string): string {
@@ -101,7 +191,11 @@ function Grid({ items, onSelect }: { items: Minister[]; onSelect: (m: Minister) 
       style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))' }}
     >
       {items.map((m) => (
-        <Card key={`${m.role}-${m.subRole ?? ''}-${m.name}-${m.order}`} m={m} onClick={() => onSelect(m)} />
+        <Card
+          key={`${m.role}-${m.subRole ?? ''}-${m.name}-${m.order}`}
+          m={m}
+          onClick={() => onSelect(m)}
+        />
       ))}
     </div>
   );
@@ -121,7 +215,7 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
   // 드롭다운 3개 (기본값 모두 "전체")
   const [pastorFilter, setPastorFilter] = useState<string>(ALL); // 목회자
   const [elderFilter, setElderFilter] = useState<string>(ALL); // 장로
-  const [teamFilter, setTeamFilter] = useState<string>(ALL); // 팀별사역
+  const [teamFilter, setTeamFilter] = useState<string>(ALL); // 팀별사역(교구/부서/미분류)
   const [query, setQuery] = useState('');
 
   useEffect(() => {
@@ -141,19 +235,18 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
   // 상호 배타 + 자동 전환 (어떤 드롭다운도 disabled 하지 않음)
   const onPastor = (v: string) => {
     setPastorFilter(v);
-    if (v !== ALL) setElderFilter(ALL); // 목회자 선택 → 장로 모드 해제
+    if (v !== ALL) setElderFilter(ALL);
   };
   const onElder = (v: string) => {
     setElderFilter(v);
     if (v !== ALL) {
-      // 장로 모드 → 목회자·팀 리셋(장로엔 팀 미적용)
       setPastorFilter(ALL);
       setTeamFilter(ALL);
     }
   };
   const onTeam = (v: string) => {
     setTeamFilter(v);
-    if (v !== ALL) setElderFilter(ALL); // 팀은 목회자 모드와 결합 → 장로 모드 해제
+    if (v !== ALL) setElderFilter(ALL);
   };
 
   // 인원수 집계 (드롭다운 라벨 병기용)
@@ -161,8 +254,10 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
     const roles: Record<string, number> = {};
     const elders: Record<string, number> = {};
     const teams: Record<string, number> = {};
+    const cats: Record<string, number> = {};
     let elderTotal = 0;
     let nonElder = 0;
+    let unclassified = 0;
     data?.ministers.forEach((m) => {
       if (m.role === '장로') {
         elderTotal += 1;
@@ -171,10 +266,12 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
       }
       nonElder += 1;
       roles[m.role] = (roles[m.role] ?? 0) + 1;
-      const t = teamOf(m.department);
-      if (t) teams[String(t)] = (teams[String(t)] ?? 0) + 1;
+      const c = classify(m.department);
+      if (c.kind === 'team') teams[String(c.team)] = (teams[String(c.team)] ?? 0) + 1;
+      else if (c.kind === 'dept') cats[c.cat] = (cats[c.cat] ?? 0) + 1;
+      else unclassified += 1;
     });
-    return { roles, elders, teams, elderTotal, nonElder };
+    return { roles, elders, teams, cats, elderTotal, nonElder, unclassified };
   }, [data]);
 
   // 정렬 비교자
@@ -185,7 +282,7 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
     ELDER_SUBROLES.indexOf(a.subRole as (typeof ELDER_SUBROLES)[number]) -
       ELDER_SUBROLES.indexOf(b.subRole as (typeof ELDER_SUBROLES)[number]) || a.order - b.order;
 
-  // 최종 표시 결과: 평면 리스트 또는 교구별 그룹
+  // 최종 표시 결과: 평면 리스트 또는 (교구/소분류) 그룹
   const view = useMemo(() => {
     if (!data) return { mode: 'flat' as const, items: [] as Minister[] };
     const q = norm(query);
@@ -195,7 +292,7 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
     const elders = data.ministers.filter((m) => m.role === '장로');
     const pastors = data.ministers.filter((m) => m.role !== '장로');
 
-    // 1) 장로 모드 (장로 드롭다운이 '전체'가 아님)
+    // 1) 장로 모드
     if (elderFilter !== ALL) {
       const items = elders
         .filter((m) => m.subRole === elderFilter)
@@ -209,10 +306,24 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
     if (pastorFilter !== ALL) pool = pool.filter((m) => m.role === pastorFilter);
     pool = pool.filter(matchQ);
 
-    // 2-a) 팀별사역 선택 → 목회자 풀에서 교구 그룹핑
-    if (teamFilter !== ALL) {
+    // 2-a) 팀별사역 = 전체
+    if (teamFilter === ALL) {
+      if (pastorFilter === ALL) {
+        return {
+          mode: 'flat' as const,
+          items: [...pool.slice().sort(byRoleOrder), ...elders.filter(matchQ).sort(byElderOrder)],
+        };
+      }
+      return { mode: 'flat' as const, items: pool.slice().sort(byRoleOrder) };
+    }
+
+    // 2-b) 교구(1~5팀) → 교구번호 그룹핑
+    if (TEAMS.includes(teamFilter as (typeof TEAMS)[number])) {
       const teamNum = parseInt(teamFilter, 10);
-      const inTeam = pool.filter((m) => teamOf(m.department) === teamNum);
+      const inTeam = pool.filter((m) => {
+        const c = classify(m.department);
+        return c.kind === 'team' && c.team === teamNum;
+      });
       const byGu = new Map<number, Minister[]>();
       inTeam.forEach((m) => {
         const g = guOf(m.department)!;
@@ -225,17 +336,36 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
       return { mode: 'grouped' as const, groups };
     }
 
-    // 2-b) 팀 '전체' + 목회자 '전체' + 장로 '전체' → 전체 명단(목회자 + 장로)
-    if (pastorFilter === ALL) {
-      const items = [
-        ...pool.slice().sort(byRoleOrder),
-        ...elders.filter(matchQ).sort(byElderOrder),
-      ];
+    // 2-c) 미분류
+    if (teamFilter === UNCLASSIFIED) {
+      const items = pool
+        .filter((m) => classify(m.department).kind === 'unclassified')
+        .sort(byRoleOrder);
       return { mode: 'flat' as const, items };
     }
 
-    // 2-c) 특정 목회자 직분만
-    return { mode: 'flat' as const, items: pool.slice().sort(byRoleOrder) };
+    // 2-d) 부서 중간분류
+    const catDef = DEPT_TREE.find((c) => c.cat === teamFilter);
+    const inCat = pool.filter((m) => {
+      const c = classify(m.department);
+      return c.kind === 'dept' && c.cat === teamFilter;
+    });
+    if (!catDef || !catHasSubs(teamFilter)) {
+      return { mode: 'flat' as const, items: inCat.sort(byRoleOrder) };
+    }
+    // 소분류별 그룹핑 (트리 정의 순서대로)
+    const bySub = new Map<string, Minister[]>();
+    inCat.forEach((m) => {
+      const c = classify(m.department);
+      const sub = c.kind === 'dept' ? c.sub || '기타' : '기타';
+      if (!bySub.has(sub)) bySub.set(sub, []);
+      bySub.get(sub)!.push(m);
+    });
+    const order = catDef.subs.map((s) => s.sub);
+    const groups = order
+      .filter((s) => bySub.has(s))
+      .map((s) => ({ title: s, items: bySub.get(s)!.sort(byRoleOrder) }));
+    return { mode: 'grouped' as const, groups };
   }, [data, pastorFilter, elderFilter, teamFilter, query]);
 
   const totalShown =
@@ -328,7 +458,7 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
               <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
             </div>
 
-            {/* 팀별사역 */}
+            {/* 팀별사역: 교구(1~5팀) + 부서 9분류 + 미분류 (optgroup으로 구분) */}
             <div className="relative flex min-w-0 items-center">
               <select
                 value={teamFilter}
@@ -337,11 +467,25 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
                 className={selCls(teamFilter !== ALL)}
               >
                 <option value={ALL}>팀별사역: 전체</option>
-                {TEAMS.map((t) => (
-                  <option key={t} value={t}>
-                    {t}팀 ({counts.teams[t] ?? 0})
+                <optgroup label="교구(팀)">
+                  {TEAMS.map((t) => (
+                    <option key={t} value={t}>
+                      {t}팀 ({counts.teams[t] ?? 0})
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="부서">
+                  {DEPT_CATS.map((c) => (
+                    <option key={c} value={c}>
+                      {c} ({counts.cats[c] ?? 0})
+                    </option>
+                  ))}
+                </optgroup>
+                <optgroup label="기타">
+                  <option value={UNCLASSIFIED}>
+                    {UNCLASSIFIED} ({counts.unclassified})
                   </option>
-                ))}
+                </optgroup>
               </select>
               <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
             </div>
