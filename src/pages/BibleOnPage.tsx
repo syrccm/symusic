@@ -213,7 +213,7 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
         </div>
       )}
 
-      {/* 말씀나눔지 PDF 뷰어 모달 (같은 출처 프록시 → 네이티브 PDF 뷰어로 원본 화질+핀치줌) */}
+      {/* 말씀나눔지 PDF 뷰어 모달 (저장소에 미러된 정적 PDF → 네이티브 뷰어로 원본 화질+핀치줌) */}
       {note?.notePdfUrl && (
         <div
           className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-2 backdrop-blur-sm sm:p-4"
@@ -239,7 +239,7 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
             </div>
             <iframe
               key={note.seq}
-              src={`/api/sermon-note-pdf?url=${encodeURIComponent(note.notePdfUrl)}`}
+              src={note.notePdfUrl}
               title={`${note.title} 말씀나눔지`}
               className="h-full w-full flex-1 border-0 bg-white"
             />

@@ -29,18 +29,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # 순서 중요: 영상 목록 갱신 → 나눔지 미러링+매핑+만료정리
       - name: Scrape bibleon
         run: node scripts/scrape-bibleon.mjs
 
+      - name: Scrape & mirror sermon notes
+        run: node scripts/scrape-sermon-notes.mjs
+
       - name: Commit changes if any
         run: |
-          if [ -n "$(git status --porcelain public/data/bibleon.json)" ]; then
+          # notes/ PDF 추가·삭제까지 포함해 public/data 전체 변경분을 스테이징
+          git add -A public/data
+          if [ -n "$(git status --porcelain public/data)" ]; then
             git config user.name "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add public/data/bibleon.json
-            git commit -m "chore(bibleon): 말씀:ON 목록 자동 갱신"
+            git commit -m "chore(bibleon): 말씀:ON 목록·말씀나눔지 자동 갱신"
             git push
-            echo "말씀:ON 변경분 커밋 완료"
+            echo "말씀:ON/말씀나눔지 변경분 커밋 완료"
           else
             echo "변경 없음 — 커밋 생략"
           fi
