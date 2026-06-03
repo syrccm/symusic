@@ -107,7 +107,7 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
                             style={{ color: '#D4AF37' }}
                           >
                             <span aria-hidden="true">📖</span>
-                            성경 구절을 클릭하면 본문이 열립니다
+                            아래 성경 구절을 클릭하면 본문이 열립니다
                           </p>
                           <div className="flex flex-wrap gap-x-2.5 gap-y-1">
                             {validRefs.map((ref, i) => (
