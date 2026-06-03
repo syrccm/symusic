@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-06-03T08:13:56.869Z",
+  "updatedAt": "2026-06-03T10:13:53.046Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/minister.jsp",
-  "count": 146,
+  "count": 161,
   "ministers": [
     {
       "role": "목사",
@@ -964,66 +964,195 @@
     },
     {
       "role": "장로",
-      "name": "김종렬",
-      "photoUrl": "/data/ministers/203cdc2c9552.gif",
-      "department": "세계선교/재산관리",
+      "subRole": "원로장로",
+      "name": "허진호",
+      "photoUrl": "/data/ministers/ed506a17669d.jpg",
+      "department": "시무기간: 1988.10.29 ~ 2016.06.08",
       "order": 0
     },
     {
       "role": "장로",
-      "name": "최은종",
-      "photoUrl": "/data/ministers/20210f34c16a.gif",
-      "department": "긍휼/유치원/엘레브/건축위원장/러브부산",
+      "subRole": "원로장로",
+      "name": "구자봉",
+      "photoUrl": "/data/ministers/f21b0354ea9c.gif",
+      "department": "시무기간: 1994.06.08 ~ 2021.06.06",
       "order": 1
     },
     {
       "role": "장로",
-      "name": "김상옥",
-      "photoUrl": "/data/ministers/7d9cbc668052.png",
-      "department": "재정/전문특화",
+      "subRole": "원로장로",
+      "name": "구진윤",
+      "photoUrl": "/data/ministers/6e295bf547bf.gif",
+      "department": "시무기간: 2003.01.01 ~ 2024.06.05",
       "order": 2
     },
     {
       "role": "장로",
-      "name": "이성욱",
-      "photoUrl": "/data/ministers/58d861475e8c.png",
-      "department": "서기",
+      "subRole": "원로장로",
+      "name": "김영식",
+      "photoUrl": "/data/ministers/215aa8c3165c.gif",
+      "department": "시무기간: 2003.01.01 ~ 2024.06.05",
       "order": 3
     },
     {
       "role": "장로",
-      "name": "김종환",
-      "photoUrl": "/data/ministers/597018eeb57b.png",
-      "department": "예배집회/양육훈련/가정사역/재산관리",
+      "subRole": "은퇴장로",
+      "name": "선우원보",
+      "photoUrl": "/data/ministers/7b4967c5e741.gif",
+      "department": "시무기간: 2004.10.20 ~ 2008.06.04",
       "order": 4
     },
     {
       "role": "장로",
-      "name": "신용출",
-      "photoUrl": "/data/ministers/9413628433c0.png",
-      "department": "국제/교구/사랑방/재산관리",
+      "subRole": "은퇴장로",
+      "name": "김종호",
+      "photoUrl": "/data/ministers/e05d2108fb77.gif",
+      "department": "시무기간: 1994.06.08 ~ 2011.06.08",
       "order": 5
     },
     {
       "role": "장로",
-      "name": "홍승범",
-      "photoUrl": "/data/ministers/4dd98ce3459a.png",
-      "department": "국내통일선교/감사",
+      "subRole": "은퇴장로",
+      "name": "배종현",
+      "photoUrl": "/data/ministers/be1894a67ea4.gif",
+      "department": "시무기간: 1994.06.08 ~ 2011.06.08",
       "order": 6
     },
     {
       "role": "장로",
-      "name": "이장호",
-      "photoUrl": "/data/ministers/c9491dbd7a36.png",
-      "department": "다음세대/로드맵",
+      "subRole": "은퇴장로",
+      "name": "박노춘",
+      "photoUrl": "/data/ministers/e0cd67ab4d80.gif",
+      "department": "시무기간: 2004.06.02 ~ 2012.06.06",
       "order": 7
     },
     {
       "role": "장로",
+      "subRole": "은퇴장로",
+      "name": "권우영",
+      "photoUrl": "/data/ministers/bc7df99b8838.gif",
+      "department": "시무기간: 2010.06.09 ~ 2016.06.08",
+      "order": 8
+    },
+    {
+      "role": "장로",
+      "subRole": "은퇴장로",
+      "name": "김부환",
+      "photoUrl": "/data/ministers/6f0c6a7754c6.gif",
+      "department": "시무기간: 2003.01.01 ~ 2017.06.01",
+      "order": 9
+    },
+    {
+      "role": "장로",
+      "subRole": "은퇴장로",
+      "name": "김대륙",
+      "photoUrl": "/data/ministers/a6031ad4dc2d.gif",
+      "department": "시무기간: 2004.10.20 ~ 2017.06.01",
+      "order": 10
+    },
+    {
+      "role": "장로",
+      "subRole": "은퇴장로",
+      "name": "조경일",
+      "photoUrl": "/data/ministers/3a0e642cf5ec.gif",
+      "department": "시무기간: 2004.10.20 ~ 2023.06.21",
+      "order": 11
+    },
+    {
+      "role": "장로",
+      "subRole": "은퇴장로",
+      "name": "황보재호",
+      "photoUrl": "/data/ministers/bbb5c5bbeea8.gif",
+      "department": "시무기간: 2010.06.09 ~ 2024.06.05",
+      "order": 12
+    },
+    {
+      "role": "장로",
+      "subRole": "은퇴장로",
+      "name": "최점일",
+      "photoUrl": "/data/ministers/9a745b8e4941.png",
+      "department": "시무기간: 2016.06.08 ~ 2024.06.05",
+      "order": 13
+    },
+    {
+      "role": "장로",
+      "subRole": "은퇴장로",
+      "name": "천현욱",
+      "photoUrl": "/data/ministers/c37d7becde6c.png",
+      "department": "시무기간: 2016.06.08 ~ 2025.06.04",
+      "order": 14
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
+      "name": "김종렬",
+      "photoUrl": "/data/ministers/203cdc2c9552.gif",
+      "department": "세계선교/재산관리",
+      "order": 15
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
+      "name": "최은종",
+      "photoUrl": "/data/ministers/20210f34c16a.gif",
+      "department": "긍휼/유치원/엘레브/건축위원장/러브부산",
+      "order": 16
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
+      "name": "김상옥",
+      "photoUrl": "/data/ministers/7d9cbc668052.png",
+      "department": "재정/전문특화",
+      "order": 17
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
+      "name": "이성욱",
+      "photoUrl": "/data/ministers/58d861475e8c.png",
+      "department": "서기",
+      "order": 18
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
+      "name": "김종환",
+      "photoUrl": "/data/ministers/597018eeb57b.png",
+      "department": "예배집회/양육훈련/가정사역/재산관리",
+      "order": 19
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
+      "name": "신용출",
+      "photoUrl": "/data/ministers/9413628433c0.png",
+      "department": "국제/교구/사랑방/재산관리",
+      "order": 20
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
+      "name": "홍승범",
+      "photoUrl": "/data/ministers/4dd98ce3459a.png",
+      "department": "국내통일선교/감사",
+      "order": 21
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
+      "name": "이장호",
+      "photoUrl": "/data/ministers/c9491dbd7a36.png",
+      "department": "다음세대/로드맵",
+      "order": 22
+    },
+    {
+      "role": "장로",
+      "subRole": "시무장로",
       "name": "구경부",
       "photoUrl": "/data/ministers/784c91d5e833.png",
       "department": "청년/장학위원회/감사",
-      "order": 8
+      "order": 23
     }
   ]
 }

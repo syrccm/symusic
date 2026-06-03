@@ -34,7 +34,7 @@ const SOURCES = [
   { role: '강도사', url: `${BASE}/minist_list.jsp?duty=61`, type: 'list' },
   { role: '전임전도사', url: `${BASE}/minist_list.jsp?duty=51,52,57`, type: 'list' },
   { role: '교육전도사', url: `${BASE}/minist_list.jsp?duty=53`, type: 'list' },
-  { role: '장로', url: `${BASE}/minister_05.jsp`, type: 'elder', section: '시무장로' },
+  { role: '장로', url: `${BASE}/minister_05.jsp`, type: 'elder' },
 ];
 
 // text_box01 의 "이름 직분"에서 직분 접미사를 떼어 이름만 추출
@@ -62,7 +62,8 @@ async function fetchText(url, cookie) {
 }
 
 // div-box 한 개(=교역자 1명)를 정규화. 제외 대상이면 null.
-function parseBox($, el, role) {
+// subRole: 장로 세부 분류('시무장로'|'은퇴장로'|'원로장로'), 그 외엔 ''.
+function parseBox($, el, role, subRole = '') {
   const $el = $(el);
   if (($el.attr('style') || '').includes('display:none')) return null; // 숨김 카드 제외
 
@@ -85,12 +86,22 @@ function parseBox($, el, role) {
     if (/^사역\s*[:：]/.test(t)) department = t.replace(/^사역\s*[:：]\s*/, '').trim();
     else if (/담당사역/.test(t)) department = t.replace(/^담당사역\s*[:：]?\s*/, '').trim();
   }
-  // elder 폴백: 시무기간/추대일이 아닌 첫 줄을 담당으로
   if (!department && role === '장로') {
-    department = ps.find((t) => t && !/^시무기간|^추\s*대\s*일/.test(t)) || '';
+    // 시무장로: 라벨 없는 담당 줄. 은퇴·원로장로: 담당사역이 없으므로 시무기간을 표시.
+    department =
+      ps.find((t) => t && !/^시무기간|^추\s*대\s*일/.test(t)) ||
+      ps.find((t) => /^시무기간/.test(t)) ||
+      '';
   }
 
-  return { role, name, department, absUrl, photoUrl: `/data/ministers/${photoFileName(absUrl)}` };
+  return {
+    role,
+    subRole,
+    name,
+    department,
+    absUrl,
+    photoUrl: `/data/ministers/${photoFileName(absUrl)}`,
+  };
 }
 
 function parseList(html, role) {
@@ -103,15 +114,16 @@ function parseList(html, role) {
   return out;
 }
 
-// 장로: minister_title(원로/은퇴/시무) 섹션 중 지정 섹션만
-function parseElder(html, role, section) {
+// 장로: minister_title(원로/은퇴/시무) 세 섹션 전체를 분류(subRole)와 함께 수집
+function parseElder(html, role) {
   const $ = load(html);
   const out = [];
   $('.minister_title').each((_, t) => {
-    if ($(t).text().trim() !== section) return;
+    const subRole = $(t).text().trim(); // '원로장로' | '은퇴장로' | '시무장로'
+    if (!/장로$/.test(subRole)) return;
     const $block = $(t).nextAll('.minister').first();
     $block.find('.div-box').each((_, el) => {
-      const m = parseBox($, el, role);
+      const m = parseBox($, el, role, subRole);
       if (m) out.push(m);
     });
   });
@@ -140,7 +152,7 @@ async function main() {
   const ministers = [];
   for (const s of SOURCES) {
     const { html } = await fetchText(s.url, cookie);
-    const items = s.type === 'elder' ? parseElder(html, s.role, s.section) : parseList(html, s.role);
+    const items = s.type === 'elder' ? parseElder(html, s.role) : parseList(html, s.role);
     items.forEach((m, i) => ministers.push({ ...m, order: i }));
     console.log(`[2/4] ${s.role}: ${items.length}명`);
   }
@@ -176,8 +188,9 @@ async function main() {
     updatedAt: new Date().toISOString(),
     source: REFERER,
     count: ministers.length,
-    ministers: ministers.map(({ role, name, photoUrl, department, order }) => ({
+    ministers: ministers.map(({ role, subRole, name, photoUrl, department, order }) => ({
       role,
+      ...(subRole ? { subRole } : {}),
       name,
       photoUrl,
       department,
