@@ -18,8 +18,9 @@ interface MinistersData {
   ministers: Minister[];
 }
 
-// 목회자 직분(장로 제외, 직제 순)
-const PASTOR_ROLES = ['목사', '강도사', '전임전도사', '교육전도사'] as const;
+// 교역자 직분(장로 제외, 직제 순)
+const CLERGY_ROLES = ['목사', '강도사', '전임전도사', '교육전도사'] as const;
+const DEFAULT_CLERGY = '목사'; // 첫 진입 및 셋 다 미선택 복귀 시 기본 표시 직분
 // 장로 세부 (시무→은퇴→원로 순)
 const ELDER_SUBROLES = ['시무장로', '은퇴장로', '원로장로'] as const;
 const TEAMS = ['1', '2', '3', '4', '5'] as const;
@@ -111,7 +112,7 @@ const guOf = (dept: string): number | null => {
   return m ? parseInt(m[1], 10) : null;
 };
 
-// 교역자(목회자) 1명 분류: 교구 우선 → 부서 트리 첫 매칭 → 기타 사역.
+// 교역자 1명 분류: 교구 우선 → 부서 트리 첫 매칭 → 기타 사역.
 // ※ 장로는 호출 전에 role로 걸러지므로 절대 여기로 오지 않는다.
 type Classified =
   | { kind: 'team'; team: number; gu: number }
@@ -210,8 +211,9 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
   const [error, setError] = useState(false);
   const [selected, setSelected] = useState<Minister | null>(null);
 
-  // 드롭다운 3개 — 기본은 모두 "선택 안 함"(NONE). 한 번에 하나만 활성.
-  const [pastorSel, setPastorSel] = useState<string>(NONE);
+  // 드롭다운 3개 — 한 번에 하나만 활성. 교역자는 기본 '목사'(첫 진입 시 목사 그룹 즉시 표시),
+  // 팀별·장로는 미선택(NONE)으로 시작.
+  const [clergySel, setClergySel] = useState<string>(DEFAULT_CLERGY);
   const [teamSel, setTeamSel] = useState<string>(NONE);
   const [elderSel, setElderSel] = useState<string>(NONE);
 
@@ -229,20 +231,21 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
     };
   }, []);
 
-  // 상호 배타: 한 드롭다운 선택 시 나머지 둘 리셋 (한 번에 하나의 기준만)
-  const onPastor = (v: string) => {
-    setPastorSel(v);
+  // 상호 배타: 한 드롭다운 선택 시 나머지 둘 리셋 (한 번에 하나의 기준만).
+  // 교역자는 비울 수 없음 — 팀별/장로를 해제(NONE)해 셋 다 미선택이 되면 교역자=목사로 복귀(빈 화면 방지).
+  const onClergy = (v: string) => {
+    setClergySel(v || DEFAULT_CLERGY);
     setTeamSel(NONE);
     setElderSel(NONE);
   };
   const onTeam = (v: string) => {
     setTeamSel(v);
-    setPastorSel(NONE);
+    setClergySel(v ? NONE : DEFAULT_CLERGY);
     setElderSel(NONE);
   };
   const onElder = (v: string) => {
     setElderSel(v);
-    setPastorSel(NONE);
+    setClergySel(v ? NONE : DEFAULT_CLERGY);
     setTeamSel(NONE);
   };
 
@@ -269,23 +272,23 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
 
   // 정렬 비교자
   const byRoleOrder = (a: Minister, b: Minister) =>
-    PASTOR_ROLES.indexOf(a.role as (typeof PASTOR_ROLES)[number]) -
-      PASTOR_ROLES.indexOf(b.role as (typeof PASTOR_ROLES)[number]) || a.order - b.order;
+    CLERGY_ROLES.indexOf(a.role as (typeof CLERGY_ROLES)[number]) -
+      CLERGY_ROLES.indexOf(b.role as (typeof CLERGY_ROLES)[number]) || a.order - b.order;
   const byElderOrder = (a: Minister, b: Minister) =>
     ELDER_SUBROLES.indexOf(a.subRole as (typeof ELDER_SUBROLES)[number]) -
       ELDER_SUBROLES.indexOf(b.subRole as (typeof ELDER_SUBROLES)[number]) || a.order - b.order;
 
-  const hasSelection = Boolean(pastorSel || teamSel || elderSel);
+  const hasSelection = Boolean(clergySel || teamSel || elderSel);
 
   // 표시 결과. mode: 'idle'(안내) | 'flat' | 'grouped'
   const view = useMemo(() => {
     if (!data) return { mode: 'idle' as const };
     const elders = data.ministers.filter((m) => m.role === '장로');
-    const pastors = data.ministers.filter((m) => m.role !== '장로'); // 목회자 = role 기준
+    const clergy = data.ministers.filter((m) => m.role !== '장로'); // 교역자 = role 기준
 
-    // 1) 목회자 직분
-    if (pastorSel) {
-      return { mode: 'flat' as const, items: pastors.filter((m) => m.role === pastorSel).sort(byRoleOrder) };
+    // 1) 교역자 직분
+    if (clergySel) {
+      return { mode: 'flat' as const, items: clergy.filter((m) => m.role === clergySel).sort(byRoleOrder) };
     }
 
     // 2) 장로 분류
@@ -293,11 +296,11 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
       return { mode: 'flat' as const, items: elders.filter((m) => m.subRole === elderSel).sort(byElderOrder) };
     }
 
-    // 3) 팀별 (장로 원천 제외: pastors 대상)
+    // 3) 팀별 (장로 원천 제외: clergy 대상)
     if (teamSel) {
       if (TEAMS.includes(teamSel as (typeof TEAMS)[number])) {
         const teamNum = parseInt(teamSel, 10);
-        const inTeam = pastors.filter((m) => {
+        const inTeam = clergy.filter((m) => {
           const c = classify(m.department);
           return c.kind === 'team' && c.team === teamNum;
         });
@@ -315,12 +318,12 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
       if (teamSel === ETC) {
         return {
           mode: 'flat' as const,
-          items: pastors.filter((m) => classify(m.department).kind === 'etc').sort(byRoleOrder),
+          items: clergy.filter((m) => classify(m.department).kind === 'etc').sort(byRoleOrder),
         };
       }
       // 부서 중간분류
       const catDef = DEPT_TREE.find((c) => c.cat === teamSel);
-      const inCat = pastors.filter((m) => {
+      const inCat = clergy.filter((m) => {
         const c = classify(m.department);
         return c.kind === 'dept' && c.cat === teamSel;
       });
@@ -343,7 +346,7 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
 
     // 4) 아무 것도 선택 안 됨 → 안내
     return { mode: 'idle' as const };
-  }, [data, pastorSel, teamSel, elderSel]);
+  }, [data, clergySel, teamSel, elderSel]);
 
   const totalShown =
     view.mode === 'flat'
@@ -383,20 +386,20 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
             </button>
           </div>
 
-          {/* 드롭다운 3개 (좌→우: 목회자 / 팀별 / 장로). flex-nowrap + 각 flex-1 균등분할 →
+          {/* 드롭다운 3개 (좌→우: 교역자 / 팀별 / 장로). flex-nowrap + 각 flex-1 균등분할 →
               어떤 선택값(길어도)에서도 한 줄 유지, 넘치면 말줄임(truncate).
               ※ <select>를 <label>로 감싸면 크롬에서 클릭 시 팝업이 즉시 닫히므로 <div> + aria-label. */}
           <div className="mt-2.5 flex flex-nowrap items-stretch gap-2">
-            {/* 목회자 */}
+            {/* 교역자 */}
             <div className="relative flex flex-1 min-w-0 items-center">
               <select
-                value={pastorSel}
-                onChange={(e) => onPastor(e.target.value)}
-                aria-label="목회자 직분 선택"
-                className={selCls(pastorSel !== NONE)}
+                value={clergySel}
+                onChange={(e) => onClergy(e.target.value)}
+                aria-label="교역자 직분 선택"
+                className={selCls(clergySel !== NONE)}
               >
-                <option value={NONE}>목회자 ▾</option>
-                {PASTOR_ROLES.map((r) => (
+                <option value={NONE}>교역자 ▾</option>
+                {CLERGY_ROLES.map((r) => (
                   <option key={r} value={r}>
                     {r} ({counts.roles[r] ?? 0})
                   </option>
