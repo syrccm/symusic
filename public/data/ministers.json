@@ -1,0 +1,1029 @@
+{
+  "updatedAt": "2026-06-03T08:13:56.869Z",
+  "source": "https://www.sooyoungro.org/main/new-layout/syrintro/minister.jsp",
+  "count": 146,
+  "ministers": [
+    {
+      "role": "목사",
+      "name": "이현우",
+      "photoUrl": "/data/ministers/360a64f3d9cb.jpg",
+      "department": "목회행정",
+      "order": 0
+    },
+    {
+      "role": "목사",
+      "name": "김나빈",
+      "photoUrl": "/data/ministers/8d17334c0078.jpg",
+      "department": "목회비서(기획)",
+      "order": 1
+    },
+    {
+      "role": "목사",
+      "name": "박정욱",
+      "photoUrl": "/data/ministers/0be57a35c2a2.jpg",
+      "department": "교구총괄/14교구",
+      "order": 2
+    },
+    {
+      "role": "목사",
+      "name": "김호진",
+      "photoUrl": "/data/ministers/4e224155ce60.jpg",
+      "department": "로드맵미니스트리총괄",
+      "order": 3
+    },
+    {
+      "role": "목사",
+      "name": "이승목",
+      "photoUrl": "/data/ministers/a807db155434.jpg",
+      "department": "사랑방총괄/34교구",
+      "order": 4
+    },
+    {
+      "role": "목사",
+      "name": "송기식",
+      "photoUrl": "/data/ministers/40c52520d9ab.jpg",
+      "department": "다음세대총괄/중등부",
+      "order": 5
+    },
+    {
+      "role": "목사",
+      "name": "김배광",
+      "photoUrl": "/data/ministers/e48906b15fec.jpg",
+      "department": "청년총괄/청년1팀 야베스",
+      "order": 6
+    },
+    {
+      "role": "목사",
+      "name": "박형석",
+      "photoUrl": "/data/ministers/88139ec49647.jpg",
+      "department": "예배・집회총괄/44교구",
+      "order": 7
+    },
+    {
+      "role": "목사",
+      "name": "양이삭",
+      "photoUrl": "/data/ministers/0f39eb1bcab7.jpg",
+      "department": "양육훈련총괄/43교구",
+      "order": 8
+    },
+    {
+      "role": "목사",
+      "name": "이창선",
+      "photoUrl": "/data/ministers/e9a636495ac4.jpg",
+      "department": "가정사역영역총괄/51교구",
+      "order": 9
+    },
+    {
+      "role": "목사",
+      "name": "오상윤",
+      "photoUrl": "/data/ministers/1df576c843d9.jpg",
+      "department": "국내・통일선교총괄/53교구",
+      "order": 10
+    },
+    {
+      "role": "목사",
+      "name": "강재모",
+      "photoUrl": "/data/ministers/faebf3a7bcb3.jpg",
+      "department": "세계선교영역총괄",
+      "order": 11
+    },
+    {
+      "role": "목사",
+      "name": "오기훈",
+      "photoUrl": "/data/ministers/c31fbd4fb9bf.png",
+      "department": "국제사역총괄/이주민/난민사역",
+      "order": 12
+    },
+    {
+      "role": "목사",
+      "name": "박정권",
+      "photoUrl": "/data/ministers/04516e978788.jpg",
+      "department": "긍휼영역총괄/농아부",
+      "order": 13
+    },
+    {
+      "role": "목사",
+      "name": "김병호",
+      "photoUrl": "/data/ministers/7c8959b88cd5.jpg",
+      "department": "전문특화영역총괄/24교구",
+      "order": 14
+    },
+    {
+      "role": "목사",
+      "name": "강석",
+      "photoUrl": "/data/ministers/8463d0925824.jpg",
+      "department": "25교구",
+      "order": 15
+    },
+    {
+      "role": "목사",
+      "name": "구자명",
+      "photoUrl": "/data/ministers/26e59afa7ee3.jpg",
+      "department": "52교구",
+      "order": 16
+    },
+    {
+      "role": "목사",
+      "name": "김대언",
+      "photoUrl": "/data/ministers/be4c2315d0b7.jpg",
+      "department": "11교구",
+      "order": 17
+    },
+    {
+      "role": "목사",
+      "name": "김병화",
+      "photoUrl": "/data/ministers/d1296b4fe67e.png",
+      "department": "찬양국",
+      "order": 18
+    },
+    {
+      "role": "목사",
+      "name": "김성민",
+      "photoUrl": "/data/ministers/b82136fc83cb.jpg",
+      "department": "41교구",
+      "order": 19
+    },
+    {
+      "role": "목사",
+      "name": "김성훈",
+      "photoUrl": "/data/ministers/a3a5079bb127.jpg",
+      "department": "중등부",
+      "order": 20
+    },
+    {
+      "role": "목사",
+      "name": "김세현",
+      "photoUrl": "/data/ministers/b84f679b985a.jpg",
+      "department": "유치부",
+      "order": 21
+    },
+    {
+      "role": "목사",
+      "name": "김신",
+      "photoUrl": "/data/ministers/a4b389bcb226.jpg",
+      "department": "42교구",
+      "order": 22
+    },
+    {
+      "role": "목사",
+      "name": "김영상",
+      "photoUrl": "/data/ministers/f741e7b21d10.jpg",
+      "department": "고등부",
+      "order": 23
+    },
+    {
+      "role": "목사",
+      "name": "김영섭",
+      "photoUrl": "/data/ministers/71eb0caed7fd.jpg",
+      "department": "청년3팀 여수룬",
+      "order": 24
+    },
+    {
+      "role": "목사",
+      "name": "김영원",
+      "photoUrl": "/data/ministers/f38dc2ed42e0.jpg",
+      "department": "청년2팀 마하나임",
+      "order": 25
+    },
+    {
+      "role": "목사",
+      "name": "김요한",
+      "photoUrl": "/data/ministers/c7d3a3254ca7.jpg",
+      "department": "16교구",
+      "order": 26
+    },
+    {
+      "role": "목사",
+      "name": "김주영",
+      "photoUrl": "/data/ministers/9c9baa324bd7.jpg",
+      "department": "청년2팀 마하나임",
+      "order": 27
+    },
+    {
+      "role": "목사",
+      "name": "김지중",
+      "photoUrl": "/data/ministers/2e1b3b48b032.jpg",
+      "department": "국내선교/시니어",
+      "order": 28
+    },
+    {
+      "role": "목사",
+      "name": "김혜진",
+      "photoUrl": "/data/ministers/6c9488550f10.png",
+      "department": "소년부",
+      "order": 29
+    },
+    {
+      "role": "목사",
+      "name": "김호수",
+      "photoUrl": "/data/ministers/726b35cb3643.jpg",
+      "department": "46교구",
+      "order": 30
+    },
+    {
+      "role": "목사",
+      "name": "동준권",
+      "photoUrl": "/data/ministers/f808b8110b11.jpg",
+      "department": "유아부",
+      "order": 31
+    },
+    {
+      "role": "목사",
+      "name": "민병건",
+      "photoUrl": "/data/ministers/dca57557722f.jpg",
+      "department": "26교구",
+      "order": 32
+    },
+    {
+      "role": "목사",
+      "name": "박상연",
+      "photoUrl": "/data/ministers/b07a52d7c7cb.jpg",
+      "department": "사랑부",
+      "order": 33
+    },
+    {
+      "role": "목사",
+      "name": "손영광",
+      "photoUrl": "/data/ministers/22222aecb937.jpg",
+      "department": "목회비서(수행)/홍보",
+      "order": 34
+    },
+    {
+      "role": "목사",
+      "name": "송지훈",
+      "photoUrl": "/data/ministers/6c9aae785787.jpg",
+      "department": "12교구",
+      "order": 35
+    },
+    {
+      "role": "목사",
+      "name": "양홍준",
+      "photoUrl": "/data/ministers/f40803876419.jpg",
+      "department": "45교구",
+      "order": 36
+    },
+    {
+      "role": "목사",
+      "name": "오승영",
+      "photoUrl": "/data/ministers/17de8aac48f9.jpg",
+      "department": "유년부",
+      "order": 37
+    },
+    {
+      "role": "목사",
+      "name": "원성묵",
+      "photoUrl": "/data/ministers/15651a0b90c0.jpg",
+      "department": "13교구",
+      "order": 38
+    },
+    {
+      "role": "목사",
+      "name": "유태은",
+      "photoUrl": "/data/ministers/f6b09c797575.jpg",
+      "department": "35교구",
+      "order": 39
+    },
+    {
+      "role": "목사",
+      "name": "이기환",
+      "photoUrl": "/data/ministers/0e4aeb8e024f.jpg",
+      "department": "32교구",
+      "order": 40
+    },
+    {
+      "role": "목사",
+      "name": "이누부세 세이치",
+      "photoUrl": "/data/ministers/a89f16b5b11a.jpg",
+      "department": "일본어예배부",
+      "order": 41
+    },
+    {
+      "role": "목사",
+      "name": "이민엽",
+      "photoUrl": "/data/ministers/bc12c08d9ea8.jpg",
+      "department": "찬양국",
+      "order": 42
+    },
+    {
+      "role": "목사",
+      "name": "이우해",
+      "photoUrl": "/data/ministers/8de84817c752.jpg",
+      "department": "세계선교",
+      "order": 43
+    },
+    {
+      "role": "목사",
+      "name": "이원석",
+      "photoUrl": "/data/ministers/0c7a0ab4b5a3.jpg",
+      "department": "36교구",
+      "order": 44
+    },
+    {
+      "role": "목사",
+      "name": "이준구",
+      "photoUrl": "/data/ministers/cbefe476e282.jpg",
+      "department": "33교구",
+      "order": 45
+    },
+    {
+      "role": "목사",
+      "name": "이준호",
+      "photoUrl": "/data/ministers/34df8907a061.jpg",
+      "department": "초등부",
+      "order": 46
+    },
+    {
+      "role": "목사",
+      "name": "이현호",
+      "photoUrl": "/data/ministers/a63ac7ebb480.jpg",
+      "department": "23교구",
+      "order": 47
+    },
+    {
+      "role": "목사",
+      "name": "이혜성",
+      "photoUrl": "/data/ministers/4b691b110005.jpg",
+      "department": "54교구",
+      "order": 48
+    },
+    {
+      "role": "목사",
+      "name": "이화성",
+      "photoUrl": "/data/ministers/e61a84301794.jpg",
+      "department": "55교구",
+      "order": 49
+    },
+    {
+      "role": "목사",
+      "name": "장병석",
+      "photoUrl": "/data/ministers/f825a41af82c.jpg",
+      "department": "청년3팀 여수룬",
+      "order": 50
+    },
+    {
+      "role": "목사",
+      "name": "장원호",
+      "photoUrl": "/data/ministers/6930037bb8fc.jpg",
+      "department": "22교구",
+      "order": 51
+    },
+    {
+      "role": "목사",
+      "name": "정민진",
+      "photoUrl": "/data/ministers/9e761586a70b.jpg",
+      "department": "31교구",
+      "order": 52
+    },
+    {
+      "role": "목사",
+      "name": "정산",
+      "photoUrl": "/data/ministers/351943ff7838.jpg",
+      "department": "청년1팀 야베스",
+      "order": 53
+    },
+    {
+      "role": "목사",
+      "name": "조대운",
+      "photoUrl": "/data/ministers/36cca14e3c87.jpg",
+      "department": "상담국",
+      "order": 54
+    },
+    {
+      "role": "목사",
+      "name": "조사규",
+      "photoUrl": "/data/ministers/d3b635efdc67.jpg",
+      "department": "행정",
+      "order": 55
+    },
+    {
+      "role": "목사",
+      "name": "조창민",
+      "photoUrl": "/data/ministers/b89b507a04b9.jpg",
+      "department": "고등부",
+      "order": 56
+    },
+    {
+      "role": "목사",
+      "name": "지영광",
+      "photoUrl": "/data/ministers/5978ba69a602.png",
+      "department": "소년부",
+      "order": 57
+    },
+    {
+      "role": "목사",
+      "name": "최보수",
+      "photoUrl": "/data/ministers/0f4ad9ffa7e3.jpg",
+      "department": "21교구",
+      "order": 58
+    },
+    {
+      "role": "목사",
+      "name": "최창선",
+      "photoUrl": "/data/ministers/6d2821655648.png",
+      "department": "청년4팀 블레싱",
+      "order": 59
+    },
+    {
+      "role": "목사",
+      "name": "최현준",
+      "photoUrl": "/data/ministers/e803bf10d469.jpg",
+      "department": "청년2팀 마하나임",
+      "order": 60
+    },
+    {
+      "role": "목사",
+      "name": "한요셉",
+      "photoUrl": "/data/ministers/3476813b1d21.jpg",
+      "department": "청년1팀 야베스",
+      "order": 61
+    },
+    {
+      "role": "목사",
+      "name": "홍영훈",
+      "photoUrl": "/data/ministers/f70fe0b002d3.jpg",
+      "department": "15교구",
+      "order": 62
+    },
+    {
+      "role": "목사",
+      "name": "홍현표",
+      "photoUrl": "/data/ministers/c82519959a7e.jpg",
+      "department": "이주민/난민사역",
+      "order": 63
+    },
+    {
+      "role": "목사",
+      "name": "황영환",
+      "photoUrl": "/data/ministers/b4cf443f4c04.jpg",
+      "department": "고등부",
+      "order": 64
+    },
+    {
+      "role": "목사",
+      "name": "이은성",
+      "photoUrl": "/data/ministers/b383d169beaf.jpg",
+      "department": "통일선교",
+      "order": 65
+    },
+    {
+      "role": "목사",
+      "name": "강명일",
+      "photoUrl": "/data/ministers/927cdea6cce5.gif",
+      "department": "통일선교",
+      "order": 66
+    },
+    {
+      "role": "목사",
+      "name": "이정원",
+      "photoUrl": "/data/ministers/a53b9f2d5d4e.png",
+      "department": "영어예배부",
+      "order": 67
+    },
+    {
+      "role": "목사",
+      "name": "가브리엘",
+      "photoUrl": "/data/ministers/871e63101e76.jpg",
+      "department": "영어예배부",
+      "order": 68
+    },
+    {
+      "role": "목사",
+      "name": "김영훈",
+      "photoUrl": "/data/ministers/dd7ef0f5fd02.jpg",
+      "department": "국제어린이주일학교",
+      "order": 69
+    },
+    {
+      "role": "목사",
+      "name": "김평화",
+      "photoUrl": "/data/ministers/f16fade4e406.png",
+      "department": "영어청소년부",
+      "order": 70
+    },
+    {
+      "role": "목사",
+      "name": "미스난",
+      "photoUrl": "/data/ministers/40d259230f57.jpg",
+      "department": "인도네시아어예배부",
+      "order": 71
+    },
+    {
+      "role": "목사",
+      "name": "알투로",
+      "photoUrl": "/data/ministers/70fd6b8d800b.jpg",
+      "department": "필리핀어예배부",
+      "order": 72
+    },
+    {
+      "role": "목사",
+      "name": "운바낙",
+      "photoUrl": "/data/ministers/f069ce84f1c6.jpg",
+      "department": "캄보디아어예배부",
+      "order": 73
+    },
+    {
+      "role": "목사",
+      "name": "유홍빈",
+      "photoUrl": "/data/ministers/4f5acdd08fe8.gif",
+      "department": "중국어예배부",
+      "order": 74
+    },
+    {
+      "role": "목사",
+      "name": "최다니엘",
+      "photoUrl": "/data/ministers/8e2a47792536.gif",
+      "department": "베트남어예배부",
+      "order": 75
+    },
+    {
+      "role": "목사",
+      "name": "틴아웅쉐",
+      "photoUrl": "/data/ministers/095700d59625.jpg",
+      "department": "미얀마어예배부",
+      "order": 76
+    },
+    {
+      "role": "목사",
+      "name": "디벤드라",
+      "photoUrl": "/data/ministers/14a9577d9884.jpg",
+      "department": "네팔어예배부",
+      "order": 77
+    },
+    {
+      "role": "목사",
+      "name": "정요셉",
+      "photoUrl": "/data/ministers/84937a221575.gif",
+      "department": "우즈벡어예배부",
+      "order": 78
+    },
+    {
+      "role": "목사",
+      "name": "나랑바타르",
+      "photoUrl": "/data/ministers/1806ba4be0ac.jpg",
+      "department": "몽골어예배부",
+      "order": 79
+    },
+    {
+      "role": "목사",
+      "name": "조우현",
+      "photoUrl": "/data/ministers/f3fb67bd3975.jpg",
+      "department": "서울로교회",
+      "order": 80
+    },
+    {
+      "role": "목사",
+      "name": "김지찬",
+      "photoUrl": "/data/ministers/0c782ae50ea6.jpg",
+      "department": "협동목사",
+      "order": 81
+    },
+    {
+      "role": "목사",
+      "name": "이진수",
+      "photoUrl": "/data/ministers/89eafa1b9144.jpg",
+      "department": "목회개발",
+      "order": 82
+    },
+    {
+      "role": "목사",
+      "name": "조원상",
+      "photoUrl": "/data/ministers/590dac49cd4e.jpg",
+      "department": "목회개발",
+      "order": 83
+    },
+    {
+      "role": "목사",
+      "name": "박남주",
+      "photoUrl": "/data/ministers/ca080fc8a2d9.jpg",
+      "department": "목회개발",
+      "order": 84
+    },
+    {
+      "role": "목사",
+      "name": "안성수",
+      "photoUrl": "/data/ministers/36274b422b02.jpg",
+      "department": "목회개발",
+      "order": 85
+    },
+    {
+      "role": "목사",
+      "name": "정용태",
+      "photoUrl": "/data/ministers/d065978f7ff5.jpg",
+      "department": "목회개발",
+      "order": 86
+    },
+    {
+      "role": "목사",
+      "name": "정철",
+      "photoUrl": "/data/ministers/84b99495295b.jpg",
+      "department": "목회개발",
+      "order": 87
+    },
+    {
+      "role": "목사",
+      "name": "고갑균",
+      "photoUrl": "/data/ministers/ae97e8dec4e2.jpg",
+      "department": "목회개발",
+      "order": 88
+    },
+    {
+      "role": "목사",
+      "name": "강지훈",
+      "photoUrl": "/data/ministers/f9f6226900a2.jpg",
+      "department": "목회개발",
+      "order": 89
+    },
+    {
+      "role": "강도사",
+      "name": "김도건",
+      "photoUrl": "/data/ministers/5a931c47a9fb.jpg",
+      "department": "초등부",
+      "order": 0
+    },
+    {
+      "role": "강도사",
+      "name": "원다위",
+      "photoUrl": "/data/ministers/7a20d5b15a16.jpg",
+      "department": "유년부",
+      "order": 1
+    },
+    {
+      "role": "강도사",
+      "name": "최예찬",
+      "photoUrl": "/data/ministers/b84e720ad504.jpg",
+      "department": "러시아어예배부",
+      "order": 2
+    },
+    {
+      "role": "전임전도사",
+      "name": "이샘",
+      "photoUrl": "/data/ministers/bd0874c45ac9.jpg",
+      "department": "소년부",
+      "order": 0
+    },
+    {
+      "role": "전임전도사",
+      "name": "진태양",
+      "photoUrl": "/data/ministers/2c7b5e3cb1c5.jpg",
+      "department": "유치부",
+      "order": 1
+    },
+    {
+      "role": "전임전도사",
+      "name": "강유정",
+      "photoUrl": "/data/ministers/4cf3119d3ef9.jpg",
+      "department": "35교구",
+      "order": 2
+    },
+    {
+      "role": "전임전도사",
+      "name": "강현숙",
+      "photoUrl": "/data/ministers/af41502ec42d.jpg",
+      "department": "15교구",
+      "order": 3
+    },
+    {
+      "role": "전임전도사",
+      "name": "구인학",
+      "photoUrl": "/data/ministers/0bba206afda7.jpg",
+      "department": "22교구",
+      "order": 4
+    },
+    {
+      "role": "전임전도사",
+      "name": "권말선",
+      "photoUrl": "/data/ministers/f96f6268ad4b.jpg",
+      "department": "양로원,군선교,터미널,노방전도팀",
+      "order": 5
+    },
+    {
+      "role": "전임전도사",
+      "name": "권정은",
+      "photoUrl": "/data/ministers/9976026d06bd.png",
+      "department": "24교구",
+      "order": 6
+    },
+    {
+      "role": "전임전도사",
+      "name": "김선희",
+      "photoUrl": "/data/ministers/c71c8b41e7f1.jpg",
+      "department": "14교구",
+      "order": 7
+    },
+    {
+      "role": "전임전도사",
+      "name": "김수진",
+      "photoUrl": "/data/ministers/79b9603b1d1b.jpg",
+      "department": "34교구",
+      "order": 8
+    },
+    {
+      "role": "전임전도사",
+      "name": "김은경",
+      "photoUrl": "/data/ministers/7008550c8b15.jpg",
+      "department": "46교구",
+      "order": 9
+    },
+    {
+      "role": "전임전도사",
+      "name": "김은진",
+      "photoUrl": "/data/ministers/a007a71fa21a.jpg",
+      "department": "25교구",
+      "order": 10
+    },
+    {
+      "role": "전임전도사",
+      "name": "김정임",
+      "photoUrl": "/data/ministers/558d4686866a.jpg",
+      "department": "55교구",
+      "order": 11
+    },
+    {
+      "role": "전임전도사",
+      "name": "김현영",
+      "photoUrl": "/data/ministers/c187582a4609.jpg",
+      "department": "33교구",
+      "order": 12
+    },
+    {
+      "role": "전임전도사",
+      "name": "김혜미",
+      "photoUrl": "/data/ministers/281fc2eeb6d3.jpg",
+      "department": "51교구",
+      "order": 13
+    },
+    {
+      "role": "전임전도사",
+      "name": "김효경",
+      "photoUrl": "/data/ministers/96f19477bf09.jpg",
+      "department": "12교구",
+      "order": 14
+    },
+    {
+      "role": "전임전도사",
+      "name": "박미경",
+      "photoUrl": "/data/ministers/e0f9cadab302.jpg",
+      "department": "54교구",
+      "order": 15
+    },
+    {
+      "role": "전임전도사",
+      "name": "박미영",
+      "photoUrl": "/data/ministers/92cb1eec92a6.jpg",
+      "department": "44교구",
+      "order": 16
+    },
+    {
+      "role": "전임전도사",
+      "name": "박소영",
+      "photoUrl": "/data/ministers/28b53899df70.png",
+      "department": "45교구",
+      "order": 17
+    },
+    {
+      "role": "전임전도사",
+      "name": "박양자",
+      "photoUrl": "/data/ministers/0f75ea0b4c25.jpg",
+      "department": "목회행정",
+      "order": 18
+    },
+    {
+      "role": "전임전도사",
+      "name": "박은아",
+      "photoUrl": "/data/ministers/e96b8d68cfec.png",
+      "department": "영아부",
+      "order": 19
+    },
+    {
+      "role": "전임전도사",
+      "name": "배선향",
+      "photoUrl": "/data/ministers/65cd0efd07f2.png",
+      "department": "43교구",
+      "order": 20
+    },
+    {
+      "role": "전임전도사",
+      "name": "백상경",
+      "photoUrl": "/data/ministers/b3075117be13.jpg",
+      "department": "21교구",
+      "order": 21
+    },
+    {
+      "role": "전임전도사",
+      "name": "백소양",
+      "photoUrl": "/data/ministers/998896d5782b.jpg",
+      "department": "사랑부",
+      "order": 22
+    },
+    {
+      "role": "전임전도사",
+      "name": "백영애",
+      "photoUrl": "/data/ministers/b2409b0f8e20.jpg",
+      "department": "시니어/호스피스",
+      "order": 23
+    },
+    {
+      "role": "전임전도사",
+      "name": "서경민",
+      "photoUrl": "/data/ministers/370fe5b70454.jpg",
+      "department": "13교구",
+      "order": 24
+    },
+    {
+      "role": "전임전도사",
+      "name": "서은영",
+      "photoUrl": "/data/ministers/0b7f530f7b86.jpg",
+      "department": "31교구",
+      "order": 25
+    },
+    {
+      "role": "전임전도사",
+      "name": "송미애",
+      "photoUrl": "/data/ministers/e9bb30f55ce4.jpg",
+      "department": "영아부",
+      "order": 26
+    },
+    {
+      "role": "전임전도사",
+      "name": "송유리",
+      "photoUrl": "/data/ministers/caeb5d3a8af8.jpg",
+      "department": "16교구",
+      "order": 27
+    },
+    {
+      "role": "전임전도사",
+      "name": "신미영",
+      "photoUrl": "/data/ministers/89a2a30c58be.jpg",
+      "department": "26교구",
+      "order": 28
+    },
+    {
+      "role": "전임전도사",
+      "name": "안영란",
+      "photoUrl": "/data/ministers/d04f0a1a1483.jpg",
+      "department": "신학원",
+      "order": 29
+    },
+    {
+      "role": "전임전도사",
+      "name": "안정선",
+      "photoUrl": "/data/ministers/01e60a234c62.jpg",
+      "department": "새가족부",
+      "order": 30
+    },
+    {
+      "role": "전임전도사",
+      "name": "엄혜숙",
+      "photoUrl": "/data/ministers/9964f2ce4bcb.jpg",
+      "department": "41교구",
+      "order": 31
+    },
+    {
+      "role": "전임전도사",
+      "name": "오은숙",
+      "photoUrl": "/data/ministers/d3b8cd5056e2.jpg",
+      "department": "로드맵미니스트리",
+      "order": 32
+    },
+    {
+      "role": "전임전도사",
+      "name": "왕선주",
+      "photoUrl": "/data/ministers/408ec5ddd1f3.jpg",
+      "department": "36교구",
+      "order": 33
+    },
+    {
+      "role": "전임전도사",
+      "name": "이경임",
+      "photoUrl": "/data/ministers/4f95ae380490.jpg",
+      "department": "통일선교",
+      "order": 34
+    },
+    {
+      "role": "전임전도사",
+      "name": "이말순",
+      "photoUrl": "/data/ministers/8b97cdde875b.jpg",
+      "department": "청년4팀 블레싱",
+      "order": 35
+    },
+    {
+      "role": "전임전도사",
+      "name": "이세옥",
+      "photoUrl": "/data/ministers/2b4782cc518a.jpg",
+      "department": "32교구",
+      "order": 36
+    },
+    {
+      "role": "전임전도사",
+      "name": "이현미",
+      "photoUrl": "/data/ministers/118250f83011.jpg",
+      "department": "유아부",
+      "order": 37
+    },
+    {
+      "role": "전임전도사",
+      "name": "정미경",
+      "photoUrl": "/data/ministers/6fef8eff17fe.jpg",
+      "department": "11교구",
+      "order": 38
+    },
+    {
+      "role": "전임전도사",
+      "name": "정은주",
+      "photoUrl": "/data/ministers/350d0ecc3417.jpg",
+      "department": "52교구",
+      "order": 39
+    },
+    {
+      "role": "전임전도사",
+      "name": "조수현",
+      "photoUrl": "/data/ministers/69c85457100c.jpg",
+      "department": "53교구",
+      "order": 40
+    },
+    {
+      "role": "전임전도사",
+      "name": "천수야",
+      "photoUrl": "/data/ministers/bdf40d35cd6d.jpg",
+      "department": "23교구",
+      "order": 41
+    },
+    {
+      "role": "교육전도사",
+      "name": "고영권",
+      "photoUrl": "/data/ministers/7f7ece1ba7f3.jpg",
+      "department": "유년부",
+      "order": 0
+    },
+    {
+      "role": "교육전도사",
+      "name": "오시윤",
+      "photoUrl": "/data/ministers/009c7e2a95dd.jpg",
+      "department": "초등부",
+      "order": 1
+    },
+    {
+      "role": "장로",
+      "name": "김종렬",
+      "photoUrl": "/data/ministers/203cdc2c9552.gif",
+      "department": "세계선교/재산관리",
+      "order": 0
+    },
+    {
+      "role": "장로",
+      "name": "최은종",
+      "photoUrl": "/data/ministers/20210f34c16a.gif",
+      "department": "긍휼/유치원/엘레브/건축위원장/러브부산",
+      "order": 1
+    },
+    {
+      "role": "장로",
+      "name": "김상옥",
+      "photoUrl": "/data/ministers/7d9cbc668052.png",
+      "department": "재정/전문특화",
+      "order": 2
+    },
+    {
+      "role": "장로",
+      "name": "이성욱",
+      "photoUrl": "/data/ministers/58d861475e8c.png",
+      "department": "서기",
+      "order": 3
+    },
+    {
+      "role": "장로",
+      "name": "김종환",
+      "photoUrl": "/data/ministers/597018eeb57b.png",
+      "department": "예배집회/양육훈련/가정사역/재산관리",
+      "order": 4
+    },
+    {
+      "role": "장로",
+      "name": "신용출",
+      "photoUrl": "/data/ministers/9413628433c0.png",
+      "department": "국제/교구/사랑방/재산관리",
+      "order": 5
+    },
+    {
+      "role": "장로",
+      "name": "홍승범",
+      "photoUrl": "/data/ministers/4dd98ce3459a.png",
+      "department": "국내통일선교/감사",
+      "order": 6
+    },
+    {
+      "role": "장로",
+      "name": "이장호",
+      "photoUrl": "/data/ministers/c9491dbd7a36.png",
+      "department": "다음세대/로드맵",
+      "order": 7
+    },
+    {
+      "role": "장로",
+      "name": "구경부",
+      "photoUrl": "/data/ministers/784c91d5e833.png",
+      "department": "청년/장학위원회/감사",
+      "order": 8
+    }
+  ]
+}

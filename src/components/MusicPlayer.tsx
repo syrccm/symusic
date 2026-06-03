@@ -32,6 +32,7 @@ import { generateAndSaveTags } from '@/lib/autoTags';
 import CatechismMatcher from '@/components/CatechismMatcher';
 import CatechismRefs from '@/components/CatechismRefs';
 import ConfessionPage from '@/pages/ConfessionPage';
+import MinistersPage from '@/pages/MinistersPage';
 import {
   Play,
   Pause,
@@ -56,7 +57,8 @@ import {
   Bell,
   ChevronDown,
   ChevronUp,
-  BookOpen
+  BookOpen,
+  Users
 } from 'lucide-react';
 
 // Types
@@ -185,6 +187,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isMetronomeOpen, setIsMetronomeOpen] = useState(false);
   // 신앙고백문답: 라우트 이동 대신 오버레이로 띄워 MusicPlayer 언마운트(=음악 정지)를 막는다.
   const [isConfessionOpen, setIsConfessionOpen] = useState(false);
+  // 교회를 섬기는분(교역자 안내): 동일하게 오버레이로 표시
+  const [isMinistersOpen, setIsMinistersOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 메뉴 외부 클릭 시 닫기
@@ -1458,6 +1462,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     <BookOpen className="h-5 w-5 shrink-0 text-teal-400" />
                     신앙고백문답
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMinistersOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
+                  >
+                    <Users className="h-5 w-5 shrink-0 text-teal-400" />
+                    교회를 섬기는분
+                  </button>
 
                   {/* ── 2단: 음악 기능 ── */}
                   <div className="my-1 h-px bg-white/20" />
@@ -2670,6 +2685,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       {isConfessionOpen && (
         <div className="fixed inset-0 z-[100] overflow-y-auto">
           <ConfessionPage onClose={() => setIsConfessionOpen(false)} />
+        </div>
+      )}
+
+      {/* 교회를 섬기는분: 동일하게 오버레이로 표시 */}
+      {isMinistersOpen && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <MinistersPage onClose={() => setIsMinistersOpen(false)} />
         </div>
       )}
 
