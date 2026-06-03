@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Search, User, ExternalLink, ChevronDown } from 'lucide-react';
+import { X, User, ExternalLink, ChevronDown } from 'lucide-react';
 
 // public/data/ministers.json 스키마 (스크래퍼가 주 1회 갱신)
 interface Minister {
@@ -104,9 +104,6 @@ const DEPT_TREE: { cat: string; subs: { sub: string; kw: string[] }[] }[] = [
 const DEPT_CATS = DEPT_TREE.map((c) => c.cat);
 const catHasSubs = (cat: string) =>
   (DEPT_TREE.find((c) => c.cat === cat)?.subs ?? []).some((s) => s.sub !== '');
-
-// 검색 정규화: 공백 제거 + 소문자
-const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 
 // department에서 "○○교구"(십의자리 1~5) 추출
 const guOf = (dept: string): number | null => {
@@ -217,7 +214,6 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
   const [pastorSel, setPastorSel] = useState<string>(NONE);
   const [teamSel, setTeamSel] = useState<string>(NONE);
   const [elderSel, setElderSel] = useState<string>(NONE);
-  const [query, setQuery] = useState('');
 
   useEffect(() => {
     let alive = true;
@@ -233,33 +229,21 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
     };
   }, []);
 
-  // 상호 배타: 한 드롭다운 선택 시 나머지 둘 + 검색어 리셋 (한 번에 하나의 기준만)
+  // 상호 배타: 한 드롭다운 선택 시 나머지 둘 리셋 (한 번에 하나의 기준만)
   const onPastor = (v: string) => {
     setPastorSel(v);
     setTeamSel(NONE);
     setElderSel(NONE);
-    setQuery('');
   };
   const onTeam = (v: string) => {
     setTeamSel(v);
     setPastorSel(NONE);
     setElderSel(NONE);
-    setQuery('');
   };
   const onElder = (v: string) => {
     setElderSel(v);
     setPastorSel(NONE);
     setTeamSel(NONE);
-    setQuery('');
-  };
-  // 검색은 독립적: 입력이 있으면 드롭다운 선택을 해제하고 전역 검색
-  const onQuery = (v: string) => {
-    setQuery(v);
-    if (v.trim()) {
-      setPastorSel(NONE);
-      setTeamSel(NONE);
-      setElderSel(NONE);
-    }
   };
 
   // 인원수 집계 (드롭다운 라벨 병기). 장로는 role로 분리.
@@ -292,37 +276,24 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
       ELDER_SUBROLES.indexOf(b.subRole as (typeof ELDER_SUBROLES)[number]) || a.order - b.order;
 
   const hasSelection = Boolean(pastorSel || teamSel || elderSel);
-  const q = norm(query);
 
   // 표시 결과. mode: 'idle'(안내) | 'flat' | 'grouped'
   const view = useMemo(() => {
     if (!data) return { mode: 'idle' as const };
-    const matchQ = (m: Minister) =>
-      norm(m.name).includes(q) || norm(m.department).includes(q);
-
     const elders = data.ministers.filter((m) => m.role === '장로');
     const pastors = data.ministers.filter((m) => m.role !== '장로'); // 목회자 = role 기준
 
-    // 1) 검색 (드롭다운 독립) — 이름/부서로 전체(장로 포함) 검색
-    if (q) {
-      const items = [
-        ...pastors.filter(matchQ).sort(byRoleOrder),
-        ...elders.filter(matchQ).sort(byElderOrder),
-      ];
-      return { mode: 'flat' as const, items };
-    }
-
-    // 2) 목회자 직분
+    // 1) 목회자 직분
     if (pastorSel) {
       return { mode: 'flat' as const, items: pastors.filter((m) => m.role === pastorSel).sort(byRoleOrder) };
     }
 
-    // 3) 장로 분류
+    // 2) 장로 분류
     if (elderSel) {
       return { mode: 'flat' as const, items: elders.filter((m) => m.subRole === elderSel).sort(byElderOrder) };
     }
 
-    // 4) 팀별사역 (장로 원천 제외: pastors 대상)
+    // 3) 팀별 (장로 원천 제외: pastors 대상)
     if (teamSel) {
       if (TEAMS.includes(teamSel as (typeof TEAMS)[number])) {
         const teamNum = parseInt(teamSel, 10);
@@ -370,9 +341,9 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
       return { mode: 'grouped' as const, groups };
     }
 
-    // 5) 아무 것도 선택/검색 안 됨 → 안내
+    // 4) 아무 것도 선택 안 됨 → 안내
     return { mode: 'idle' as const };
-  }, [data, pastorSel, teamSel, elderSel, q]);
+  }, [data, pastorSel, teamSel, elderSel]);
 
   const totalShown =
     view.mode === 'flat'
@@ -383,7 +354,7 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
 
   // 셀렉트 스타일: 활성(선택됨)이면 teal 강조로 현재 보고 있는 기준을 분명히
   const selBase =
-    'min-w-0 max-w-full appearance-none rounded-xl border py-2 pl-3 pr-8 text-sm focus:outline-none focus:ring-1 focus:ring-teal-400';
+    'w-full truncate appearance-none rounded-xl border py-2 pl-2.5 pr-7 text-sm focus:outline-none focus:ring-1 focus:ring-teal-400';
   const selCls = (active: boolean) =>
     `${selBase} ${
       active
@@ -412,25 +383,12 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
             </button>
           </div>
 
-          {/* 검색창 (항상 활성, 드롭다운과 독립) */}
-          <div className="relative mt-2">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-purple-300" />
-            <input
-              type="text"
-              inputMode="search"
-              value={query}
-              onChange={(e) => onQuery(e.target.value)}
-              placeholder="이름 또는 부서(교구) 검색"
-              aria-label="이름 또는 부서 검색"
-              className="h-12 w-full rounded-xl border border-purple-400/40 bg-slate-900/40 pl-10 pr-4 text-base text-white placeholder:text-purple-300/70 focus:border-teal-400 focus:outline-none focus:ring-1 focus:ring-teal-400"
-            />
-          </div>
-
-          {/* 드롭다운 3개 (좌→우: 목회자 / 팀별사역 / 장로). flex-wrap, 가로 오버플로 없음.
+          {/* 드롭다운 3개 (좌→우: 목회자 / 팀별 / 장로). flex-nowrap + 각 flex-1 균등분할 →
+              어떤 선택값(길어도)에서도 한 줄 유지, 넘치면 말줄임(truncate).
               ※ <select>를 <label>로 감싸면 크롬에서 클릭 시 팝업이 즉시 닫히므로 <div> + aria-label. */}
-          <div className="mt-2.5 flex flex-wrap items-center gap-2">
+          <div className="mt-2.5 flex flex-nowrap items-stretch gap-2">
             {/* 목회자 */}
-            <div className="relative flex min-w-0 items-center">
+            <div className="relative flex flex-1 min-w-0 items-center">
               <select
                 value={pastorSel}
                 onChange={(e) => onPastor(e.target.value)}
@@ -444,18 +402,18 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
+              <ChevronDown className="pointer-events-none absolute right-2 h-4 w-4 text-purple-300" />
             </div>
 
-            {/* 팀별사역: 교구(1~5팀) + 부서 9분류 + 기타 사역 (optgroup으로 구분) */}
-            <div className="relative flex min-w-0 items-center">
+            {/* 팀별: 교구(1~5팀) + 부서 9분류 + 기타 사역 (optgroup으로 구분) */}
+            <div className="relative flex flex-1 min-w-0 items-center">
               <select
                 value={teamSel}
                 onChange={(e) => onTeam(e.target.value)}
-                aria-label="팀별사역 선택"
+                aria-label="팀별 선택"
                 className={selCls(teamSel !== NONE)}
               >
-                <option value={NONE}>팀별사역 ▾</option>
+                <option value={NONE}>팀별 ▾</option>
                 <optgroup label="교구(팀)">
                   {TEAMS.map((t) => (
                     <option key={t} value={t}>
@@ -476,11 +434,11 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
                   </option>
                 </optgroup>
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
+              <ChevronDown className="pointer-events-none absolute right-2 h-4 w-4 text-purple-300" />
             </div>
 
             {/* 장로 (맨 우측) */}
-            <div className="relative flex min-w-0 items-center">
+            <div className="relative flex flex-1 min-w-0 items-center">
               <select
                 value={elderSel}
                 onChange={(e) => onElder(e.target.value)}
@@ -494,7 +452,7 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
                   </option>
                 ))}
               </select>
-              <ChevronDown className="pointer-events-none absolute right-2.5 h-4 w-4 text-purple-300" />
+              <ChevronDown className="pointer-events-none absolute right-2 h-4 w-4 text-purple-300" />
             </div>
           </div>
         </header>
@@ -508,10 +466,10 @@ export default function MinistersPage({ onClose }: MinistersPageProps = {}) {
             </div>
           ) : !data ? (
             <div className="mt-16 text-center text-purple-200/70">불러오는 중…</div>
-          ) : !hasSelection && !q ? (
+          ) : !hasSelection ? (
             <div className="mt-20 flex flex-col items-center gap-3 px-6 text-center text-purple-200/70">
-              <Search className="h-10 w-10 text-purple-300/40" />
-              <p className="text-base">위에서 항목을 선택하거나 이름으로 검색하세요</p>
+              <User className="h-10 w-10 text-purple-300/40" />
+              <p className="text-base">위에서 항목을 선택하세요</p>
             </div>
           ) : totalShown === 0 ? (
             <div className="mt-16 text-center text-purple-200/70">검색 결과가 없습니다.</div>
