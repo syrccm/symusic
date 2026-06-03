@@ -1881,9 +1881,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         </div>
                         {currentSong.catechismRefs && currentSong.catechismRefs.length > 0 && (
                           <>
-                            {/* 가사 ↔ 신앙고백 카드 시각적 구분선 */}
-                            <div className="mt-10 border-t border-slate-600" />
-                            <CatechismRefs refs={currentSong.catechismRefs} className="mt-6" />
+                            {/* 가사 ↔ 신앙고백 카드 여백 (구분선 없이 약 2줄 높이 56px) */}
+                            <CatechismRefs refs={currentSong.catechismRefs} className="mt-14" />
                           </>
                         )}
                         <div className="text-center pt-3 border-t border-slate-600 flex items-center justify-center gap-2 flex-wrap">
