@@ -24,6 +24,18 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
   // 모든 문답 기본 닫힘 — 사용자가 탭할 때만 펼쳐진다.
   const [openSet, setOpenSet] = useState<Set<number>>(() => new Set());
 
+  // 곡이 바뀌면 열림 상태를 초기화한다.
+  // 이 컴포넌트는 곡 전환 시 언마운트되지 않고 refs prop만 갱신되며 재사용되므로,
+  // 표시 문답 집합(정렬·중복제거된 번호)을 추적해 "바뀔 때만" openSet을 비운다.
+  // (렌더 중 setState — React 공식 "prop 변경 시 상태 리셋" 패턴: 깜빡임 없이 즉시 반영.
+  //  같은 곡에서는 refsKey가 동일하므로 토글/다중 열기 동작은 그대로 유지된다.)
+  const refsKey = items.map((i) => i.number).join(',');
+  const [prevRefsKey, setPrevRefsKey] = useState(refsKey);
+  if (refsKey !== prevRefsKey) {
+    setPrevRefsKey(refsKey);
+    setOpenSet(new Set());
+  }
+
   // 클릭한 성경 구절(개역한글 모달)
   const [verseRef, setVerseRef] = useState<string | null>(null);
 
