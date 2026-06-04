@@ -5,7 +5,7 @@ import { shorterCatechism, type CatechismItem } from '@/data/westminsterShorter'
 import { largerCatechism } from '@/data/westminsterLarger';
 import { confession, type ConfessionChapter } from '@/data/westminsterConfession';
 import BibleVerseModal from '@/components/BibleVerseModal';
-import { refHasValidVerse } from '@/utils/bibleParser';
+import { parseRef, verseExists, type VerseSegment } from '@/utils/bibleParser';
 
 type TabKey = 'intro' | 'confession' | 'shorter' | 'larger';
 type DocKey = 'confession' | 'shorter' | 'larger';
@@ -37,6 +37,14 @@ const DOC_META: Record<DocKey, { title: string; desc: string }> = {
 // 검색 정규화: 공백 제거 + 소문자
 const norm = (s: string) => s.replace(/\s+/g, '').toLowerCase();
 
+// 세그먼트(절/범위) 안에 실제 존재하는 절이 하나라도 있으면 true.
+const segHasValidVerse = (seg: VerseSegment) => {
+  for (let v = seg.verseStart; v <= seg.verseEnd; v++) {
+    if (verseExists(seg.book, seg.chapter, v)) return true;
+  }
+  return false;
+};
+
 function ReferenceList({
   references,
   onRefClick,
@@ -44,9 +52,17 @@ function ReferenceList({
   references: string[];
   onRefClick: (ref: string) => void;
 }) {
-  // 실제 존재하는 절을 가진 참조만 노출 (잘못된 참조 버튼은 숨김)
-  const validRefs = (references ?? []).filter(refHasValidVerse);
-  if (validRefs.length === 0) return null;
+  // 데이터는 "마22:29, 31; 엡2:20; 행28:25"처럼 한 원소에 여러 구절이 묶여 있어
+  // 그대로 칩으로 만들면 줄을 통째로 차지해 정렬이 들쭉날쭉해진다.
+  // parseRef로 절 단위(범위는 유지)로 펼쳐 짧고 균일한 칩으로 만든다.
+  // 잘못된 참조는 제외하고, 같은 절(label)은 중복 제거한다.
+  const seen = new Set<string>();
+  const chips = (references ?? [])
+    .flatMap(parseRef)
+    .filter(segHasValidVerse)
+    .filter((seg) => (seen.has(seg.label) ? false : (seen.add(seg.label), true)));
+
+  if (chips.length === 0) return null;
   return (
     <div className="mt-3">
       <p className="my-3 flex items-center gap-1.5 text-base font-semibold" style={{ color: '#D4AF37' }}>
@@ -54,14 +70,14 @@ function ReferenceList({
         아래 성경 구절을 클릭하면 본문이 열립니다
       </p>
       <div className="flex flex-wrap gap-x-2.5 gap-y-1">
-        {validRefs.map((ref, i) => (
+        {chips.map((seg) => (
           <button
-            key={i}
+            key={seg.label}
             type="button"
-            onClick={() => onRefClick(ref)}
+            onClick={() => onRefClick(seg.label)}
             className="cursor-pointer rounded px-2 py-1 text-base leading-relaxed text-teal-300 underline underline-offset-2 transition-colors hover:bg-white/10 hover:text-teal-200"
           >
-            {ref}
+            {seg.label}
           </button>
         ))}
       </div>
