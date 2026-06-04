@@ -45,7 +45,7 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
       {/* 헤더: 구분선 없이 제목만 (여백으로 자연스럽게 연결) */}
       <div className="mb-4 flex items-center gap-1.5">
         <span aria-hidden="true" className="text-xl">📖</span>
-        <span className="text-xl font-bold text-white">웨스트민스터 신앙고백</span>
+        <span className="text-base font-bold text-white">웨스트민스터 소요리문답 매칭</span>
       </div>
 
       <div className="space-y-2.5">
