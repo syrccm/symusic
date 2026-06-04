@@ -69,6 +69,25 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
     };
   }, []);
 
+  // 말씀나눔지 뷰어가 열리면 ESC·기기/브라우저 뒤로가기로도 닫히게.
+  // 열 때 히스토리 항목을 하나 push → 뒤로가기 시 페이지 이탈 대신 모달만 닫힘.
+  useEffect(() => {
+    if (!note) return;
+    window.history.pushState({ pdfViewer: true }, '');
+    const onPop = () => setNote(null);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setNote(null);
+    };
+    window.addEventListener('popstate', onPop);
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('popstate', onPop);
+      window.removeEventListener('keydown', onKey);
+      // X·바깥 탭으로 닫은 경우엔 우리가 push한 히스토리 항목이 아직 남아있으니 되돌림.
+      if (window.history.state?.pdfViewer) window.history.back();
+    };
+  }, [note]);
+
   const fmtUpdate = (iso: string) => {
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return '';
@@ -213,17 +232,19 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
         </div>
       )}
 
-      {/* 말씀나눔지 PDF 뷰어 모달 (저장소에 미러된 정적 PDF → 네이티브 뷰어로 원본 화질+핀치줌) */}
+      {/* 말씀나눔지 PDF 뷰어 모달 — PDF.js 공식 prebuilt(legacy) 뷰어를 전체화면 모달에 임베드.
+          file= 동일출처 정적 PDF(/data/notes/*.pdf), #zoom=page-width 로 폭맞춤(가로 잘림 방지).
+          핀치줌·세로스크롤·툴바(줌/페이지 이동)는 뷰어가 자체 제공. */}
       {note?.notePdfUrl && (
         <div
-          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-2 backdrop-blur-sm sm:p-4"
+          className="fixed inset-0 z-[70] flex flex-col bg-black/85 backdrop-blur-sm"
           onClick={() => setNote(null)}
         >
           <div
-            className="relative flex h-[92vh] w-full max-w-4xl flex-col overflow-hidden rounded-2xl bg-[#1a0636] shadow-2xl"
+            className="relative mx-auto flex h-full w-full max-w-5xl flex-col overflow-hidden bg-[#1a0636] shadow-2xl sm:my-3 sm:h-[calc(100%-1.5rem)] sm:rounded-2xl"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between gap-2 border-b border-purple-500/20 px-4 py-2.5">
+            <div className="flex items-center justify-between gap-2 border-b border-purple-500/20 bg-[#3A0D6E] px-4 py-2.5">
               <div className="min-w-0">
                 <p className="text-xs font-medium text-teal-300">{note.date} · 말씀나눔지</p>
                 <p className="truncate text-sm font-semibold text-white">{note.title}</p>
@@ -232,14 +253,15 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
                 type="button"
                 onClick={() => setNote(null)}
                 aria-label="닫기"
-                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-black/60 text-white transition-colors hover:bg-black/80"
+                title="닫기"
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-teal-400/40 bg-teal-500/15 text-teal-100 transition-colors hover:bg-teal-500/30"
               >
                 <X className="h-5 w-5" />
               </button>
             </div>
             <iframe
               key={note.seq}
-              src={note.notePdfUrl}
+              src={`/pdfjs/web/viewer.html?file=${encodeURIComponent(note.notePdfUrl)}#zoom=page-width`}
               title={`${note.title} 말씀나눔지`}
               className="h-full w-full flex-1 border-0 bg-white"
             />
