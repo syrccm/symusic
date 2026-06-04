@@ -12,7 +12,7 @@ interface CatechismRefsProps {
 /**
  * 찬양 가사 하단에 매핑된 웨스트민스터 소요리문답을 표시하는 카드.
  * 보라 배경(#3A0D6E) + teal(#14b8a6) 강조, 모바일 최적화.
- * 문답이 여러 개면 접기/펼치기(첫 문답은 기본 펼침).
+ * 모든 문답 카드는 기본 닫힘 — 탭할 때만 펼쳐지며, 여러 개를 동시에 열 수 있다.
  */
 export default function CatechismRefs({ refs, className = '' }: CatechismRefsProps) {
   // 유효한 번호만, 중복 제거, 오름차순. shorterCatechism에서 본문 조회.
@@ -21,10 +21,8 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
     .filter((c): c is NonNullable<typeof c> => Boolean(c))
     .sort((a, b) => a.number - b.number);
 
-  // 첫 문답만 기본 펼침
-  const [openSet, setOpenSet] = useState<Set<number>>(
-    () => new Set(items.length ? [items[0].number] : [])
-  );
+  // 모든 문답 기본 닫힘 — 사용자가 탭할 때만 펼쳐진다.
+  const [openSet, setOpenSet] = useState<Set<number>>(() => new Set());
 
   // 클릭한 성경 구절(개역한글 모달)
   const [verseRef, setVerseRef] = useState<string | null>(null);
@@ -37,8 +35,6 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
       next.has(n) ? next.delete(n) : next.add(n);
       return next;
     });
-
-  const single = items.length === 1;
 
   return (
     <>
@@ -54,7 +50,7 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
 
       <div className="space-y-2.5">
         {items.map((item) => {
-          const open = single || openSet.has(item.number);
+          const open = openSet.has(item.number);
           return (
             <div
               key={item.number}
@@ -62,11 +58,9 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
             >
               <button
                 type="button"
-                onClick={() => !single && toggle(item.number)}
+                onClick={() => toggle(item.number)}
                 aria-expanded={open}
-                className={`flex w-full items-center gap-2 px-3.5 py-2.5 text-left ${
-                  single ? 'cursor-default' : 'transition-colors hover:bg-white/5'
-                }`}
+                className="flex w-full items-center gap-2 px-3.5 py-2.5 text-left transition-colors hover:bg-white/5"
               >
                 <span
                   className="shrink-0 text-sm font-bold"
@@ -74,13 +68,11 @@ export default function CatechismRefs({ refs, className = '' }: CatechismRefsPro
                 >
                   소요리문답 제{item.number}문
                 </span>
-                {!single && (
-                  <ChevronDown
-                    className={`ml-auto h-4 w-4 shrink-0 text-purple-300 transition-transform duration-300 ${
-                      open ? 'rotate-180' : ''
-                    }`}
-                  />
-                )}
+                <ChevronDown
+                  className={`ml-auto h-4 w-4 shrink-0 text-purple-300 transition-transform duration-300 ${
+                    open ? 'rotate-180' : ''
+                  }`}
+                />
               </button>
               <div
                 className={`grid transition-all duration-300 ease-in-out ${
