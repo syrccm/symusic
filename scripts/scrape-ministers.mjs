@@ -156,6 +156,9 @@ async function main() {
     items.forEach((m, i) => ministers.push({ ...m, order: i }));
     console.log(`[2/4] ${s.role}: ${items.length}명`);
   }
+  // 0건이면 페이지 구조 변경 가능성 — 빈 명단 커밋(교역자 페이지 백지화) 방지로 중단.
+  // (이 가드가 사진 정리보다 앞에 있어야 빈 kept 집합으로 전체 사진이 삭제되는 것도 막는다.)
+  if (ministers.length === 0) throw new Error('파싱 결과 0건 — 페이지 구조 변경 가능성');
 
   // 3) 사진 미러링 + 사용 파일 집합 수집
   const kept = new Set();
