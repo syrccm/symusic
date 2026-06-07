@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-06-03T11:59:54.182Z",
+  "updatedAt": "2026-06-07T10:36:10.870Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.05.31",
+      "seq": 328,
+      "youtubeId": "FuWALMIylQw",
+      "title": "말과 삶의 격차 줄이기",
+      "noteSeq": 499,
+      "notePdfUrl": "/data/notes/20260531.pdf"
+    },
     {
       "date": "2026.05.24",
       "seq": 327,
@@ -55,9 +63,7 @@
       "date": "2026.04.05",
       "seq": 321,
       "youtubeId": "ZjvJXpUDbwE",
-      "title": "부활을 입고 일상을 살다",
-      "noteSeq": 491,
-      "notePdfUrl": "/data/notes/20260405.pdf"
+      "title": "부활을 입고 일상을 살다"
     },
     {
       "date": "2026.03.29",
@@ -70,12 +76,6 @@
       "seq": 319,
       "youtubeId": "ss67wgxcXJE",
       "title": "의를 위하여 박해를 받은 자"
-    },
-    {
-      "date": "2026.03.15",
-      "seq": 318,
-      "youtubeId": "JqdGCIP0jYo",
-      "title": "화평하게 하는 자"
     }
   ]
 }

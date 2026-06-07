@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-06-03T15:46:17.228Z",
+  "updatedAt": "2026-06-07T10:36:25.901Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
   "count": 13,
   "notes": [
+    {
+      "seq": 499,
+      "title": "말과 삶의 격차 줄이기",
+      "date": "2026.06.05",
+      "pdfUrl": "/data/notes/20260531.pdf",
+      "normTitle": "말과삶의격차줄이기"
+    },
     {
       "seq": 498,
       "title": "성적 유혹 어떻게 할 것인가?",
@@ -57,7 +64,7 @@
       "seq": 491,
       "title": "부활을 입고 일상을 살다",
       "date": "2026.04.10",
-      "pdfUrl": "/data/notes/20260405.pdf",
+      "pdfUrl": null,
       "normTitle": "부활을입고일상을살다"
     },
     {
@@ -87,13 +94,6 @@
       "date": "2026.03.14",
       "pdfUrl": null,
       "normTitle": "마음이청결한자"
-    },
-    {
-      "seq": 486,
-      "title": "긍휼히 여기는 자",
-      "date": "2026.03.06",
-      "pdfUrl": null,
-      "normTitle": "긍휼히여기는자"
     }
   ]
 }
