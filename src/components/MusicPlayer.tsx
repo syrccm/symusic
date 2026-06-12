@@ -1472,6 +1472,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     type="button"
                     onClick={() => {
+                      setIsMemoryOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
+                  >
+                    <Scroll className="h-5 w-5 shrink-0 text-teal-400" />
+                    성경암송
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
                       setIsConfessionOpen(true);
                       setIsMenuOpen(false);
                     }}
@@ -1490,17 +1501,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   >
                     <Users className="h-5 w-5 shrink-0 text-teal-400" />
                     교회를 섬기는분
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMemoryOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
-                  >
-                    <Scroll className="h-5 w-5 shrink-0 text-teal-400" />
-                    성경암송
                   </button>
 
                   {/* ── 2단: 음악 기능 ── */}
