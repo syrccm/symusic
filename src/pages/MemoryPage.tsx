@@ -72,13 +72,12 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
         <header className="sticky top-0 z-20 bg-[#3A0D6E]/95 px-3 pt-3 pb-2 backdrop-blur-sm">
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
-              <h1 className="text-xl font-bold leading-tight">신앙고백 암송</h1>
-              <p className="mt-0.5 text-sm font-medium text-purple-100">
-                웨스트민스터 신앙고백서 30구절
-              </p>
-              <p className="mt-1 text-xs font-medium text-purple-200">
-                구절을 탭하면 암송 연습이 시작됩니다
-              </p>
+              <h1 className="text-xl font-bold leading-tight">
+                신앙고백 암송{' '}
+                <span className="text-sm font-medium text-purple-200/80 whitespace-nowrap">
+                  - 웨스트민스터 신앙고백서
+                </span>
+              </h1>
             </div>
             <button
               type="button"
@@ -93,10 +92,8 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
 
           {/* 단계 영역 — 향후 소요리·대요리 추가 시 이 줄을 탭 스트립으로 교체.
               지금은 1단계만 있으므로 빈 탭 없이 현재 단계만 표시. */}
-          <div className="mt-2 flex items-center gap-2">
-            <span className="rounded-full bg-teal-500/15 px-3 py-1 text-xs font-semibold text-teal-200 ring-1 ring-teal-400/30">
-              신앙고백서
-            </span>
+          <div className="mt-2 flex items-center">
+            {/* 2차(소요리·대요리) 추가 시 이 자리에 단계 탭 스트립을 넣는다. */}
             <span className="text-xs text-purple-200/70">
               외움 {memorized}/{verses.length}
             </span>
