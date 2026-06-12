@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-06-07T10:36:25.901Z",
+  "updatedAt": "2026-06-12T12:26:29.558Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 13,
+  "count": 12,
   "notes": [
     {
       "seq": 499,
@@ -57,7 +57,7 @@
       "seq": 492,
       "title": "그리스도인의 정체성",
       "date": "2026.04.18",
-      "pdfUrl": "/data/notes/20260412.pdf",
+      "pdfUrl": null,
       "normTitle": "그리스도인의정체성"
     },
     {
@@ -87,13 +87,6 @@
       "date": "2026.03.20",
       "pdfUrl": null,
       "normTitle": "화평하게하는자"
-    },
-    {
-      "seq": 487,
-      "title": "마음이 청결한 자",
-      "date": "2026.03.14",
-      "pdfUrl": null,
-      "normTitle": "마음이청결한자"
     }
   ]
 }
