@@ -1429,7 +1429,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       <div className="relative flex flex-col h-screen-dvh max-w-md mx-auto">
 
         {/* ===== 헤더 ===== */}
-        <header className="sticky top-0 z-30 bg-slate-900/85 backdrop-blur border-b border-purple-500/20">
+        <header className="sticky top-0 z-50 bg-slate-900/85 backdrop-blur border-b border-purple-500/20">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
               <div className="w-9 h-9 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -1455,7 +1455,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               </Button>
 
               {isMenuOpen && (
-                <div className="absolute right-0 top-full mt-1 w-52 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg overflow-hidden z-50 py-1">
+                <div className="absolute right-0 top-full mt-1 w-52 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg max-h-[70vh] overflow-y-auto z-50 py-1 pb-2">
                   {/* ── 1단: 신앙 (메인, 강조) ── */}
                   <p className="px-3 pt-1 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">신앙</p>
                   <button
