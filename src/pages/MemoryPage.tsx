@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, ChevronRight } from 'lucide-react';
 import { memoryVerses, MEMORY_TOPICS } from '@/data/memoryVerses';
 import { parseRef, getVerseText, loadKrv, type KrvData } from '@/utils/bibleParser';
 import { useMemoryProgress, type MemoryStatus } from '@/hooks/useMemoryProgress';
+import MemoryPractice from '@/components/MemoryPractice';
 
 interface MemoryPageProps {
   onClose?: () => void;
@@ -32,10 +33,14 @@ function verseTextOf(data: KrvData, ref: string): string | null {
 export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
   const [data, setData] = useState<KrvData | null>(null);
   const [load, setLoad] = useState<LoadStatus>('loading');
-  const { status, cycleStatus, memorized } = useMemoryProgress();
+  const { status, setStatus, cycleStatus, memorized } = useMemoryProgress();
 
   // 1차: tier 1 (30구절)만
   const verses = memoryVerses.filter((v) => v.tier <= 1);
+
+  // 전체화면 가림 연습으로 연 구절(평면 배열 인덱스). null이면 목록 화면.
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const selected = selectedIndex != null ? verses[selectedIndex] : null;
 
   // 개역한글 데이터 지연 로딩(1회 fetch 후 캐시) — BibleVerseModal과 동일 패턴
   useEffect(() => {
@@ -70,6 +75,9 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
               <h1 className="text-lg font-bold">성경암송</h1>
               <p className="text-xs text-purple-200/70">
                 1차 · 신앙고백서 30구절 · 외움 {memorized}/{verses.length}
+              </p>
+              <p className="mt-1 text-xs font-medium text-purple-200">
+                구절을 탭하면 암송 연습이 시작됩니다
               </p>
             </div>
             <button
@@ -116,13 +124,17 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
                         return (
                           <div
                             key={v.id}
-                            className="rounded-xl border border-purple-300/20 bg-black/20 p-3.5"
+                            onClick={() => setSelectedIndex(verses.findIndex((x) => x.id === v.id))}
+                            className="cursor-pointer rounded-xl border border-purple-300/20 bg-black/20 p-3.5 transition-colors hover:bg-black/30 active:bg-black/40"
                           >
                             <div className="mb-1.5 flex items-center justify-between gap-2">
                               <span className="text-sm font-bold text-teal-300">{v.id}</span>
                               <button
                                 type="button"
-                                onClick={() => cycleStatus(v.id)}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  cycleStatus(v.id);
+                                }}
                                 aria-label={`${v.id} 진도: ${badge.label} (탭하여 변경)`}
                                 className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold transition-colors ${badge.className}`}
                               >
@@ -134,9 +146,15 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
                                 <span className="text-purple-300/60">본문을 찾을 수 없습니다.</span>
                               )}
                             </p>
-                            <p className="mt-2 text-right text-[11px] text-purple-300/50">
-                              {v.source} · 개역한글
-                            </p>
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <span className="inline-flex items-center gap-0.5 rounded-full border border-teal-400/30 bg-teal-500/15 px-2.5 py-1 text-xs font-semibold text-teal-300">
+                                암송하기
+                                <ChevronRight className="h-4 w-4" />
+                              </span>
+                              <span className="text-[11px] text-purple-300/50">
+                                {v.source} · 개역한글
+                              </span>
+                            </div>
                           </div>
                         );
                       })}
@@ -148,6 +166,24 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
           )}
         </main>
       </div>
+
+      {/* 전체화면 가림 연습 — key로 구절마다 리마운트(모드 초기화) */}
+      {selected && data && (
+        <MemoryPractice
+          key={selected.id}
+          verse={selected}
+          text={verseTextOf(data, selected.ref)}
+          status={status(selected.id)}
+          onSetStatus={(s) => setStatus(selected.id, s)}
+          onPrev={() => setSelectedIndex((i) => (i != null && i > 0 ? i - 1 : i))}
+          onNext={() =>
+            setSelectedIndex((i) => (i != null && i < verses.length - 1 ? i + 1 : i))
+          }
+          hasPrev={selectedIndex != null && selectedIndex > 0}
+          hasNext={selectedIndex != null && selectedIndex < verses.length - 1}
+          onClose={() => setSelectedIndex(null)}
+        />
+      )}
     </div>
   );
 }
