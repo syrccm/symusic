@@ -1422,8 +1422,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
-      <div className="relative flex flex-col h-screen max-w-md mx-auto">
+    <div className="min-h-screen-dvh bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white">
+      <div className="relative flex flex-col h-screen-dvh max-w-md mx-auto">
 
         {/* ===== 헤더 ===== */}
         <header className="sticky top-0 z-30 bg-slate-900/85 backdrop-blur border-b border-purple-500/20">

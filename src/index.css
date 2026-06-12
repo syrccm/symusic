@@ -119,6 +119,18 @@
   }
 }
 
+/* 동적 뷰포트 높이 — iOS Safari의 접히는 툴바로 100vh가 시각 뷰포트와 어긋나
+   하단 fixed 요소가 밀려 보이는 문제 대응. vh를 먼저 선언해 dvh 미지원
+   구형 브라우저 폴백을 남기고, 지원 시 dvh가 덮어쓴다. */
+.min-h-screen-dvh {
+  min-height: 100vh;   /* 폴백 */
+  min-height: 100dvh;
+}
+.h-screen-dvh {
+  height: 100vh;       /* 폴백 */
+  height: 100dvh;
+}
+
 /* 스크롤 가능 영역에 항상 보이는 얇은 스크롤바.
    모바일 WebKit(iOS Safari, Chrome Android)은 기본적으로 오버레이 스크롤바라
    스크롤 중에만 잠깐 나타난다. scrollbar-gutter: stable 로 트랙 자리를 항상
