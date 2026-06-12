@@ -34,6 +34,7 @@ import CatechismRefs from '@/components/CatechismRefs';
 import ConfessionPage from '@/pages/ConfessionPage';
 import MinistersPage from '@/pages/MinistersPage';
 import BibleOnPage from '@/pages/BibleOnPage';
+import MemoryPage from '@/pages/MemoryPage';
 import {
   Play,
   Pause,
@@ -193,6 +194,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isMinistersOpen, setIsMinistersOpen] = useState(false);
   // 말씀:ON(3분 설교요약 VOD): 동일하게 오버레이로 표시
   const [isBibleOnOpen, setIsBibleOnOpen] = useState(false);
+  // 성경암송: 동일하게 오버레이로 표시
+  const [isMemoryOpen, setIsMemoryOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 메뉴 외부 클릭 시 닫기
@@ -1488,6 +1491,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     <Users className="h-5 w-5 shrink-0 text-teal-400" />
                     교회를 섬기는분
                   </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMemoryOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
+                  >
+                    <Scroll className="h-5 w-5 shrink-0 text-teal-400" />
+                    성경암송
+                  </button>
 
                   {/* ── 2단: 음악 기능 ── */}
                   <div className="my-1 h-px bg-white/20" />
@@ -2714,6 +2728,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       {isBibleOnOpen && (
         <div className="fixed inset-0 z-[100] overflow-y-auto">
           <BibleOnPage onClose={() => setIsBibleOnOpen(false)} />
+        </div>
+      )}
+
+      {/* 성경암송: 동일하게 오버레이로 표시 */}
+      {isMemoryOpen && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <MemoryPage onClose={() => setIsMemoryOpen(false)} />
         </div>
       )}
 
