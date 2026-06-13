@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { X, Loader2, ChevronRight } from 'lucide-react';
 import { memoryVerses, MEMORY_TOPICS } from '@/data/memoryVerses';
-import { parseRef, getVerseText, loadKrv, type KrvData } from '@/utils/bibleParser';
+import { parseRef, getSegmentVerses, loadKrv, type KrvData } from '@/utils/bibleParser';
 import { useMemoryProgress, type MemoryStatus } from '@/hooks/useMemoryProgress';
 import MemoryPractice from '@/components/MemoryPractice';
 
@@ -18,11 +18,15 @@ const STATUS_BADGE: Record<MemoryStatus, { label: string; className: string }> =
   memorized: { label: '외움', className: 'border-teal-400/40 bg-teal-500/15 text-teal-300' },
 };
 
-// memoryVerse.ref → 개역한글 단일 절 본문 (없으면 null)
+// memoryVerse.ref → 개역한글 본문. 범위(여러 절)면 절 본문을 공백으로 이어붙인다. (없으면 null)
+// 절 번호는 표시하지 않음 — 가림연습 maskText가 번호까지 가리는 어색함을 피한다.
 function verseTextOf(data: KrvData, ref: string): string | null {
-  const seg = parseRef(ref)[0];
-  if (!seg) return null;
-  return getVerseText(data, seg.book, seg.chapter, seg.verseStart);
+  const segs = parseRef(ref);
+  if (!segs.length) return null;
+  const parts = segs
+    .flatMap((seg) => getSegmentVerses(data, seg).map((x) => x.text))
+    .filter((t): t is string => Boolean(t));
+  return parts.length ? parts.join(' ') : null;
 }
 
 /**

@@ -82,8 +82,8 @@ export default function MemoryPractice({
           <span className="w-[64px]" aria-hidden="true" />
         </header>
 
-        {/* 본문 (가림 적용) — 화면 중앙 */}
-        <main className="flex flex-1 items-center justify-center px-5">
+        {/* 본문 (가림 적용) — 위에서부터 시작, 넘치면 세로 스크롤 (절 수 무관·동일 폰트) */}
+        <main className="flex-1 overflow-y-auto px-5 py-8">
           <p className="whitespace-pre-wrap break-keep text-center text-2xl leading-relaxed tracking-wide text-white">
             {display ?? (
               <span className="text-base text-purple-300/60">본문을 찾을 수 없습니다.</span>

@@ -54,11 +54,11 @@ export const memoryVerses: MemoryVerse[] = [
   { id: '창 3:15', ref: '창 3:15', tier: 1, topic: '언약', source: 'WCF 7.3' },
   { id: '눅 22:20', ref: '눅 22:20', tier: 1, topic: '언약', source: 'WCF 7.4' },
   // 5. 기독론
-  { id: '갈 4:4', ref: '갈 4:4', tier: 1, topic: '기독론', source: 'WCF 8.2' },
+  { id: '갈 4:4-5', ref: '갈 4:4-5', tier: 1, topic: '기독론', source: 'WCF 8.2' },
   { id: '딤전 2:5', ref: '딤전 2:5', tier: 1, topic: '기독론', source: 'WCF 8.1' },
   { id: '요 1:14', ref: '요 1:14', tier: 1, topic: '기독론', source: 'WCF 8.2' },
   // 6. 구원론
-  { id: '엡 2:8', ref: '엡 2:8', tier: 1, topic: '구원론', source: 'WCF 10.2' },
+  { id: '엡 2:8-9', ref: '엡 2:8-9', tier: 1, topic: '구원론', source: 'WCF 10.2' },
   { id: '롬 3:24', ref: '롬 3:24', tier: 1, topic: '구원론', source: 'WCF 11.1' },
   { id: '요 1:12', ref: '요 1:12', tier: 1, topic: '구원론', source: 'WCF 11.2' },
   { id: '요 10:28', ref: '요 10:28', tier: 1, topic: '구원론', source: 'WCF 11.5' },
