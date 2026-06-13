@@ -30,21 +30,32 @@ function verseTextOf(data: KrvData, ref: string): string | null {
 }
 
 /**
- * 성경암송 — 구절 목록 화면(메뉴 오버레이). 1차(tier 1) 30구절을 교리 주제별로 보여준다.
+ * 성경암송 — 구절 목록 화면(메뉴 오버레이). 암송 단계 탭(1차 신앙고백/2차 소요리)으로
+ * 해당 tier 구절만(배타) 교리 주제별로 보여준다.
  * 본문은 krv.json에서 지연 로딩(개역한글). 진도 뱃지를 탭하면 상태가 순환한다.
  * (단계적 가림 연습은 다음 단계에서 별도 추가 — 이 화면은 목록+본문+진도까지만.)
  */
 export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
   const [data, setData] = useState<KrvData | null>(null);
   const [load, setLoad] = useState<LoadStatus>('loading');
-  const { status, setStatus, cycleStatus, memorized } = useMemoryProgress();
+  const { status, setStatus, cycleStatus } = useMemoryProgress();
 
-  // 1차: tier 1 (30구절)만
-  const verses = memoryVerses.filter((v) => v.tier <= 1);
+  // 암송 단계 탭(배타): 1차=신앙고백(WCF) 30, 2차=소요리(WSC) 30. 누적이 아닌 해당 tier만 표시.
+  const [activeTier, setActiveTier] = useState<1 | 2>(1);
+  const verses = memoryVerses.filter((v) => v.tier === activeTier);
+
+  // 진도 "외움 N/N" 분자는 현재 탭 구절에 한정해 계산.
+  // (useMemoryProgress.memorized는 localStorage 전체를 세어 다른 tier까지 합산되므로 여기선 쓰지 않음.)
+  const memorizedInTab = verses.filter((v) => status(v.id) === 'memorized').length;
 
   // 전체화면 가림 연습으로 연 구절(평면 배열 인덱스). null이면 목록 화면.
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const selected = selectedIndex != null ? verses[selectedIndex] : null;
+
+  // 탭(activeTier) 전환 시 인덱스가 다른 배열의 엉뚱한 구절을 가리키지 않도록 목록 화면으로 리셋.
+  useEffect(() => {
+    setSelectedIndex(null);
+  }, [activeTier]);
 
   // 개역한글 데이터 지연 로딩(1회 fetch 후 캐시) — BibleVerseModal과 동일 패턴
   useEffect(() => {
@@ -79,7 +90,7 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
               <h1 className="text-xl font-bold leading-tight">
                 신앙고백 암송{' '}
                 <span className="text-sm font-medium text-purple-200/80 whitespace-nowrap">
-                  - 웨스트민스터 신앙고백서
+                  - {activeTier === 1 ? '웨스트민스터 신앙고백서' : '웨스트민스터 소요리문답'}
                 </span>
               </h1>
             </div>
@@ -94,13 +105,37 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
             </button>
           </div>
 
-          {/* 단계 영역 — 향후 소요리·대요리 추가 시 이 줄을 탭 스트립으로 교체.
-              지금은 1단계만 있으므로 빈 탭 없이 현재 단계만 표시. */}
-          <div className="mt-2 flex items-center">
-            {/* 2차(소요리·대요리) 추가 시 이 자리에 단계 탭 스트립을 넣는다. */}
-            <span className="text-xs text-purple-200/70">
-              외움 {memorized}/{verses.length}
-            </span>
+          {/* 단계 영역 — 좌: 단계 탭(배타) + 외움 진도(현재 탭 기준) / 우: 전체 퀴즈(로직은 다음 작업) */}
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+              <div className="flex rounded-full border border-purple-400/30 bg-black/20 p-0.5 text-xs">
+                {([1, 2] as const).map((tier) => (
+                  <button
+                    key={tier}
+                    type="button"
+                    onClick={() => setActiveTier(tier)}
+                    aria-pressed={activeTier === tier}
+                    className={`rounded-full px-3 py-1 font-semibold transition-colors ${
+                      activeTier === tier
+                        ? 'bg-teal-500/25 text-teal-200'
+                        : 'text-purple-200/60 hover:text-purple-100'
+                    }`}
+                  >
+                    {tier === 1 ? '신앙고백' : '소요리'}
+                  </button>
+                ))}
+              </div>
+              <span className="whitespace-nowrap text-xs text-purple-200/70">
+                외움 {memorizedInTab}/{verses.length}
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => alert('전체 퀴즈는 준비 중입니다.')}
+              className="shrink-0 rounded-full border border-purple-400/30 bg-black/20 px-3 py-1 text-xs font-semibold text-purple-100 transition-colors hover:bg-black/30"
+            >
+              전체 퀴즈
+            </button>
           </div>
         </header>
 

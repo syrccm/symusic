@@ -82,4 +82,46 @@ export const memoryVerses: MemoryVerse[] = [
   // 13. 종말론
   { id: '고후 5:10', ref: '고후 5:10', tier: 1, topic: '종말론', source: 'WCF 33.1' },
   { id: '마 25:21', ref: '마 25:21', tier: 1, topic: '종말론', source: 'WCF 33.2' },
+
+  // ===== 2차(tier 2): 웨스트민스터 소요리문답(WSC) 증거구절 기반 30구절 (누적 60) =====
+  // 선정: 소요리 증거구절 중 반복 인용(freq>=2) & '신앙 기본 고백' 성격을 우선. source=대표 인용 문답(WSC Q번호).
+  // 2. 신론
+  { id: '롬 11:36', ref: '롬 11:36', tier: 2, topic: '신론', source: 'WSC Q8' },
+  { id: '엡 1:4-5', ref: '엡 1:4-5', tier: 2, topic: '신론', source: 'WSC Q7' },
+  { id: '빌 2:6', ref: '빌 2:6', tier: 2, topic: '신론', source: 'WSC Q6' },
+  { id: '계 15:4', ref: '계 15:4', tier: 2, topic: '신론', source: 'WSC Q4' },
+  { id: '요 4:24', ref: '요 4:24', tier: 2, topic: '신론', source: 'WSC Q4' },
+  { id: '히 11:3', ref: '히 11:3', tier: 2, topic: '신론', source: 'WSC Q8' },
+  { id: '히 4:13', ref: '히 4:13', tier: 2, topic: '신론', source: 'WSC Q4' },
+  // 3. 인간론·죄
+  { id: '롬 6:23', ref: '롬 6:23', tier: 2, topic: '인간론·죄', source: 'WSC Q19' },
+  { id: '엡 4:24', ref: '엡 4:24', tier: 2, topic: '인간론·죄', source: 'WSC Q10' },
+  // 4. 언약
+  { id: '롬 3:22', ref: '롬 3:22', tier: 2, topic: '언약', source: 'WSC Q20' },
+  { id: '엡 1:7', ref: '엡 1:7', tier: 2, topic: '언약', source: 'WSC Q20' },
+  { id: '딛 3:5', ref: '딛 3:5', tier: 2, topic: '언약', source: 'WSC Q20' },
+  // 5. 기독론
+  { id: '빌 2:7-8', ref: '빌 2:7-8', tier: 2, topic: '기독론', source: 'WSC Q23' },
+  { id: '고전 15:4', ref: '고전 15:4', tier: 2, topic: '기독론', source: 'WSC Q27' },
+  { id: '롬 8:34', ref: '롬 8:34', tier: 2, topic: '기독론', source: 'WSC Q25' },
+  { id: '히 4:15', ref: '히 4:15', tier: 2, topic: '기독론', source: 'WSC Q22' },
+  // 6. 구원론
+  { id: '살전 5:23', ref: '살전 5:23', tier: 2, topic: '구원론', source: 'WSC Q32' },
+  { id: '요일 3:2', ref: '요일 3:2', tier: 2, topic: '구원론', source: 'WSC Q34' },
+  { id: '단 9:18', ref: '단 9:18', tier: 2, topic: '구원론', source: 'WSC Q87' },
+  { id: '눅 18:13', ref: '눅 18:13', tier: 2, topic: '구원론', source: 'WSC Q87' },
+  // 7. 율법·자유
+  { id: '미 6:8', ref: '미 6:8', tier: 2, topic: '율법·자유', source: 'WSC Q3' },
+  { id: '엡 4:29', ref: '엡 4:29', tier: 2, topic: '율법·자유', source: 'WSC Q71' },
+  // 8. 예배·서약
+  { id: '계 4:11', ref: '계 4:11', tier: 2, topic: '예배·서약', source: 'WSC Q1' },
+  { id: '히 12:28', ref: '히 12:28', tier: 2, topic: '예배·서약', source: 'WSC Q54' },
+  { id: '계 15:3', ref: '계 15:3', tier: 2, topic: '예배·서약', source: 'WSC Q52' },
+  { id: '사 58:13', ref: '사 58:13', tier: 2, topic: '예배·서약', source: 'WSC Q60' },
+  // 11. 성례
+  { id: '요 6:55', ref: '요 6:55', tier: 2, topic: '성례', source: 'WSC Q96' },
+  { id: '요 6:56', ref: '요 6:56', tier: 2, topic: '성례', source: 'WSC Q96' },
+  { id: '고전 11:28', ref: '고전 11:28', tier: 2, topic: '성례', source: 'WSC Q96' },
+  // 13. 종말론
+  { id: '계 22:20', ref: '계 22:20', tier: 2, topic: '종말론', source: 'WSC Q102' },
 ];
