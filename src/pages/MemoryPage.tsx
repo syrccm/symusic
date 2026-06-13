@@ -4,6 +4,8 @@ import { memoryVerses, MEMORY_TOPICS } from '@/data/memoryVerses';
 import { parseRef, getSegmentVerses, loadKrv, type KrvData } from '@/utils/bibleParser';
 import { useMemoryProgress, type MemoryStatus } from '@/hooks/useMemoryProgress';
 import MemoryPractice from '@/components/MemoryPractice';
+import MemoryQuiz from '@/components/MemoryQuiz';
+import type { QuizItem } from '@/utils/memoryQuiz';
 
 interface MemoryPageProps {
   onClose?: () => void;
@@ -44,6 +46,9 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
   const [activeTier, setActiveTier] = useState<1 | 2>(1);
   const verses = memoryVerses.filter((v) => v.tier === activeTier);
 
+  // 전체 퀴즈 오버레이 열림 여부.
+  const [quizOpen, setQuizOpen] = useState(false);
+
   // 진도 "외움 N/N" 분자는 현재 탭 구절에 한정해 계산.
   // (useMemoryProgress.memorized는 localStorage 전체를 세어 다른 tier까지 합산되므로 여기선 쓰지 않음.)
   const memorizedInTab = verses.filter((v) => status(v.id) === 'memorized').length;
@@ -51,6 +56,13 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
   // 전체화면 가림 연습으로 연 구절(평면 배열 인덱스). null이면 목록 화면.
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
   const selected = selectedIndex != null ? verses[selectedIndex] : null;
+
+  // 퀴즈에 넘길 미리 추출 리스트(현재 탭 구절 + 본문). data 없거나 본문 없는 건 제외.
+  const quizItems: QuizItem[] = data
+    ? verses
+        .map((v) => ({ id: v.id, ref: v.ref, text: verseTextOf(data, v.ref) }))
+        .filter((x): x is QuizItem => x.text != null)
+    : [];
 
   // 탭(activeTier) 전환 시 인덱스가 다른 배열의 엉뚱한 구절을 가리키지 않도록 목록 화면으로 리셋.
   useEffect(() => {
@@ -131,7 +143,7 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
             </div>
             <button
               type="button"
-              onClick={() => alert('전체 퀴즈는 준비 중입니다.')}
+              onClick={() => setQuizOpen(true)}
               className="shrink-0 rounded-full border border-purple-400/30 bg-black/20 px-3 py-1 text-xs font-semibold text-purple-100 transition-colors hover:bg-black/30"
             >
               전체 퀴즈
@@ -230,6 +242,11 @@ export default function MemoryPage({ onClose }: MemoryPageProps = {}) {
           hasNext={selectedIndex != null && selectedIndex < verses.length - 1}
           onClose={() => setSelectedIndex(null)}
         />
+      )}
+
+      {/* 전체 퀴즈 — 현재 탭(activeTier) 구절로 출제. key로 탭 전환 시 재마운트. */}
+      {quizOpen && data && (
+        <MemoryQuiz key={activeTier} items={quizItems} onClose={() => setQuizOpen(false)} />
       )}
     </div>
   );
