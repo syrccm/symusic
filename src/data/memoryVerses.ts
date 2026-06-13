@@ -44,7 +44,7 @@ export const memoryVerses: MemoryVerse[] = [
   { id: '딤후 3:16', ref: '딤후 3:16', tier: 1, topic: '계시·성경', source: 'WCF 1.2' },
   { id: '시 119:105', ref: '시 119:105', tier: 1, topic: '계시·성경', source: 'WCF 1.7' },
   // 2. 신론
-  { id: '엡 1:11', ref: '엡 1:11', tier: 1, topic: '신론', source: 'WCF 2.1' },
+  { id: '엡 1:11-12', ref: '엡 1:11-12', tier: 1, topic: '신론', source: 'WCF 2.1' },
   { id: '롬 8:28', ref: '롬 8:28', tier: 1, topic: '신론', source: 'WCF 3.6' },
   { id: '약 1:17', ref: '약 1:17', tier: 1, topic: '신론', source: 'WCF 2.1' },
   // 3. 인간론·죄
@@ -58,6 +58,7 @@ export const memoryVerses: MemoryVerse[] = [
   { id: '딤전 2:5', ref: '딤전 2:5', tier: 1, topic: '기독론', source: 'WCF 8.1' },
   { id: '요 1:14', ref: '요 1:14', tier: 1, topic: '기독론', source: 'WCF 8.2' },
   // 6. 구원론
+  { id: '요 3:16', ref: '요 3:16', tier: 1, topic: '구원론', source: 'WCF 7.3' },
   { id: '엡 2:8-9', ref: '엡 2:8-9', tier: 1, topic: '구원론', source: 'WCF 10.2' },
   { id: '롬 3:24', ref: '롬 3:24', tier: 1, topic: '구원론', source: 'WCF 11.1' },
   { id: '요 1:12', ref: '요 1:12', tier: 1, topic: '구원론', source: 'WCF 11.2' },
@@ -70,16 +71,14 @@ export const memoryVerses: MemoryVerse[] = [
   // 8. 예배·서약
   { id: '출 20:8', ref: '출 20:8', tier: 1, topic: '예배·서약', source: 'WCF 21.7' },
   { id: '마 4:10', ref: '마 4:10', tier: 1, topic: '예배·서약', source: 'WCF 21.1' },
+  { id: '마 6:9-10', ref: '마 6:9-10', tier: 1, topic: '예배·서약', source: 'WCF 21.3' },
   // 9. 국가·결혼
-  { id: '롬 13:1', ref: '롬 13:1', tier: 1, topic: '국가·결혼', source: 'WCF 23.2' },
   { id: '마 19:6', ref: '마 19:6', tier: 1, topic: '국가·결혼', source: 'WCF 24.1' },
   // 10. 교회론
   { id: '골 1:18', ref: '골 1:18', tier: 1, topic: '교회론', source: 'WCF 25.1' },
   // 11. 성례
-  { id: '마 28:19', ref: '마 28:19', tier: 1, topic: '성례', source: 'WCF 27.1' },
+  { id: '마 28:19-20', ref: '마 28:19-20', tier: 1, topic: '성례', source: 'WCF 27.1' },
   { id: '고전 10:16', ref: '고전 10:16', tier: 1, topic: '성례', source: 'WCF 27.1' },
-  // 12. 권징·회의
-  { id: '마 18:17', ref: '마 18:17', tier: 1, topic: '권징·회의', source: 'WCF 30.2' },
   // 13. 종말론
   { id: '고후 5:10', ref: '고후 5:10', tier: 1, topic: '종말론', source: 'WCF 33.1' },
   { id: '마 25:21', ref: '마 25:21', tier: 1, topic: '종말론', source: 'WCF 33.2' },
