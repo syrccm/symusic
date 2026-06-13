@@ -196,8 +196,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isBibleOnOpen, setIsBibleOnOpen] = useState(false);
   // 성경암송: 동일하게 오버레이로 표시
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
-  // 대한성서공회 사전: iframe 오버레이로 표시 (용어사전 'term' | 인명·지명사전 'name')
-  const [dictOpen, setDictOpen] = useState<null | 'term' | 'name'>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   // 메뉴 외부 클릭 시 닫기
@@ -1496,28 +1494,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     type="button"
                     onClick={() => {
-                      setDictOpen('term');
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex w-full items-center gap-2 text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    <BookOpen className="h-4 w-4 shrink-0 text-gray-400" />
-                    성경 용어사전
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDictOpen('name');
-                      setIsMenuOpen(false);
-                    }}
-                    className="flex w-full items-center gap-2 text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    <BookOpen className="h-4 w-4 shrink-0 text-gray-400" />
-                    성경 인명·지명사전
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
                       setIsMinistersOpen(true);
                       setIsMenuOpen(false);
                     }}
@@ -2761,46 +2737,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           <MemoryPage onClose={() => setIsMemoryOpen(false)} />
         </div>
       )}
-
-      {/* 대한성서공회 사전: 외부 페이지를 iframe 오버레이로 표시 */}
-      {dictOpen && (() => {
-        const dictTitle = dictOpen === 'term' ? '성경 용어사전' : '성경 인명·지명사전';
-        const dictUrl =
-          dictOpen === 'term'
-            ? 'https://www.bskorea.or.kr/prog/popup_term.php'
-            : 'https://www.bskorea.or.kr/prog/popup_name.php';
-        return (
-          <div className="fixed inset-0 z-[100] bg-slate-900 flex flex-col">
-            {/* 상단 바 */}
-            <div className="flex items-center justify-between gap-2 px-4 h-12 shrink-0 bg-slate-800 border-b border-purple-500/30">
-              <span className="text-sm text-white truncate">
-                {dictTitle}
-                <span className="text-gray-400"> · 자료: 대한성서공회</span>
-              </span>
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => window.open(dictUrl, '_blank', 'noopener,noreferrer')}
-                  title="새 창으로 열기"
-                  className="px-2.5 h-8 rounded-md bg-slate-700/80 hover:bg-slate-600 text-white text-xs flex items-center"
-                >
-                  새 창
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setDictOpen(null)}
-                  aria-label="사전 닫기"
-                  title="닫기"
-                  className="w-8 h-8 rounded-full bg-slate-700/80 hover:bg-slate-600 text-white flex items-center justify-center"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-            <iframe src={dictUrl} title={dictTitle} className="w-full flex-1 border-0" />
-          </div>
-        );
-      })()}
 
     </div>
   );
