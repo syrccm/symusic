@@ -186,6 +186,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // 햄버거 메뉴 + 카포·조옮김 / 메트로놈 모달
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  // 좌측 상단 음표 아이콘 드롭다운(음악 도구: 카포·조옮김 / 메트로놈)
+  const [isMusicMenuOpen, setIsMusicMenuOpen] = useState(false);
   const [isGitaOpen, setIsGitaOpen] = useState(false);
   const [isMetronomeOpen, setIsMetronomeOpen] = useState(false);
   // 신앙고백문답: 라우트 이동 대신 오버레이로 띄워 MusicPlayer 언마운트(=음악 정지)를 막는다.
@@ -197,8 +199,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // 성경암송: 동일하게 오버레이로 표시
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const musicMenuRef = useRef<HTMLDivElement>(null);
 
-  // 메뉴 외부 클릭 시 닫기
+  // 햄버거 메뉴 외부 클릭 시 닫기
   useEffect(() => {
     if (!isMenuOpen) return;
     const handleClickOutside = (e: MouseEvent) => {
@@ -209,6 +212,18 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isMenuOpen]);
+
+  // 음악 도구 메뉴 외부 클릭 시 닫기
+  useEffect(() => {
+    if (!isMusicMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (musicMenuRef.current && !musicMenuRef.current.contains(e.target as Node)) {
+        setIsMusicMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isMusicMenuOpen]);
 
   // 카포·조옮김 / 메트로놈 iframe에서 보내는 close 메시지 수신
   useEffect(() => {
@@ -1432,8 +1447,46 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         <header className="sticky top-0 z-50 bg-slate-900/85 backdrop-blur border-b border-purple-500/20">
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-9 h-9 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                <Music className="h-5 w-5 text-white" />
+              <div ref={musicMenuRef} className="relative flex-shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMusicMenuOpen((v) => !v);
+                    setIsMenuOpen(false);
+                  }}
+                  aria-label="음악 도구"
+                  aria-expanded={isMusicMenuOpen}
+                  title="음악 도구"
+                  className="relative w-9 h-9 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center"
+                >
+                  <Music className="h-5 w-5 text-white" />
+                </button>
+
+                {isMusicMenuOpen && (
+                  <div className="absolute left-0 top-full mt-1 w-52 bg-slate-800 border border-purple-500/30 rounded-lg shadow-lg z-50 py-1 pb-2">
+                    <p className="px-3 pt-1 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">음악</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsGitaOpen(true);
+                        setIsMusicMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    >
+                      🎸 카포·조옮김
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsMetronomeOpen(true);
+                        setIsMusicMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    >
+                      🎹 메트로놈
+                    </button>
+                  </div>
+                )}
               </div>
               <div className="min-w-0">
                 <h1 className="text-lg font-bold leading-tight">SY Music</h1>
@@ -1445,7 +1498,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setIsMenuOpen((v) => !v)}
+                onClick={() => {
+                  setIsMenuOpen((v) => !v);
+                  setIsMusicMenuOpen(false);
+                }}
                 aria-label="메뉴 열기"
                 title="메뉴"
                 className="text-white hover:text-white hover:bg-transparent"
@@ -1503,31 +1559,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     교회를 섬기는분
                   </button>
 
-                  {/* ── 2단: 음악 기능 ── */}
-                  <div className="my-1 h-px bg-white/20" />
-                  <p className="px-3 pt-0.5 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">음악</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsGitaOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    🎸 카포·조옮김
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMetronomeOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    🎹 메트로놈
-                  </button>
-
-                  {/* ── 3단: 관리 / 기타 ── */}
+                  {/* ── 2단: 관리 / 기타 ── */}
                   <div className="my-1 h-px bg-white/20" />
                   <p className="px-3 pt-0.5 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">관리</p>
                   <button
