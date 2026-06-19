@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Play, ExternalLink, Film } from 'lucide-react';
+import SermonNotes from '@/components/SermonNotes';
+
+type BibleOnTab = 'word' | 'notes';
 
 // public/data/bibleon.json 스키마 (스크래퍼가 주 1회 갱신)
 interface BibleOnItem {
@@ -54,6 +57,7 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
   const [error, setError] = useState(false);
   const [playing, setPlaying] = useState<BibleOnItem | null>(null);
   const [note, setNote] = useState<BibleOnItem | null>(null); // 말씀나눔지 PDF 뷰어 대상
+  const [tab, setTab] = useState<BibleOnTab>('word'); // 말씀(영상) ↔ 설교노트
 
   useEffect(() => {
     let alive = true;
@@ -98,7 +102,10 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
   return (
     <div
       className="min-h-screen text-white"
-      style={{ background: 'linear-gradient(160deg, #3A0D6E 0%, #4A1290 100%)' }}
+      style={{
+        background:
+          tab === 'notes' ? '#000000' : 'linear-gradient(160deg, #3A0D6E 0%, #4A1290 100%)',
+      }}
     >
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col">
         {/* 헤더 + 닫기(X) */}
@@ -118,9 +125,41 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
               <X className="h-5 w-5" />
             </button>
           </div>
+
+          {/* 말씀 ↔ 설교노트 토글 (알약 트랙) */}
+          <div className="mx-auto mt-2.5 flex w-full max-w-xs rounded-full border border-white/15 bg-black/25 p-1">
+            {(
+              [
+                ['word', '📖 말씀'],
+                ['notes', '✍️ 설교노트'],
+              ] as [BibleOnTab, string][]
+            ).map(([key, label]) => {
+              const active = tab === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTab(key)}
+                  className="flex-1 rounded-full py-2 text-center transition-colors"
+                  style={{
+                    background: active ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'transparent',
+                    color: active ? '#04221e' : 'rgba(255,255,255,.7)',
+                    fontWeight: active ? 700 : 500,
+                    fontSize: 16,
+                    boxShadow: active ? '0 4px 14px rgba(45,212,191,.35)' : 'none',
+                  }}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
         </header>
 
-        {/* 본문 */}
+        {tab === 'notes' ? (
+          <SermonNotes />
+        ) : (
+        /* 본문 (말씀: 영상 카드) */
         <main className="flex-1 px-3 py-4 sm:px-4">
           {error ? (
             <div className="mt-16 text-center text-purple-200/80">
@@ -192,6 +231,7 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
             </div>
           )}
         </main>
+        )}
       </div>
 
       {/* 유튜브 임베드 재생 모달 */}
