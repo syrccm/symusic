@@ -35,6 +35,7 @@ import ConfessionPage from '@/pages/ConfessionPage';
 import MinistersPage from '@/pages/MinistersPage';
 import BibleOnPage from '@/pages/BibleOnPage';
 import MemoryPage from '@/pages/MemoryPage';
+import BibleReader from '@/components/BibleReader';
 import {
   Play,
   Pause,
@@ -60,6 +61,7 @@ import {
   ChevronDown,
   ChevronUp,
   BookOpen,
+  BookMarked,
   Users,
   MonitorPlay
 } from 'lucide-react';
@@ -198,6 +200,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isBibleOnOpen, setIsBibleOnOpen] = useState(false);
   // 성경암송: 동일하게 오버레이로 표시
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
+  // 성경말씀(전체 성경 뷰어): 동일하게 오버레이로 표시
+  const [isBibleReaderOpen, setIsBibleReaderOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const musicMenuRef = useRef<HTMLDivElement>(null);
 
@@ -1528,6 +1532,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     type="button"
                     onClick={() => {
+                      setIsBibleReaderOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
+                  >
+                    <BookMarked className="h-5 w-5 shrink-0 text-teal-400" />
+                    성경말씀
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
                       setIsMemoryOpen(true);
                       setIsMenuOpen(false);
                     }}
@@ -2767,6 +2782,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       {isMemoryOpen && (
         <div className="fixed inset-0 z-[100] overflow-y-auto">
           <MemoryPage onClose={() => setIsMemoryOpen(false)} />
+        </div>
+      )}
+
+      {/* 성경말씀(전체 성경 뷰어): 동일하게 오버레이로 표시 */}
+      {isBibleReaderOpen && (
+        <div className="fixed inset-0 z-[100] overflow-y-auto">
+          <BibleReader onClose={() => setIsBibleReaderOpen(false)} />
         </div>
       )}
 
