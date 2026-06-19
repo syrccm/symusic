@@ -25,11 +25,12 @@ const WORSHIPS: Worship[] = ['주일', '금철', 'QT', '기타'];
 // 예배 태그 색: 주일·금철 teal / QT·기타 gold
 const isGold = (w: Worship) => w === 'QT' || w === '기타';
 
-type View = 'hub' | 'write' | 'list' | 'manage';
+type View = 'hub' | 'write' | 'list' | 'detail' | 'manage';
 const TITLES: Record<View, string> = {
   hub: '설교노트',
   write: '새 노트 작성',
   list: '목록 보기',
+  detail: '노트',
   manage: '관리',
 };
 
@@ -110,12 +111,17 @@ function todayDownloadStr(): string {
 export default function SermonNotes() {
   const [view, setView] = useState<View>('hub');
 
-  // 작성 폼
+  // 작성/수정 폼 (editingId 있으면 수정, 없으면 신규)
   const [wWorship, setWWorship] = useState<Worship>('주일');
   const [wDate, setWDate] = useState<string>(todayStr());
   const [wPassage, setWPassage] = useState('');
   const [wContent, setWContent] = useState('');
   const [saving, setSaving] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingCreatedAt, setEditingCreatedAt] = useState<number | null>(null);
+
+  // 상세 보기 대상 노트
+  const [detailNote, setDetailNote] = useState<SermonNote | null>(null);
 
   // 목록
   const [notes, setNotes] = useState<SermonNote[]>([]);
@@ -166,11 +172,50 @@ export default function SermonNotes() {
     setWContent('');
   };
 
-  // 작성 화면 진입: 폼 초기화 + 잠금 초기값 = 현재 defaultLock
+  // 신규 작성 진입: 폼 초기화 + 잠금 초기값 = 현재 defaultLock
   const openWrite = () => {
     resetWrite();
+    setEditingId(null);
+    setEditingCreatedAt(null);
     setWLocked(settings.defaultLock);
     go('write');
+  };
+
+  // 수정 진입: 기존 노트 값을 폼에 채움 (id·createdAt 유지)
+  const openEdit = (note: SermonNote) => {
+    setEditingId(note.id);
+    setEditingCreatedAt(note.createdAt);
+    setWWorship(note.worship);
+    setWDate(note.date);
+    setWPassage(note.passage ?? '');
+    setWContent(note.content);
+    setWLocked(note.locked);
+    setView('write');
+  };
+
+  // 상세 보기 진입
+  const openDetail = (note: SermonNote) => {
+    setDetailNote(note);
+    setView('detail');
+  };
+
+  // 화면별 뒤로
+  const goBack = () => {
+    if (view === 'detail') {
+      setDetailNote(null);
+      go('list');
+      return;
+    }
+    if (view === 'write' && editingId) {
+      // 수정 취소 → 상세로 복귀
+      setEditingId(null);
+      setEditingCreatedAt(null);
+      if (detailNote) {
+        setView('detail');
+        return;
+      }
+    }
+    go('hub');
   };
 
   const handleSave = async () => {
@@ -186,20 +231,32 @@ export default function SermonNotes() {
     setSaving(true);
     const now = Date.now();
     const note: SermonNote = {
-      id: newId(),
+      id: editingId ?? newId(),
       worship: wWorship,
       date: wDate,
       passage: wPassage.trim() || undefined,
       content,
       locked: wLocked,
-      createdAt: now,
+      createdAt: editingId ? editingCreatedAt ?? now : now, // 수정 시 createdAt 유지
       updatedAt: now,
     };
     try {
       await saveNote(note);
+      setNotes((prev) =>
+        editingId ? prev.map((n) => (n.id === note.id ? note : n)) : prev
+      );
+      const wasEditing = editingId;
       resetWrite();
-      toast('저장되었습니다.');
-      go('list');
+      setEditingId(null);
+      setEditingCreatedAt(null);
+      toast(wasEditing ? '수정되었습니다.' : '저장되었습니다.');
+      if (wasEditing) {
+        // 수정 → 갱신된 노트 상세로 복귀 (잠금 노트도 방금 편집했으니 열어둔 상태 유지)
+        setUnlockedIds((prev) => new Set(prev).add(note.id));
+        openDetail(note);
+      } else {
+        go('list');
+      }
     } catch (err) {
       console.error('[SermonNotes] 저장 실패:', err);
       toast('저장에 실패했습니다.');
@@ -208,12 +265,13 @@ export default function SermonNotes() {
     }
   };
 
-  const handleDelete = async (note: SermonNote) => {
+  const handleDelete = async (note: SermonNote, afterDelete?: () => void) => {
     if (!window.confirm('이 노트를 삭제할까요? 되돌릴 수 없습니다.')) return;
     try {
       await deleteNote(note.id);
       setNotes((prev) => prev.filter((n) => n.id !== note.id));
       toast('삭제되었습니다.');
+      afterDelete?.();
     } catch (err) {
       console.error('[SermonNotes] 삭제 실패:', err);
       toast('삭제에 실패했습니다.');
@@ -406,9 +464,11 @@ export default function SermonNotes() {
     try {
       const h = await hashPin(pinInput);
       if (h === settings.pinHash) {
-        setUnlockedIds((prev) => new Set(prev).add(pinModalNote.id));
+        const target = pinModalNote;
+        setUnlockedIds((prev) => new Set(prev).add(target.id));
         setPinModalNote(null);
         setPinInput('');
+        openDetail(target); // 잠금 해제 후 상세 화면으로
       } else {
         toast('PIN이 일치하지 않습니다.');
       }
@@ -455,14 +515,16 @@ export default function SermonNotes() {
         ) : (
           <button
             type="button"
-            onClick={() => go('hub')}
+            onClick={goBack}
             aria-label="뒤로"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10"
           >
             <ChevronLeft className="h-6 w-6" />
           </button>
         )}
-        <h2 className="flex-1 text-center text-base font-bold">{TITLES[view]}</h2>
+        <h2 className="flex-1 text-center text-base font-bold">
+          {view === 'write' ? (editingId ? '노트 수정' : '새 노트 작성') : TITLES[view]}
+        </h2>
         <span className="w-8 shrink-0" aria-hidden />
       </div>
 
@@ -638,9 +700,18 @@ export default function SermonNotes() {
                       잠긴 노트 · 탭하여 PIN 입력
                     </button>
                   ) : (
-                    <p className="whitespace-pre-wrap text-[15px] leading-relaxed text-[#e6e6e6]">
-                      {n.content}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => openDetail(n)}
+                      className="block w-full text-left"
+                    >
+                      <p className="line-clamp-3 whitespace-pre-wrap text-[15px] leading-relaxed text-[#e6e6e6]">
+                        {n.content}
+                      </p>
+                      <span className="mt-1 block text-xs" style={{ color: MUTED }}>
+                        탭하여 전체 보기
+                      </span>
+                    </button>
                   )}
                   <div
                     className="mt-3 flex gap-2 pt-2.5"
@@ -666,6 +737,63 @@ export default function SermonNotes() {
                 </div>
               ))
             )}
+          </div>
+        )}
+
+        {/* ===== 노트 상세/읽기 ===== */}
+        {view === 'detail' && detailNote && (
+          <div>
+            {/* 제목 영역: 예배 태그 · 날짜 · 본문 */}
+            <div className="mb-3 flex items-center gap-2">
+              <span
+                className="rounded px-2 py-0.5 text-[11px] font-bold"
+                style={{
+                  background: isGold(detailNote.worship) ? GOLD : TEAL,
+                  color: '#04221e',
+                }}
+              >
+                {detailNote.worship}
+              </span>
+              <span className="flex-1 text-xs" style={{ color: MUTED }}>
+                {detailNote.date}
+                {detailNote.passage ? ` · ${detailNote.passage}` : ''}
+              </span>
+            </div>
+
+            {/* 전체 내용 (잘림 없이) */}
+            <p className="whitespace-pre-wrap text-[16px] leading-relaxed text-[#e6e6e6]">
+              {detailNote.content}
+            </p>
+
+            {/* 동작: 수정 / 공유·백업 / 삭제 */}
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                type="button"
+                onClick={() => openEdit(detailNote)}
+                className="w-full rounded-xl py-3 text-[15px] font-bold"
+                style={{ background: TEAL_GRAD, color: '#04221e' }}
+              >
+                수정
+              </button>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleShare(detailNote)}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-[14px] text-[#cfcfcf] hover:bg-white/5 hover:text-white"
+                  style={{ background: CARD, border: `1px solid ${LINE}` }}
+                >
+                  <Share2 className="h-4 w-4" /> 공유·백업
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDelete(detailNote, () => go('list'))}
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl py-2.5 text-[14px] hover:bg-white/5"
+                  style={{ background: CARD, border: `1px solid ${LINE}`, color: '#ef6b6b' }}
+                >
+                  <Trash2 className="h-4 w-4" /> 삭제
+                </button>
+              </div>
+            </div>
           </div>
         )}
 
