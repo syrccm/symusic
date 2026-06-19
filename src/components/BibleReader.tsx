@@ -411,15 +411,21 @@ export default function BibleReader({ onClose }: BibleReaderProps) {
                 <p className="py-16 text-center text-sm text-white/50">본문을 찾을 수 없습니다.</p>
               ) : (
                 verses.map((v) => (
-                  <p
+                  <div
                     key={v.verse}
                     data-verse={v.verse}
-                    className="mb-5 break-keep"
-                    style={{ fontSize: 20, lineHeight: 1.7, color: FG }}
+                    className="flex items-start break-keep"
+                    style={{ marginBottom: 30, fontSize: 23, lineHeight: 1.8, color: FG }}
                   >
-                    <span className="mr-2 align-baseline text-sm text-white/40">{v.verse}</span>
-                    {v.text}
-                  </p>
+                    {/* 절 번호: 고정폭 칸 + 위첨자 느낌(상단 정렬·작게·옅은 회색) → 행잉 인덴트 */}
+                    <span
+                      className="shrink-0 select-none text-white/40"
+                      style={{ width: 28, fontSize: 13, lineHeight: 1, paddingTop: 5 }}
+                    >
+                      {v.verse}
+                    </span>
+                    <span className="flex-1">{v.text}</span>
+                  </div>
                 ))
               )}
             </div>
