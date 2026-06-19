@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>설교노트 — Symusic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{ --bg:#000; --header:#1a1a1a; --line:rgba(255,255,255,.1);
+    --teal:#2dd4bf; --tealD:#0e8a7c; --gold:#e8c24a; --ink:#fff; --muted:#9a9a9a; --card:#141414; }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Noto Sans KR',system-ui,'Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+    background:#050505;min-height:100vh;display:flex;justify-content:center;padding:14px;color:var(--ink)}
+  .phone{width:100%;max-width:420px;background:var(--bg);border:1px solid var(--line);border-radius:22px;
+    overflow:hidden;display:flex;flex-direction:column;height:760px}
+  .top{display:flex;align-items:center;gap:8px;padding:14px;background:var(--header);border-bottom:1px solid var(--line);flex:none}
+  .top button{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;width:32px;text-align:left}
+  .top h1{flex:1;text-align:center;font-size:16px;font-weight:700;margin-right:32px}
+  .wrap-rel{position:relative;flex:1;display:flex;flex-direction:column;min-height:0}
+  .body{flex:1;overflow-y:auto;padding:16px;scrollbar-width:none}
+  .body::-webkit-scrollbar{display:none}
+  .view{display:none}.view.on{display:block}
+  .hub{display:flex;flex-direction:column;gap:12px;margin-top:8px}
+  .hubcard{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);
+    border-radius:16px;padding:20px 18px;cursor:pointer;transition:.15s}
+  .hubcard:hover{background:#1c1c1c;border-color:rgba(45,212,191,.4)}
+  .hubcard .ic{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-size:22px;flex:none}
+  .hubcard .ic.a{background:rgba(45,212,191,.15)} .hubcard .ic.b{background:rgba(95,168,255,.15)} .hubcard .ic.c{background:rgba(232,194,74,.15)}
+  .hubcard .tx b{font-size:17px} .hubcard .tx small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+  .chip{background:var(--card);border:1px solid var(--line);border-radius:999px;color:#ddd;padding:9px 16px;font-size:14px;cursor:pointer;font-family:inherit}
+  .chip.on{background:var(--teal);border-color:var(--teal);color:#04221e;font-weight:700}
+  .field{background:var(--card);border:1px solid var(--line);border-radius:11px;color:#fff;font-family:inherit;
+    font-size:15px;padding:13px 14px;width:100%;margin-bottom:10px}
+  .write-area{width:100%;background:var(--card);border:1px solid var(--line);border-radius:12px;color:#fff;
+    font-family:inherit;font-size:16px;line-height:1.75;padding:15px;resize:none;min-height:360px}
+  .save{width:100%;background:linear-gradient(135deg,var(--teal),var(--tealD));border:none;border-radius:12px;
+    color:#04221e;font-weight:700;font-size:16px;padding:15px;cursor:pointer;font-family:inherit;margin-top:12px}
+  .filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px}
+  .filters .chip{padding:7px 13px;font-size:13px}
+  .fdate{background:var(--card);border:1px solid var(--line);border-radius:999px;color:#fff;padding:7px 12px;font-family:inherit;font-size:13px;margin-bottom:8px}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:10px}
+  .note .meta{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .note .tag{font-size:11px;color:#04221e;background:var(--teal);border-radius:6px;padding:2px 9px;font-weight:700}
+  .note .tag.gold{background:var(--gold)}
+  .note .dt{color:var(--muted);font-size:12px;flex:1}
+  .note .nt{font-size:15px;color:#e6e6e6;line-height:1.7;white-space:pre-wrap}
+  .note .acts{display:flex;gap:7px;margin-top:11px;padding-top:10px;border-top:1px solid var(--line)}
+  .note .acts button{flex:1;background:none;border:1px solid var(--line);border-radius:9px;color:#cfcfcf;
+    font-size:13px;padding:8px;cursor:pointer;font-family:inherit}
+  .note .acts button:hover{background:rgba(255,255,255,.06);color:#fff}
+  .empty{color:var(--muted);text-align:center;padding:50px 14px;font-size:14px;line-height:1.8}
+  .mgr button{width:100%;text-align:left;background:var(--card);border:1px solid var(--line);border-radius:13px;
+    color:#e6e6e6;font-family:inherit;font-size:15px;padding:16px;cursor:pointer;margin-bottom:11px;display:flex;gap:11px;align-items:center}
+  .mgr button:hover{background:#1c1c1c}
+  .mgr small{display:block;color:var(--muted);font-size:12px;margin-top:3px}
+  .codebox{margin-top:6px;background:rgba(232,194,74,.08);border:1px solid rgba(232,194,74,.3);border-radius:12px;
+    padding:14px;font-size:12.5px;color:var(--gold);line-height:1.7}
+  .codebox code{background:#000;color:#fff;padding:3px 8px;border-radius:6px}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#1b1b1b;border-top:1px solid var(--line);
+    border-radius:18px 18px 0 0;padding:10px 14px 18px;transform:translateY(110%);transition:.25s}
+  .sheet.on{transform:none}
+  .sheet h3{font-size:13px;color:var(--muted);text-align:center;padding:8px 0 10px;font-weight:500}
+  .sheet button{width:100%;background:var(--card);border:1px solid var(--line);border-radius:11px;color:#fff;
+    font-family:inherit;font-size:15px;padding:14px;margin-bottom:8px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="phone">
+  <div class="top">
+    <button id="back" style="visibility:hidden">&lsaquo;</button>
+    <h1 id="title">설교노트</h1>
+    <span style="width:32px"></span>
+  </div>
+  <div class="wrap-rel">
+  <div class="body">
+    <div class="view on" id="vHub">
+      <div class="hub">
+        <div class="hubcard" onclick="go('write')"><div class="ic a">✍️</div><div class="tx"><b>새 노트 작성</b><small>오늘 들은 말씀을 기록</small></div></div>
+        <div class="hubcard" onclick="go('list')"><div class="ic b">📚</div><div class="tx"><b>목록 보기</b><small>날짜·예배별로 지난 노트 확인</small></div></div>
+        <div class="hubcard" onclick="go('manage')"><div class="ic c">⚙️</div><div class="tx"><b>관리</b><small>전체 백업 · 복원 · 백업 코드</small></div></div>
+      </div>
+    </div>
+    <div class="view" id="vWrite">
+      <div class="chips" id="wChips">
+        <div class="chip on" data-w="주일">주일</div><div class="chip" data-w="금철">금철</div>
+        <div class="chip" data-w="QT">QT</div><div class="chip" data-w="기타">기타</div>
+      </div>
+      <input class="field" type="date" id="nDate" value="2026-06-14">
+      <input class="field" id="nPassage" placeholder="본문 (선택, 예: 고전 3:1-15)">
+      <textarea class="write-area" id="nContent" placeholder="설교를 들으며 받은 은혜와 적용할 점을 자유롭게 기록하세요…"></textarea>
+      <button class="save" onclick="saveNote()">저장</button>
+    </div>
+    <div class="view" id="vList">
+      <div class="filters" id="lFilters">
+        <div class="chip on" data-f="전체">전체</div><div class="chip" data-f="주일">주일</div>
+        <div class="chip" data-f="금철">금철</div><div class="chip" data-f="QT">QT</div><div class="chip" data-f="기타">기타</div>
+      </div>
+      <input class="fdate" type="date" id="lDate" onchange="renderList()">
+      <button class="chip" style="margin-bottom:10px" onclick="document.getElementById('lDate').value='';renderList()">날짜 초기화</button>
+      <div id="list"></div>
+    </div>
+    <div class="view" id="vManage">
+      <div class="mgr">
+        <button onclick="backupAllJSON()">📥 전체 백업 (파일로 저장)<small>모든 노트를 JSON 파일로 내려받아 안전 보관</small></button>
+        <button onclick="document.getElementById('rf').click()">📤 전체 복원 (파일에서 불러오기)<small>백업 파일 선택 → 합치기/덮어쓰기</small></button>
+        <button onclick="alert('(데모) 백업 코드 입력 → 클라우드에서 노트 복원')">🔑 백업 코드로 복원<small>다른 기기에서 백업 코드로 노트 가져오기</small></button>
+        <button onclick="shareAllText()">📤 전체 텍스트로 공유<small>모든 노트를 텍스트로 한 번에 내보내기</small></button>
+      </div>
+      <div class="codebox">🔑 <b>내 백업 코드</b> · <code>device_a8f3-7b21-c490</code><br>이 코드를 메모하세요. 캐시 삭제·기기 변경 시 복구에 필요합니다. (분실 시 복구 불가)</div>
+      <input type="file" id="rf" accept="application/json" style="display:none" onchange="restoreAll(event)">
+    </div>
+  </div>
+  <div class="sheet" id="sheet">
+    <h3 id="sheetTitle">이 노트</h3>
+    <button onclick="sheetAct('shareText')">📤 텍스트로 공유 / 복사</button>
+    <button onclick="sheetAct('email')">✉️ 이메일로 보내기</button>
+    <button onclick="sheetAct('jsonOne')">📥 이 노트 백업 (JSON 파일)</button>
+    <button onclick="closeSheet()" style="background:none;border:none;color:#888">닫기</button>
+  </div>
+  </div>
+</div>
+<script>
+  let curW="주일", curF="전체", sheetIdx=-1;
+  let notes=[
+    {w:"주일",date:"2026-06-07",passage:"고전 2:6-16",content:"성령으로 하나님의 깊은 것까지 통달.\n적용: 말씀 앞에 겸손히 무릎 꿇기."},
+    {w:"금철",date:"2026-06-05",passage:"시 23",content:"여호와는 나의 목자, 부족함이 없음을 신뢰."},
+    {w:"QT",date:"2026-06-06",passage:"요 8:21-30",content:"빛으로 오신 예수. 오늘 빛 가운데 행하기."}
+  ];
+  const $=id=>document.getElementById(id);
+  const views={hub:$("vHub"),write:$("vWrite"),list:$("vList"),manage:$("vManage")};
+  const titles={hub:"설교노트",write:"새 노트 작성",list:"목록 보기",manage:"관리"};
+  function go(v){ Object.values(views).forEach(x=>x.classList.remove("on")); views[v].classList.add("on");
+    $("title").textContent=titles[v]; $("back").style.visibility=v==="hub"?"hidden":"visible"; if(v==="list")renderList(); }
+  $("back").onclick=()=>go("hub");
+  document.querySelectorAll('#wChips .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#wChips .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');curW=c.dataset.w;});
+  document.querySelectorAll('#lFilters .chip').forEach(c=>c.onclick=()=>{document.querySelectorAll('#lFilters .chip').forEach(x=>x.classList.remove('on'));c.classList.add('on');curF=c.dataset.f;renderList();});
+  function saveNote(){ const content=$("nContent").value.trim(); if(!content){alert('내용을 입력하세요');return;}
+    notes.unshift({w:curW,date:$("nDate").value,passage:$("nPassage").value.trim(),content});
+    $("nContent").value="";$("nPassage").value=""; alert('저장되었습니다.'); go("list"); }
+  function renderList(){ const sd=$("lDate").value,L=$("list"); L.innerHTML="";
+    const shown=notes.map((n,i)=>({n,i})).filter(x=>curF==='전체'||x.n.w===curF).filter(x=>!sd||x.n.date===sd);
+    if(!shown.length){L.innerHTML='<div class="empty">기록이 없습니다.<br>필터를 바꾸거나 새 노트를 작성하세요.</div>';return;}
+    shown.forEach(({n,i})=>{ const gold=(n.w==='QT'||n.w==='기타'); const d=document.createElement('div'); d.className='note';
+      d.innerHTML='<div class="meta"><span class="tag '+(gold?'gold':'')+'">'+n.w+'</span><span class="dt">'+n.date+(n.passage?' · '+n.passage:'')+'</span></div><div class="nt">'+n.content.replace(/[<>]/g,'')+'</div><div class="acts"><button onclick="openSheet('+i+')">📤 공유·백업</button><button onclick="delNote('+i+')" style="color:#ef6b6b">🗑 삭제</button></div>';
+      L.appendChild(d); });
+  }
+  function delNote(i){ if(confirm('이 노트를 삭제할까요? 되돌릴 수 없습니다.')){notes.splice(i,1);renderList();} }
+  function openSheet(i){ sheetIdx=i; $("sheetTitle").textContent=notes[i].date+' '+notes[i].w; $("sheet").classList.add('on'); }
+  function closeSheet(){ $("sheet").classList.remove('on'); }
+  function noteText(n){ return '['+n.w+'] '+n.date+(n.passage?' · '+n.passage:'')+'\n\n'+n.content+'\n\n— Symusic 설교노트'; }
+  function dl(fn,t,ty){ const b=new Blob([t],{type:ty});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=fn;a.click();URL.revokeObjectURL(a.href); }
+  async function sheetAct(kind){ const n=notes[sheetIdx];
+    if(kind==='shareText'){const t=noteText(n);if(navigator.share){try{await navigator.share({title:'설교노트',text:t});}catch(e){}}else{try{await navigator.clipboard.writeText(t);alert('복사되었습니다.');}catch(e){alert('복사 실패');}}}
+    if(kind==='email'){location.href='mailto:?subject='+encodeURIComponent('설교노트 '+n.date+' ('+n.w+')')+'&body='+encodeURIComponent(noteText(n));}
+    if(kind==='jsonOne'){dl('설교노트-'+n.date+'-'+n.w+'.json',JSON.stringify({version:1,note:n},null,2),'application/json');}
+    closeSheet(); }
+  function backupAllJSON(){ const today=new Date().toISOString().slice(0,10);
+    dl('symusic-설교노트-'+today+'.json',JSON.stringify({app:"Symusic 설교노트",version:1,exportedAt:new Date().toISOString(),deviceId:"device_a8f3-7b21-c490",notes},null,2),'application/json'); }
+  function shareAllText(){ const t=notes.map(noteText).join('\n\n──────────\n\n');
+    if(navigator.share){navigator.share({title:'설교노트 모음',text:t}).catch(()=>{});}else{navigator.clipboard.writeText(t).then(()=>alert('전체 복사 완료'));} }
+  function restoreAll(e){ const f=e.target.files[0];if(!f)return;const r=new FileReader();
+    r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d.notes))throw 0;
+      const merge=confirm('백업 '+d.notes.length+'개를 불러옵니다.\n[확인] 기존과 합치기 / [취소] 덮어쓰기');
+      if(merge)notes=[...d.notes,...notes];else if(confirm('기존을 모두 지우고 덮어쓸까요?'))notes=[...d.notes];else{e.target.value="";return;}
+      alert('복원되었습니다.');go("list");}catch(err){alert('백업 파일 형식 오류');}e.target.value="";};
+    r.readAsText(f); }
+</script>
+</body>
+</html>

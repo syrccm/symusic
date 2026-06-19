@@ -108,8 +108,11 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
       }}
     >
       <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col">
-        {/* 헤더 + 닫기(X) */}
-        <header className="sticky top-0 z-20 bg-[#3A0D6E]/95 px-3 pt-3 pb-2.5 backdrop-blur-sm sm:px-4">
+        {/* 헤더 + 닫기(X) — notes 탭에서는 본문과 동일하게 검정 통일 */}
+        <header
+          className="sticky top-0 z-20 px-3 pt-3 pb-2.5 backdrop-blur-sm sm:px-4"
+          style={{ background: tab === 'notes' ? '#000000' : 'rgba(58,13,110,.95)' }}
+        >
           <div className="flex items-center justify-between gap-2">
             <div>
               <h1 className="text-lg font-bold">말씀:ON</h1>
@@ -127,7 +130,10 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
           </div>
 
           {/* 말씀 ↔ 설교노트 토글 (알약 트랙) */}
-          <div className="mx-auto mt-2.5 flex w-full max-w-xs rounded-full border border-white/15 bg-black/25 p-1">
+          <div
+            className="mx-auto mt-2.5 flex w-full max-w-xs rounded-full border border-white/15 p-1"
+            style={{ background: tab === 'notes' ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.25)' }}
+          >
             {(
               [
                 ['word', '📖 말씀'],
