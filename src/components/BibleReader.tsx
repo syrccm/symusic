@@ -326,11 +326,12 @@ export default function BibleReader({ onClose }: BibleReaderProps) {
                         type="button"
                         onClick={() => openChapters(b.abbr)}
                         title={b.name}
-                        className="flex aspect-square w-full items-center justify-center rounded-lg border text-sm font-semibold transition-colors hover:brightness-125"
+                        className="flex aspect-square w-full items-center justify-center rounded-lg border font-semibold leading-none transition-colors hover:brightness-125"
                         style={{
                           background: CELL_BG,
                           borderColor: CELL_BORDER,
                           color: b.testament === 'ot' ? OT_COLOR : NT_COLOR,
+                          fontSize: 'clamp(16px, 5.5vw, 24px)',
                         }}
                       >
                         {b.abbr}
@@ -364,8 +365,12 @@ export default function BibleReader({ onClose }: BibleReaderProps) {
                     key={n}
                     type="button"
                     onClick={() => openReader(book, n)}
-                    className="flex aspect-square w-full items-center justify-center rounded-lg border text-sm font-semibold text-white transition-colors hover:brightness-125"
-                    style={{ background: CELL_BG, borderColor: CELL_BORDER }}
+                    className="flex aspect-square w-full items-center justify-center rounded-lg border font-semibold leading-none text-white transition-colors hover:brightness-125"
+                    style={{
+                      background: CELL_BG,
+                      borderColor: CELL_BORDER,
+                      fontSize: 'clamp(16px, 5.5vw, 24px)',
+                    }}
                   >
                     {n}
                   </button>
@@ -420,7 +425,7 @@ export default function BibleReader({ onClose }: BibleReaderProps) {
                     {/* 절 번호: 고정폭 칸 + 위첨자 느낌(상단 정렬·작게·옅은 회색) → 행잉 인덴트 */}
                     <span
                       className="shrink-0 select-none text-white/40"
-                      style={{ width: 28, fontSize: 13, lineHeight: 1, paddingTop: 5 }}
+                      style={{ width: 36, fontSize: 18, lineHeight: 1, paddingTop: 4 }}
                     >
                       {v.verse}
                     </span>
