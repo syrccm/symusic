@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-06-14T11:24:03.725Z",
+  "updatedAt": "2026-06-19T12:54:29.853Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 13,
+  "count": 12,
   "notes": [
     {
       "seq": 500,
@@ -57,7 +57,7 @@
       "seq": 493,
       "title": "빛은 어둠을 이긴다",
       "date": "2026.04.24",
-      "pdfUrl": "/data/notes/20260419.pdf",
+      "pdfUrl": null,
       "normTitle": "빛은어둠을이긴다"
     },
     {
@@ -87,13 +87,6 @@
       "date": "2026.03.27",
       "pdfUrl": null,
       "normTitle": "의를위하여박해를받은자"
-    },
-    {
-      "seq": 488,
-      "title": "화평하게 하는 자",
-      "date": "2026.03.20",
-      "pdfUrl": null,
-      "normTitle": "화평하게하는자"
     }
   ]
 }
