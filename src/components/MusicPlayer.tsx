@@ -2773,7 +2773,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
       {/* 말씀:ON: 동일하게 오버레이로 표시 */}
       {isBibleOnOpen && (
-        <div className="fixed inset-0 z-[100] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain" style={{ touchAction: 'pan-y' }}>
           <BibleOnPage onClose={() => setIsBibleOnOpen(false)} />
         </div>
       )}

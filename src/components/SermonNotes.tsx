@@ -11,6 +11,7 @@ import {
   hashPin,
 } from '@/utils/sermonNoteStore';
 import { getDeviceId } from '@/utils/deviceId';
+import BiblePassagePicker from '@/components/BiblePassagePicker';
 import type { SermonNote, SermonNoteSettings, Worship } from '@/types/sermonNote';
 
 // ── 색 토큰 (목업 v2 — 순수 검정 다크) ─────────────────────────
@@ -26,13 +27,6 @@ const WORSHIPS: Worship[] = ['주일', '금철', 'QT', '기타'];
 const isGold = (w: Worship) => w === 'QT' || w === '기타';
 
 type View = 'hub' | 'write' | 'list' | 'detail' | 'manage';
-const TITLES: Record<View, string> = {
-  hub: '설교노트',
-  write: '새 노트 작성',
-  list: '목록 보기',
-  detail: '노트',
-  manage: '관리',
-};
 
 function todayStr(): string {
   const d = new Date();
@@ -112,10 +106,12 @@ export default function SermonNotes() {
   const [view, setView] = useState<View>('hub');
 
   // 작성/수정 폼 (editingId 있으면 수정, 없으면 신규)
-  const [wWorship, setWWorship] = useState<Worship>('주일');
+  // 신규 작성 시 예배구분은 '미선택'('')에서 시작 → 사용자가 반드시 고르도록
+  const [wWorship, setWWorship] = useState<Worship | ''>('');
   const [wDate, setWDate] = useState<string>(todayStr());
   const [wPassage, setWPassage] = useState('');
   const [wContent, setWContent] = useState('');
+  const [passagePickerOpen, setPassagePickerOpen] = useState(false); // 본문 성경말씀 선택 오버레이
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingCreatedAt, setEditingCreatedAt] = useState<number | null>(null);
@@ -133,7 +129,14 @@ export default function SermonNotes() {
   const [sheetNote, setSheetNote] = useState<SermonNote | null>(null);
   const [busy, setBusy] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const passageRef = useRef<HTMLInputElement>(null); // 본문 input (피커 닫힌 뒤 포커스 복귀 루프 방지)
   const deviceId = getDeviceId();
+
+  // 피커 닫기: 닫은 뒤 input 포커스가 복귀하며 다시 열리는 루프를 차단
+  const closePassagePicker = () => {
+    setPassagePickerOpen(false);
+    setTimeout(() => passageRef.current?.blur(), 0);
+  };
 
   // 잠금(화면 가림막)
   const [settings, setSettings] = useState<SermonNoteSettings>({ defaultLock: false, pinHash: null });
@@ -166,7 +169,7 @@ export default function SermonNotes() {
   };
 
   const resetWrite = () => {
-    setWWorship('주일');
+    setWWorship('');
     setWDate(todayStr());
     setWPassage('');
     setWContent('');
@@ -219,6 +222,10 @@ export default function SermonNotes() {
   };
 
   const handleSave = async () => {
+    if (!wWorship) {
+      toast('예배구분을 선택하세요.');
+      return;
+    }
     const content = wContent.trim();
     if (!content) {
       toast('내용을 입력하세요.');
@@ -504,31 +511,15 @@ export default function SermonNotes() {
     .filter((n) => !filterDate || n.date === filterDate);
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-black text-white">
-      {/* 서브 헤더: 뒤로 + 현재 화면명 */}
-      <div
-        className="flex items-center gap-2 px-4 py-3"
-        style={{ borderBottom: `1px solid ${LINE}` }}
-      >
-        {view === 'hub' ? (
-          <span className="w-8 shrink-0" aria-hidden />
-        ) : (
-          <button
-            type="button"
-            onClick={goBack}
-            aria-label="뒤로"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white/80 hover:bg-white/10"
-          >
-            <ChevronLeft className="h-6 w-6" />
-          </button>
-        )}
-        <h2 className="flex-1 text-center text-base font-bold">
-          {view === 'write' ? (editingId ? '노트 수정' : '새 노트 작성') : TITLES[view]}
-        </h2>
-        <span className="w-8 shrink-0" aria-hidden />
-      </div>
+    <div className="flex min-h-full w-full max-w-full flex-1 flex-col overflow-x-hidden bg-black text-white">
+      {/* 서브 헤더: 뒤로 버튼 (허브·작성 제외) — 작성 화면은 날짜 줄에 합침 */}
+      {view !== 'hub' && view !== 'write' && (
+        <div className="flex items-center px-3 pt-2">
+          <BackBtn onClick={goBack} />
+        </div>
+      )}
 
-      <div className="mx-auto w-full max-w-[680px] flex-1 px-4 py-4">
+      <div className="mx-auto w-full min-w-0 max-w-[680px] flex-1 overflow-x-hidden px-4 pb-4 pt-1">
         {/* ===== 허브 ===== */}
         {view === 'hub' && (
           <div className="mt-1 flex flex-col gap-3">
@@ -562,39 +553,65 @@ export default function SermonNotes() {
         {/* ===== 새 노트 작성 ===== */}
         {view === 'write' && (
           <div>
-            <div className="mb-3 flex flex-wrap gap-2">
-              {WORSHIPS.map((w) => (
-                <Chip key={w} active={wWorship === w} onClick={() => setWWorship(w)}>
-                  {w}
-                </Chip>
-              ))}
+            {/* [‹ 뒤로] + 날짜(탭해서 변경) + 예배구분(필수 드롭다운) — 한 줄 */}
+            <div className="mb-3 flex items-stretch gap-2">
+              <BackBtn onClick={goBack} />
+              <input
+                type="date"
+                value={wDate}
+                onChange={(e) => setWDate(e.target.value)}
+                aria-label="날짜 (탭해서 변경)"
+                className="block min-w-0 flex-[3] rounded-xl px-3 py-3 text-[15px] text-white outline-none"
+                style={{ background: CARD, border: `1px solid ${LINE}`, boxSizing: 'border-box' }}
+              />
+              <select
+                value={wWorship}
+                onChange={(e) => setWWorship(e.target.value as Worship)}
+                aria-label="예배구분 (필수)"
+                className="block min-w-0 flex-[2] rounded-xl px-3 py-3 text-[15px] outline-none"
+                style={{
+                  background: CARD,
+                  border: `1px solid ${wWorship ? LINE : TEAL}`,
+                  color: wWorship ? '#fff' : MUTED,
+                  boxSizing: 'border-box',
+                }}
+              >
+                <option value="" disabled style={{ background: CARD, color: MUTED }}>
+                  예배구분 *
+                </option>
+                {WORSHIPS.map((w) => (
+                  <option key={w} value={w} style={{ background: CARD, color: '#fff' }}>
+                    {w}
+                  </option>
+                ))}
+              </select>
             </div>
+            {/* 본문: 탭하면 성경말씀 선택 오버레이, 직접 수정도 허용 */}
             <input
-              type="date"
-              value={wDate}
-              onChange={(e) => setWDate(e.target.value)}
-              className="mb-2.5 w-full rounded-xl px-3.5 py-3 text-[15px] text-white outline-none"
-              style={{ background: CARD, border: `1px solid ${LINE}` }}
-            />
-            <input
+              ref={passageRef}
               type="text"
               value={wPassage}
               onChange={(e) => setWPassage(e.target.value)}
-              placeholder="본문 (선택, 예: 고전 3:1-15)"
-              className="mb-2.5 w-full rounded-xl px-3.5 py-3 text-[15px] text-white outline-none placeholder:text-white/35"
-              style={{ background: CARD, border: `1px solid ${LINE}` }}
+              onFocus={() => setPassagePickerOpen(true)}
+              onClick={() => setPassagePickerOpen(true)}
+              placeholder="본문 (선택, 탭하여 성경에서 고르기 · 예: 고전 3:1-5)"
+              className="mb-2.5 block w-full min-w-0 max-w-full rounded-xl px-3.5 py-3 text-[15px] text-white outline-none placeholder:text-white/35"
+              style={{ background: CARD, border: `1px solid ${LINE}`, boxSizing: 'border-box' }}
             />
             <textarea
               value={wContent}
               onChange={(e) => setWContent(e.target.value)}
               placeholder="설교를 들으며 받은 은혜와 적용할 점을 자유롭게 기록하세요…"
-              className="w-full resize-none rounded-xl p-4 text-white outline-none placeholder:text-white/35"
+              className="block w-full min-w-0 max-w-full resize-none rounded-xl p-4 text-white outline-none placeholder:text-white/35"
               style={{
                 background: CARD,
                 border: `1px solid ${LINE}`,
                 fontSize: 16,
                 lineHeight: 1.75,
                 minHeight: 360,
+                boxSizing: 'border-box',
+                touchAction: 'pan-y',
+                overscrollBehavior: 'contain',
               }}
             />
             {/* 잠금 토글 */}
@@ -1051,11 +1068,34 @@ export default function SermonNotes() {
           </div>
         </div>
       )}
+
+      {/* 본문 성경말씀 선택 오버레이 */}
+      {passagePickerOpen && (
+        <BiblePassagePicker
+          onClose={closePassagePicker}
+          onSelect={(passage) => setWPassage(passage)}
+        />
+      )}
     </div>
   );
 }
 
 // ── 하위 표현 컴포넌트 ──────────────────────────────────────────
+
+// 뒤로 버튼: 카드색 배경 + 테두리 + 또렷한 흰색 아이콘 (버튼임이 분명하게)
+function BackBtn({ onClick }: { onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label="뒤로"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white transition-colors hover:bg-white/10 active:bg-white/15"
+      style={{ background: CARD, border: `1px solid ${LINE}` }}
+    >
+      <ChevronLeft className="h-7 w-7" />
+    </button>
+  );
+}
 
 function HubCard({
   icon,

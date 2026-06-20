@@ -101,22 +101,49 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
 
   return (
     <div
-      className="min-h-screen text-white"
+      className="min-h-screen w-full max-w-full overflow-x-hidden text-white"
       style={{
         background:
           tab === 'notes' ? '#000000' : 'linear-gradient(160deg, #3A0D6E 0%, #4A1290 100%)',
       }}
     >
-      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col">
+      <div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col overflow-x-hidden">
         {/* 헤더 + 닫기(X) — notes 탭에서는 본문과 동일하게 검정 통일 */}
         <header
           className="sticky top-0 z-20 px-3 pt-3 pb-2.5 backdrop-blur-sm sm:px-4"
           style={{ background: tab === 'notes' ? '#000000' : 'rgba(58,13,110,.95)' }}
         >
-          <div className="flex items-center justify-between gap-2">
-            <div>
-              <h1 className="text-lg font-bold">말씀:ON</h1>
-              <p className="text-xs text-purple-200/70">주일 설교말씀 3분 요약</p>
+          {/* 말씀 ↔ 설교노트 토글 + 닫기(X) — 한 줄로 통합 */}
+          <div className="flex items-center gap-2">
+            <div
+              className="flex min-w-0 flex-1 rounded-full border border-white/15 p-1"
+              style={{ background: tab === 'notes' ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.25)' }}
+            >
+              {(
+                [
+                  ['word', '말씀:ON'],
+                  ['notes', '✍️ 설교노트'],
+                ] as [BibleOnTab, string][]
+              ).map(([key, label]) => {
+                const active = tab === key;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setTab(key)}
+                    className="min-w-0 flex-1 rounded-full py-2 text-center transition-colors"
+                    style={{
+                      background: active ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'transparent',
+                      color: active ? '#04221e' : 'rgba(255,255,255,.7)',
+                      fontWeight: active ? 700 : 500,
+                      fontSize: 16,
+                      boxShadow: active ? '0 4px 14px rgba(45,212,191,.35)' : 'none',
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
             <button
               type="button"
@@ -129,37 +156,10 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
             </button>
           </div>
 
-          {/* 말씀 ↔ 설교노트 토글 (알약 트랙) */}
-          <div
-            className="mx-auto mt-2.5 flex w-full max-w-xs rounded-full border border-white/15 p-1"
-            style={{ background: tab === 'notes' ? 'rgba(255,255,255,.06)' : 'rgba(0,0,0,.25)' }}
-          >
-            {(
-              [
-                ['word', '📖 말씀'],
-                ['notes', '✍️ 설교노트'],
-              ] as [BibleOnTab, string][]
-            ).map(([key, label]) => {
-              const active = tab === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setTab(key)}
-                  className="flex-1 rounded-full py-2 text-center transition-colors"
-                  style={{
-                    background: active ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'transparent',
-                    color: active ? '#04221e' : 'rgba(255,255,255,.7)',
-                    fontWeight: active ? 700 : 500,
-                    fontSize: 16,
-                    boxShadow: active ? '0 4px 14px rgba(45,212,191,.35)' : 'none',
-                  }}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
+          {/* 부제: 말씀:ON 탭에서만 토글 아래에 작게 표시 */}
+          {tab === 'word' && (
+            <p className="mt-2 text-center text-xs text-purple-200/70">주일 설교말씀 3분 요약</p>
+          )}
         </header>
 
         {tab === 'notes' ? (
