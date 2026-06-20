@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { db, auth } from '@/lib/firebase';
 import {
   collection,
@@ -1290,6 +1290,32 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     });
   }, [currentSongIndex]);
 
+  // 'NEW' 표시 대상 곡 id 집합.
+  // 대상: category 가 '금철' 또는 '주일' 인 곡 중, 그 구분에서 created_at 이
+  // 가장 최신인 1곡이 추가 4일 이내이면 NEW. (전체 곡 기준 — 탭/필터와 무관)
+  // ★ 훅 규칙: 반드시 아래 early return(if (loading))보다 위에 둔다.
+  const NEW_BADGE_MAX_AGE_MS = 4 * 24 * 60 * 60 * 1000;
+  const newSongIds = useMemo(() => {
+    const now = Date.now();
+    const result = new Set<string>();
+    for (const category of ['금철', '주일']) {
+      let latest: { id: string; time: number } | null = null;
+      for (const song of songs) {
+        if (song.category !== category) continue;
+        if (!song.created_at) continue;
+        const time = new Date(song.created_at).getTime();
+        if (Number.isNaN(time)) continue; // 파싱 실패 곡 제외
+        if (!latest || time > latest.time) {
+          latest = { id: song.id, time };
+        }
+      }
+      if (latest && now - latest.time <= NEW_BADGE_MAX_AGE_MS) {
+        result.add(latest.id);
+      }
+    }
+    return result;
+  }, [songs]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center px-4">
@@ -1410,6 +1436,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
                     <span className="text-white text-base line-clamp-2 break-words">{song.title}</span>
+                    {newSongIds.has(song.id) && (
+                      <span className="new-badge flex-shrink-0 text-[10px] font-bold text-teal-400">
+                        NEW
+                      </span>
+                    )}
                   </div>
                 </div>
                 <button
@@ -1778,6 +1809,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                   <span className="text-white text-base line-clamp-2 break-words">
                                     {song.title}
                                   </span>
+                                  {newSongIds.has(song.id) && (
+                                    <span className="new-badge flex-shrink-0 text-[10px] font-bold text-teal-400">
+                                      NEW
+                                    </span>
+                                  )}
                                 </div>
                                 <button
                                   type="button"
