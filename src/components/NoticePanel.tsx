@@ -255,7 +255,7 @@ export function NoticePanel({
                       )}
                       <div className="flex-1 min-w-0">
                         <p
-                          className={`text-base font-light truncate ${
+                          className={`text-base font-light line-clamp-2 break-keep ${
                             unread ? 'text-white' : 'text-gray-200'
                           }`}
                         >
