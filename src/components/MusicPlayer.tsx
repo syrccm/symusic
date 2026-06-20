@@ -1535,9 +1535,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       setIsBibleReaderOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-[#e8c24a] bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
                   >
-                    <BookMarked className="h-5 w-5 shrink-0 text-teal-400" />
+                    <BookMarked className="h-5 w-5 shrink-0 text-[#e8c24a]" />
                     성경말씀
                   </button>
                   <button
