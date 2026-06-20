@@ -2430,7 +2430,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
         {isAdminRoute && (
         <Dialog open={showAdminManagementDialog} onOpenChange={setShowAdminManagementDialog}>
-          <DialogContent className="bg-slate-800 border-slate-700 mx-4 max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-slate-800 border-slate-700 max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-white">곡 관리</DialogTitle>
             </DialogHeader>
