@@ -173,23 +173,3 @@
 .scrollbar-hide::-webkit-scrollbar {
   display: none; /* Chrome/Safari */
 }
-
-/* 곡 목록 'NEW' 뱃지 — opacity 1↔0.35 부드러운 깜빡임(무한 반복) */
-@keyframes newBlink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.35;
-  }
-}
-.new-badge {
-  animation: newBlink 1.3s ease-in-out infinite;
-}
-/* 모션 최소화 선호 시 깜빡임 끄고 항상 보이게 */
-@media (prefers-reduced-motion: reduce) {
-  .new-badge {
-    animation: none;
-  }
-}
