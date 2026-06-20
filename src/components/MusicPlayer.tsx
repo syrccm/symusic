@@ -651,14 +651,28 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         await updateDoc(doc(db, 'songs', editingSong.id), updatedData);
         toast.success(`곡이 수정되었습니다: ${editSongData.title}`);
 
-        // 수정 시 가사가 있으면 태그 재생성
-        console.log('🏷️ [UpdateSong] runAutoTagging 호출 직전:', {
+        // 수정 시 가사 또는 제목이 "실제로" 바뀐 경우에만 태그 재생성(API 호출).
+        // youtubeUrl·카테고리·구분 등만 변경되면 기존 tags/moods 보존 + API 미호출.
+        const lyricsChanged =
+          (updatedData.lyrics ?? '').trim() !== (editingSong.lyrics ?? '').trim();
+        const titleChanged =
+          (updatedData.title ?? '').trim() !== (editingSong.title ?? '').trim();
+        console.log('🏷️ [UpdateSong] 변경 감지:', {
           songId: editingSong.id,
+          lyricsChanged,
+          titleChanged,
           hasLyrics: !!updatedData.lyrics,
           title: updatedData.title,
         });
-        await runAutoTagging(editingSong.id, updatedData.lyrics, updatedData.title);
-        console.log('🏷️ [UpdateSong] runAutoTagging 호출 완료:', editingSong.id);
+        if (lyricsChanged || titleChanged) {
+          await runAutoTagging(editingSong.id, updatedData.lyrics, updatedData.title);
+          console.log('🏷️ [UpdateSong] runAutoTagging 호출 완료:', editingSong.id);
+        } else {
+          console.log(
+            '🏷️ [UpdateSong] 가사·제목 변경 없음 — 태그 재생성 건너뜀:',
+            editingSong.id,
+          );
+        }
       }
 
       setEditingSong(null);
