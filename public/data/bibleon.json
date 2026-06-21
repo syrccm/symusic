@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-19T12:54:20.048Z",
+  "updatedAt": "2026-06-21T11:39:45.117Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
@@ -7,7 +7,9 @@
       "date": "2026.06.14",
       "seq": 331,
       "youtubeId": "55O3ewx2kFo",
-      "title": "사랑 너머 사랑"
+      "title": "사랑 너머 사랑",
+      "noteSeq": 501,
+      "notePdfUrl": "/data/notes/20260614.pdf"
     },
     {
       "date": "2026.06.07",
