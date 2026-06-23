@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Play, ExternalLink, Film } from 'lucide-react';
 import SermonNotes from '@/components/SermonNotes';
+import NotePdfViewer from '@/components/NotePdfViewer';
 
 type BibleOnTab = 'word' | 'notes';
 
@@ -278,9 +279,9 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
         </div>
       )}
 
-      {/* 말씀나눔지 PDF 뷰어 모달 — PDF.js 공식 prebuilt(legacy) 뷰어를 전체화면 모달에 임베드.
-          file= 동일출처 정적 PDF(/data/notes/*.pdf), #zoom=page-width 로 폭맞춤(가로 잘림 방지).
-          핀치줌·세로스크롤·툴바(줌/페이지 이동)는 뷰어가 자체 제공. */}
+      {/* 말씀나눔지 PDF 뷰어 모달 — 모바일 전용 자체 뷰어(NotePdfViewer).
+          동일출처 정적 PDF(/data/notes/*.pdf)를 pdfjs-dist 로 canvas 세로 렌더하고
+          react-zoom-pan-pinch 로 핀치줌·팬·더블탭줌 제공. 헤더는 제목+닫기(X)만. */}
       {note?.notePdfUrl && (
         <div
           className="fixed inset-0 z-[70] flex flex-col bg-black/85 backdrop-blur-sm"
@@ -305,12 +306,9 @@ export default function BibleOnPage({ onClose }: BibleOnPageProps = {}) {
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <iframe
-              key={note.seq}
-              src={`/pdfjs/web/viewer.html?file=${encodeURIComponent(note.notePdfUrl)}#zoom=page-width`}
-              title={`${note.title} 말씀나눔지`}
-              className="h-full w-full flex-1 border-0 bg-white"
-            />
+            <div className="min-h-0 w-full flex-1">
+              <NotePdfViewer key={note.seq} url={note.notePdfUrl} />
+            </div>
           </div>
         </div>
       )}
