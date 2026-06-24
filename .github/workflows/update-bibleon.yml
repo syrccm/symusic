@@ -39,6 +39,14 @@ jobs:
       - name: Scrape & mirror sermon notes
         run: node scripts/scrape-sermon-notes.mjs
 
+      # 말씀나눔지 PDF → 텍스트 JSON(사랑방용). 신규 PDF만 보정 생성, 고아 JSON·index 자동 정리.
+      # 실패해도(키 누락·API 한도·새 레이아웃) 잡을 멈추지 않음 → PDF 미러링 커밋은 항상 보장.
+      - name: Build note text JSON
+        run: node scripts/build-note-json.mjs
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
       - name: Commit changes if any
         run: |
           # notes/ PDF 추가·삭제까지 포함해 public/data 전체 변경분을 스테이징

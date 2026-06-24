@@ -34,6 +34,7 @@ import CatechismRefs from '@/components/CatechismRefs';
 import ConfessionPage from '@/pages/ConfessionPage';
 import MinistersPage from '@/pages/MinistersPage';
 import BibleOnPage from '@/pages/BibleOnPage';
+import SarangbangPage from '@/pages/SarangbangPage';
 import MemoryPage from '@/pages/MemoryPage';
 import BibleReader from '@/components/BibleReader';
 import {
@@ -63,7 +64,8 @@ import {
   BookOpen,
   BookMarked,
   Users,
-  MonitorPlay
+  MonitorPlay,
+  HeartHandshake
 } from 'lucide-react';
 
 // Types
@@ -198,6 +200,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isMinistersOpen, setIsMinistersOpen] = useState(false);
   // 말씀:ON(3분 설교요약 VOD): 동일하게 오버레이로 표시
   const [isBibleOnOpen, setIsBibleOnOpen] = useState(false);
+  // 사랑방(말씀나눔지 텍스트 3탭): 동일하게 오버레이로 표시
+  const [isSarangbangOpen, setIsSarangbangOpen] = useState(false);
   // 성경암송: 동일하게 오버레이로 표시
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
   // 성경말씀(전체 성경 뷰어): 동일하게 오버레이로 표시
@@ -1577,6 +1581,17 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <button
                     type="button"
                     onClick={() => {
+                      setIsSarangbangOpen(true);
+                      setIsMenuOpen(false);
+                    }}
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
+                  >
+                    <HeartHandshake className="h-5 w-5 shrink-0 text-teal-400" />
+                    사랑방
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
                       setIsBibleReaderOpen(true);
                       setIsMenuOpen(false);
                     }}
@@ -2825,6 +2840,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       {isBibleOnOpen && (
         <div className="fixed inset-0 z-[100] w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain" style={{ touchAction: 'pan-y' }}>
           <BibleOnPage onClose={() => setIsBibleOnOpen(false)} />
+        </div>
+      )}
+
+      {/* 사랑방(말씀나눔지 텍스트 3탭): 동일하게 오버레이로 표시 */}
+      {isSarangbangOpen && (
+        <div className="fixed inset-0 z-[100] w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain" style={{ touchAction: 'pan-y' }}>
+          <SarangbangPage onClose={() => setIsSarangbangOpen(false)} />
         </div>
       )}
 
