@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, ChevronDown } from 'lucide-react';
 
@@ -68,6 +68,29 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [fontSize, setFontSize] = useState<number>(loadFont);
 
+  // ── 탭별 스크롤 위치 기억(세션 메모리) ───────────────────────────────────
+  // 같은 노트 안에서 탭만 오갈 때 각 탭의 마지막 위치 복원. 날짜 바뀌면 0으로.
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollPos = useRef<Record<Tab, number>>({ word: 0, share: 0, pray: 0 });
+
+  // 탭 전환: 떠나는 탭의 현재 위치 저장 후 전환
+  const selectTab = (next: Tab) => {
+    if (next === tab) return;
+    if (scrollRef.current) scrollPos.current[tab] = scrollRef.current.scrollTop;
+    setTab(next);
+  };
+
+  // 탭이 바뀌면 저장된 위치로 복원(레이아웃 단계 — 깜빡임 없음)
+  useLayoutEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = scrollPos.current[tab] ?? 0;
+  }, [tab]);
+
+  // 날짜(노트)가 바뀌면 위치 초기화 + 맨 위로
+  useEffect(() => {
+    scrollPos.current = { word: 0, share: 0, pray: 0 };
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [date]);
+
   // 고른 글자 크기 기억
   useEffect(() => {
     try {
@@ -125,27 +148,41 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
 
   return (
     <div
-      className="min-h-screen w-full max-w-full overflow-x-hidden text-white"
+      className="relative h-screen w-full max-w-full overflow-hidden text-white"
       style={{ background: '#0d0f14', fontFamily: reading }}
     >
-      <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col overflow-x-hidden">
-        {/* 헤더: 3탭 토글 + 닫기(X) */}
+      {/* 닫기(X) — 본문과 함께 스크롤되는 탭바와 달리 항상 우상단에 고정 */}
+      <button
+        type="button"
+        onClick={() => (onClose ? onClose() : navigate('/'))}
+        aria-label="닫기"
+        title="닫기"
+        className="fixed right-3 top-3 z-30 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-teal-400/30 bg-slate-800/90 text-white shadow-lg transition-colors hover:bg-slate-700"
+      >
+        <X className="h-5 w-5" />
+      </button>
+
+      {/* 전용 스크롤 컨테이너 — 본문만 스크롤되고, 헤더는 컨테이너 직계 자식으로 상단 고정 */}
+      <div ref={scrollRef} className="h-full w-full overflow-y-auto overflow-x-hidden">
+        {/* 헤더: 3탭 토글 — 스크롤 컨테이너 직계 sticky(가운데 정렬은 내부 max-w-3xl로) */}
         <header
-          className="sticky top-0 z-20 px-3 pt-3 pb-2.5 backdrop-blur-sm sm:px-4"
-          style={{ background: 'rgba(13,15,20,.96)' }}
+          className="sticky top-0 z-20 backdrop-blur-sm"
+          style={{ background: '#0d0f14' }}
         >
-          <div className="flex items-center gap-2">
-            <div
-              className="flex min-w-0 flex-1 rounded-full border border-white/12 p-1"
-              style={{ background: 'rgba(255,255,255,.05)' }}
-            >
-              {TABS.map(([key, label]) => {
+          <div className="mx-auto w-full max-w-3xl px-3 pt-3 pb-2.5 sm:px-4">
+            {/* 우측 pr-14: 고정된 X 버튼 자리 확보 */}
+            <div className="flex items-center gap-2 pr-14">
+              <div
+                className="flex min-w-0 flex-1 rounded-full border border-white/12 p-1"
+                style={{ background: 'rgba(255,255,255,.05)' }}
+              >
+                {TABS.map(([key, label]) => {
                 const active = tab === key;
                 return (
                   <button
                     key={key}
                     type="button"
-                    onClick={() => setTab(key)}
+                    onClick={() => selectTab(key)}
                     className="min-w-0 flex-1 rounded-full py-2 text-center transition-colors"
                     style={{
                       background: active ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'transparent',
@@ -159,17 +196,8 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
                   </button>
                 );
               })}
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={() => (onClose ? onClose() : navigate('/'))}
-              aria-label="닫기"
-              title="닫기"
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-teal-400/30 bg-slate-800/90 text-white shadow-lg transition-colors hover:bg-slate-700"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
 
           {/* 날짜·제목 드롭다운 + 글자 크기(A-/A+) */}
           {note && (
@@ -239,9 +267,11 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
               </div>
             </div>
           )}
+          </div>
         </header>
 
-        {/* 본문 영역 */}
+        {/* 본문 영역 — 헤더와 동일한 가운데 정렬(max-w-3xl) */}
+        <div className="mx-auto w-full max-w-3xl">
         <main className="flex-1 px-4 py-4 sm:px-6">
           {indexError ? (
             <div className="mt-16 text-center text-white/60">
@@ -259,7 +289,8 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
           ) : (
             <ListTab items={note.prayers} empty="기도제목이 없습니다." accent="#e8c24a" fontSize={fontSize} />
           )}
-        </main>
+          </main>
+        </div>
       </div>
 
       {/* 드롭다운 바깥 클릭 닫기용 투명 오버레이 */}
