@@ -1,8 +1,14 @@
 {
-  "updatedAt": "2026-06-24T15:51:36.961Z",
+  "updatedAt": "2026-06-26T11:50:05.534Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.06.21",
+      "seq": 332,
+      "youtubeId": "cTEBbJQUJ8Q",
+      "title": "너무나 모범적인, 그러나"
+    },
     {
       "date": "2026.06.14",
       "seq": 331,
@@ -70,12 +76,6 @@
       "seq": 322,
       "youtubeId": "7pInychiV30",
       "title": "그리스도인의 정체성"
-    },
-    {
-      "date": "2026.04.05",
-      "seq": 321,
-      "youtubeId": "ZjvJXpUDbwE",
-      "title": "부활을 입고 일상을 살다"
     }
   ]
 }
