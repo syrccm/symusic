@@ -1584,9 +1584,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       setIsSarangbangOpen(true);
                       setIsMenuOpen(false);
                     }}
-                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 transition-colors"
+                    className="flex w-full items-center gap-2 text-left px-3 py-3.5 text-base font-semibold text-rose-200 bg-[rgba(244,114,182,0.14)] hover:bg-[rgba(244,114,182,0.22)] transition-colors"
                   >
-                    <HeartHandshake className="h-5 w-5 shrink-0 text-teal-400" />
+                    <HeartHandshake className="h-5 w-5 shrink-0 text-rose-300" />
                     사랑방
                   </button>
                   <button
