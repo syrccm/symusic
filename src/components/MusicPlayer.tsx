@@ -57,6 +57,7 @@ import {
   Star,
   Share2,
   Menu,
+  Info,
   Search,
   Bell,
   ChevronDown,
@@ -1538,6 +1539,60 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     >
                       🎹 메트로놈
                     </button>
+
+                    {/* 관리(관리자 전용) — /0691(isAdminRoute)일 때만. 일반 사용자는 음악 도구만. */}
+                    {isAdminRoute && (
+                      <>
+                        <div className="my-1 h-px bg-white/20" />
+                        <p className="px-3 pt-0.5 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">관리</p>
+
+                        {isAdmin ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleAdminManagementAccess();
+                                setIsMusicMenuOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                            >
+                              ⚙️ 곡 관리
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsAnalyticsOpen(true);
+                                setIsMusicMenuOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                            >
+                              📊 통계
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                handleAdminLogout();
+                                setIsMusicMenuOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2.5 text-sm text-red-300 hover:bg-red-500/10 transition-colors"
+                            >
+                              🚪 로그아웃
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleAdminManagementAccess();
+                              setIsMusicMenuOpen(false);
+                            }}
+                            className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                          >
+                            🔐 관리자 로그인
+                          </button>
+                        )}
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -1546,6 +1601,20 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 <p className="text-base text-purple-300 truncate">수영로말씀적용찬양</p>
               </div>
             </div>
+
+            <div className="flex items-center gap-1 flex-shrink-0">
+            {/* 개발자 정보 — 누구나 접근(게이트 없음). 햄버거와 별개 아이콘. */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsAboutOpen(true)}
+              aria-label="개발자 정보"
+              title="개발자 정보"
+              className="text-white hover:text-white hover:bg-transparent"
+              style={{ padding: '8px', lineHeight: 0, height: 'auto' }}
+            >
+              <Info style={{ width: '24px', height: '24px' }} strokeWidth={1.5} color="white" />
+            </Button>
 
             <div ref={menuRef} className="relative flex-shrink-0">
               <Button
@@ -1633,70 +1702,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     <Users className="h-5 w-5 shrink-0 text-teal-400" />
                     교회를 섬기는분
                   </button>
-
-                  {/* ── 2단: 관리 / 기타 ── */}
-                  <div className="my-1 h-px bg-white/20" />
-                  <p className="px-3 pt-0.5 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">관리</p>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsAboutOpen(true);
-                      setIsMenuOpen(false);
-                    }}
-                    className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                  >
-                    ℹ️ 개발자 정보
-                  </button>
-
-                  {isAdminRoute && isAdmin && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleAdminManagementAccess();
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                      >
-                        ⚙️ 곡 관리
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setIsAnalyticsOpen(true);
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                      >
-                        📊 통계
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleAdminLogout();
-                          setIsMenuOpen(false);
-                        }}
-                        className="w-full text-left px-3 py-2.5 text-sm text-red-300 hover:bg-red-500/10 transition-colors"
-                      >
-                        🚪 로그아웃
-                      </button>
-                    </>
-                  )}
-
-                  {isAdminRoute && !isAdmin && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        handleAdminManagementAccess();
-                        setIsMenuOpen(false);
-                      }}
-                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
-                    >
-                      🔐 관리자 로그인
-                    </button>
-                  )}
+                  {/* 관리 섹션(곡관리·통계·로그아웃·관리자로그인)은 음표 로고 메뉴로 이동됨 */}
                 </div>
               )}
+            </div>
             </div>
           </div>
 
