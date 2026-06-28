@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, ChevronDown } from 'lucide-react';
+import { X } from 'lucide-react';
 
 // public/data/notes-text/[YYYYMMDD].json 스키마 (build-note-json.mjs 생성)
 interface NoteData {
@@ -59,13 +59,11 @@ interface SarangbangPageProps {
 
 export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
   const navigate = useNavigate();
-  const [index, setIndex] = useState<IndexData | null>(null);
   const [indexError, setIndexError] = useState(false);
-  const [date, setDate] = useState<string>(''); // 선택된 노트 날짜
+  const [date, setDate] = useState<string>(''); // 최신 노트 날짜
   const [note, setNote] = useState<NoteData | null>(null);
   const [noteError, setNoteError] = useState(false);
   const [tab, setTab] = useState<Tab>('word');
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [fontSize, setFontSize] = useState<number>(loadFont);
 
   // ── 탭별 스크롤 위치 기억(세션 메모리) ───────────────────────────────────
@@ -107,7 +105,7 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
     });
   };
 
-  // 목록 로드 → 최신 노트 기본 선택
+  // 목록 로드 → 가장 최신 나눔지 1개만 자동 선택(과거 선택 UI 없음)
   useEffect(() => {
     let alive = true;
     fetch('/data/notes-text/index.json', { cache: 'no-cache' })
@@ -117,7 +115,7 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
       })
       .then((d: IndexData) => {
         if (!alive) return;
-        setIndex(d);
+        // index.json은 날짜 내림차순 → 첫 항목이 가장 최신 나눔지
         if (d.notes?.length) setDate(d.notes[0].date);
       })
       .catch(() => alive && setIndexError(true));
@@ -170,77 +168,32 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
           style={{ background: '#0d0f14' }}
         >
           <div className="mx-auto w-full max-w-3xl px-3 pt-3 pb-2.5 sm:px-4">
-            {/* 우측 pr-14: 고정된 X 버튼 자리 확보 */}
+            {/* 우측 pr-14: 고정된 X 버튼 자리 확보. 탭 토글 + 글자 크기(A−/A+)를 한 줄에. */}
             <div className="flex items-center gap-2 pr-14">
               <div
                 className="flex min-w-0 flex-1 rounded-full border border-white/12 p-1"
                 style={{ background: 'rgba(255,255,255,.05)' }}
               >
                 {TABS.map(([key, label]) => {
-                const active = tab === key;
-                return (
-                  <button
-                    key={key}
-                    type="button"
-                    onClick={() => selectTab(key)}
-                    className="min-w-0 flex-1 rounded-full py-2 text-center transition-colors"
-                    style={{
-                      background: active ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'transparent',
-                      color: active ? '#04221e' : 'rgba(255,255,255,.7)',
-                      fontWeight: active ? 700 : 500,
-                      fontSize: 16,
-                      boxShadow: active ? '0 4px 14px rgba(45,212,191,.35)' : 'none',
-                    }}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
-              </div>
-            </div>
-
-          {/* 날짜·제목 드롭다운 + 글자 크기(A-/A+) */}
-          {note && (
-            <div className="mt-2 flex items-center gap-2">
-              <div className="relative min-w-0 flex-1">
-              <button
-                type="button"
-                onClick={() => setPickerOpen((v) => !v)}
-                className="flex w-full items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-left transition-colors hover:bg-white/10"
-              >
-                <span className="min-w-0">
-                  <span className="text-xs font-medium text-teal-300">{fmtDate(note.date)}</span>
-                  <span className="ml-2 text-sm font-semibold text-white break-keep">{note.title}</span>
-                </span>
-                <ChevronDown
-                  className={`h-4 w-4 shrink-0 text-white/50 transition-transform ${pickerOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-              {pickerOpen && index && (
-                <div className="absolute left-0 right-0 top-full z-30 mt-1 max-h-[60vh] overflow-y-auto rounded-xl border border-white/12 bg-[#171a21] py-1 shadow-2xl">
-                  {index.notes.map((n) => {
-                    const sel = n.date === date;
-                    return (
-                      <button
-                        key={n.date}
-                        type="button"
-                        onClick={() => {
-                          setDate(n.date);
-                          setPickerOpen(false);
-                          setTab('word');
-                        }}
-                        className={`flex w-full flex-col gap-0.5 px-3 py-2.5 text-left transition-colors ${
-                          sel ? 'bg-teal-500/15' : 'hover:bg-white/5'
-                        }`}
-                      >
-                        <span className="text-xs font-medium text-teal-300">{fmtDate(n.date)}</span>
-                        <span className="text-sm font-semibold text-white break-keep">{n.title}</span>
-                        <span className="text-xs text-white/45">{n.scripture}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
+                  const active = tab === key;
+                  return (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => selectTab(key)}
+                      className="min-w-0 flex-1 rounded-full py-2 text-center transition-colors"
+                      style={{
+                        background: active ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'transparent',
+                        color: active ? '#04221e' : 'rgba(255,255,255,.7)',
+                        fontWeight: active ? 700 : 500,
+                        fontSize: 16,
+                        boxShadow: active ? '0 4px 14px rgba(45,212,191,.35)' : 'none',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
               </div>
               {/* 글자 크기 조절 — 읽는 텍스트만 적용 */}
               <div className="flex shrink-0 items-center gap-1">
@@ -266,7 +219,6 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
                 </button>
               </div>
             </div>
-          )}
           </div>
         </header>
 
@@ -292,9 +244,6 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
           </main>
         </div>
       </div>
-
-      {/* 드롭다운 바깥 클릭 닫기용 투명 오버레이 */}
-      {pickerOpen && <div className="fixed inset-0 z-10" onClick={() => setPickerOpen(false)} />}
     </div>
   );
 }
@@ -317,8 +266,9 @@ function renderScripture(text: string) {
 function WordTab({ note, fontSize }: { note: NoteData; fontSize: number }) {
   return (
     <article className="pb-10">
-      {/* 제목·설교자·성경표기는 고정 크기(UI) */}
-      <h1 className="text-2xl font-bold leading-tight text-white break-keep sm:text-[26px]">
+      {/* 날짜(어느 주인지) → 제목·설교자·성경표기. 본문과 함께 스크롤 */}
+      <p className="text-xs font-medium text-teal-300">{fmtDate(note.date)}</p>
+      <h1 className="mt-1 text-2xl font-bold leading-tight text-white break-keep sm:text-[26px]">
         {note.title}
       </h1>
       <p className="mt-1.5 text-sm text-white/55">
