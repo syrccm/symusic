@@ -146,10 +146,10 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
 
   return (
     <div
-      className="relative h-screen w-full max-w-full overflow-hidden text-white"
+      className="relative flex h-screen w-full max-w-full flex-col overflow-hidden text-white"
       style={{ background: '#0d0f14', fontFamily: reading }}
     >
-      {/* 닫기(X) — 본문과 함께 스크롤되는 탭바와 달리 항상 우상단에 고정 */}
+      {/* 닫기(X) — 항상 우상단에 고정 */}
       <button
         type="button"
         onClick={() => (onClose ? onClose() : navigate('/'))}
@@ -160,13 +160,10 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
         <X className="h-5 w-5" />
       </button>
 
-      {/* 전용 스크롤 컨테이너 — 본문만 스크롤되고, 헤더는 컨테이너 직계 자식으로 상단 고정 */}
-      <div ref={scrollRef} className="h-full w-full overflow-y-auto overflow-x-hidden">
-        {/* 헤더: 3탭 토글 — 스크롤 컨테이너 직계 sticky(가운데 정렬은 내부 max-w-3xl로) */}
-        <header
-          className="sticky top-0 z-20 backdrop-blur-sm"
-          style={{ background: '#0d0f14' }}
-        >
+      {/* 헤더: 3탭 토글 — 스크롤 컨테이너 "밖" 상단에 고정.
+          iOS에서 본문을 끝까지 내린 뒤 더 당기는 rubber-band 바운스 때
+          컨테이너 내부 sticky 헤더가 잠깐 사라지는 현상을 원천 차단(본문 스크롤과 분리). */}
+      <header className="z-20 shrink-0" style={{ background: '#0d0f14' }}>
           <div className="mx-auto w-full max-w-3xl px-3 pt-3 pb-2.5 sm:px-4">
             {/* 우측 pr-14: 고정된 X 버튼 자리 확보. 탭 토글 + 글자 크기(A−/A+)를 한 줄에. */}
             <div className="flex items-center gap-2 pr-14">
@@ -222,6 +219,12 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
           </div>
         </header>
 
+      {/* 전용 스크롤 컨테이너 — 본문만 스크롤. overscroll-contain으로 바운스/스크롤 체이닝 억제.
+          scrollRef는 그대로 이 컨테이너 → 탭별 스크롤 위치 기억·날짜 초기화 로직 변경 없음. */}
+      <div
+        ref={scrollRef}
+        className="min-h-0 w-full flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain"
+      >
         {/* 본문 영역 — 헤더와 동일한 가운데 정렬(max-w-3xl) */}
         <div className="mx-auto w-full max-w-3xl">
         <main className="flex-1 px-4 py-4 sm:px-6">
@@ -265,7 +268,7 @@ function renderScripture(text: string) {
 // 말씀 탭: 제목·설교자·성경표기 + 성경본문 + 설교 본문 문단(설교자 문단마다 순서 번호)
 function WordTab({ note, fontSize }: { note: NoteData; fontSize: number }) {
   return (
-    <article className="pb-10">
+    <article className="pb-32">
       {/* 날짜(어느 주인지) → 제목·설교자·성경표기. 본문과 함께 스크롤 */}
       <p className="text-xs font-medium text-teal-300">{fmtDate(note.date)}</p>
       <h1 className="mt-1 text-2xl font-bold leading-tight text-white break-keep sm:text-[26px]">
@@ -324,7 +327,7 @@ function ListTab({
 }) {
   if (!items?.length) return <div className="mt-16 text-center text-white/50">{empty}</div>;
   return (
-    <ol className="space-y-4 pb-10">
+    <ol className="space-y-4 pb-32">
       {items.map((t, i) => (
         <li key={i} className="flex gap-3">
           <span
