@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-06-26T11:50:15.700Z",
+  "updatedAt": "2026-06-28T00:13:32.681Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 12,
+  "count": 13,
   "notes": [
+    {
+      "seq": 502,
+      "title": "너무나 모범적인, 그러나",
+      "date": "2026.06.26",
+      "pdfUrl": "/data/notes/20260621.pdf",
+      "normTitle": "너무나모범적인그러나"
+    },
     {
       "seq": 501,
       "title": "사랑 너머 사랑",
