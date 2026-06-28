@@ -1297,9 +1297,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // 'NEW' 표시 대상 곡 id 집합.
   // 대상: category 가 '금철' 또는 '주일' 인 곡 중, 그 구분에서 created_at 이
-  // 가장 최신인 1곡이 추가 4일 이내이면 NEW. (전체 곡 기준 — 탭/필터와 무관)
+  // 가장 최신인 1곡이 추가 6일 이내이면 NEW. (전체 곡 기준 — 탭/필터와 무관)
   // ★ 훅 규칙: 반드시 아래 early return(if (loading))보다 위에 둔다.
-  const NEW_BADGE_MAX_AGE_MS = 4 * 24 * 60 * 60 * 1000;
+  const NEW_BADGE_MAX_AGE_MS = 6 * 24 * 60 * 60 * 1000;
   const newSongIds = useMemo(() => {
     const now = Date.now();
     const result = new Set<string>();
