@@ -1,6 +1,45 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X } from 'lucide-react';
+import { X, Highlighter, Eraser, Check } from 'lucide-react';
+import { toast } from 'sonner';
+import {
+  buildSegments,
+  fetchHighlights,
+  saveHighlights,
+  genMarkId,
+  type HighlightColor,
+  type HighlightMark,
+} from '@/utils/noteHighlights';
+
+// 편집 중 선택(한 문단 안, 글자 단위). 공백 제외 오프셋으로 환산해 저장.
+interface PendingSel {
+  para: number;
+  start: number; // 공백 제외 글자 오프셋(포함)
+  end: number; // 공백 제외 글자 오프셋(제외)
+  quote: string; // 선택 글자열(공백 제거)
+}
+
+const stripWS = (s: string) => s.replace(/\s+/g, '');
+const countNW = (s: string) => stripWS(s).length;
+
+// 문단 <p>(data-para) 기준, DOM 선택 경계까지의 "공백 포함" 글자 오프셋.
+function offsetWithinPara(paraEl: Element, node: Node, offset: number): number {
+  const r = document.createRange();
+  r.selectNodeContents(paraEl);
+  try {
+    r.setEnd(node, offset);
+  } catch {
+    return 0;
+  }
+  return r.toString().length;
+}
+
+// 선택 노드에서 가장 가까운 [data-para] 문단 엘리먼트
+function closestPara(node: Node | null): HTMLElement | null {
+  const el = node && node.nodeType === 3 ? node.parentElement : (node as HTMLElement | null);
+  return el ? el.closest('[data-para]') : null;
+}
 
 // public/data/notes-text/[YYYYMMDD].json 스키마 (build-note-json.mjs 생성)
 interface NoteData {
@@ -55,9 +94,11 @@ function loadFont(): number {
 interface SarangbangPageProps {
   /** 오버레이로 띄울 때 닫기 콜백. 없으면 라우트 모드(뒤로가기). */
   onClose?: () => void;
+  /** 관리자(/0691 로그인)일 때만 형광펜 작성 UI 노출. */
+  isAdmin?: boolean;
 }
 
-export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
+export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangPageProps = {}) {
   const navigate = useNavigate();
   const [indexError, setIndexError] = useState(false);
   const [date, setDate] = useState<string>(''); // 최신 노트 날짜
@@ -65,6 +106,13 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
   const [noteError, setNoteError] = useState(false);
   const [tab, setTab] = useState<Tab>('word');
   const [fontSize, setFontSize] = useState<number>(loadFont);
+  const [highlights, setHighlights] = useState<HighlightMark[]>([]); // 형광펜(표시·편집 공용)
+
+  // ── 형광펜 작성(관리자) ──────────────────────────────────────────────────
+  const [editMode, setEditMode] = useState(false); // 형광펜 모드
+  const [pendingSel, setPendingSel] = useState<PendingSel | null>(null); // 편집 중 선택(글자 단위)
+  const [dirty, setDirty] = useState(false); // 미저장 변경
+  const [saving, setSaving] = useState(false);
 
   // ── 탭별 스크롤 위치 기억(세션 메모리) ───────────────────────────────────
   // 같은 노트 안에서 탭만 오갈 때 각 탭의 마지막 위치 복원. 날짜 바뀌면 0으로.
@@ -142,6 +190,112 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
     };
   }, [date]);
 
+  // 형광펜 강조 로드. 날짜 바뀌면 noteHighlights/{date} 읽어옴. (편집 상태도 초기화)
+  useEffect(() => {
+    setPendingSel(null);
+    setDirty(false);
+    if (!date) {
+      setHighlights([]);
+      return;
+    }
+    let alive = true;
+    fetchHighlights(date)
+      .then((h) => alive && setHighlights(h))
+      .catch(() => alive && setHighlights([]));
+    return () => {
+      alive = false;
+    };
+  }, [date]);
+
+  // ── 형광펜 작성 핸들러 ─────────────────────────────────────────────────
+  // 선택 해제(상태 + 브라우저 네이티브 선택 모두)
+  const clearSelection = () => {
+    setPendingSel(null);
+    try {
+      window.getSelection()?.removeAllRanges();
+    } catch {
+      /* 무시 */
+    }
+  };
+
+  // 형광펜 모드 토글. 끌 때 선택은 비운다(미저장 변경은 유지 — 실수 방지).
+  const toggleEdit = () => {
+    setEditMode((on) => {
+      if (on) clearSelection();
+      return !on;
+    });
+  };
+
+  // 편집 모드에서 OS 텍스트 선택 감지 → 한 문단 안 글자범위를 pendingSel 로 저장.
+  // (모바일: 색 버튼 탭 시 선택이 풀려도 적용되도록 미리 캡처해 둔다.)
+  useEffect(() => {
+    if (!editMode || !note) return;
+    const onSelectionChange = () => {
+      const sel = window.getSelection();
+      // 선택 없음/접힘이면 pendingSel 은 "유지"(클리어 안 함 → 버튼 탭으로 풀려도 적용 가능)
+      if (!sel || sel.isCollapsed || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      const startPara = closestPara(range.startContainer);
+      if (!startPara) return; // 본문 밖 선택은 무시
+      const paraIndex = Number(startPara.getAttribute('data-para'));
+      const p = note.body[paraIndex] ?? '';
+      const startWS = offsetWithinPara(startPara, range.startContainer, range.startOffset);
+      // 한 문단 내로 제한: 끝이 다른 문단이면 시작 문단 끝까지
+      const endPara = closestPara(range.endContainer);
+      const endWS =
+        endPara === startPara ? offsetWithinPara(startPara, range.endContainer, range.endOffset) : p.length;
+      const start = countNW(p.slice(0, startWS));
+      const end = countNW(p.slice(0, endWS));
+      if (end <= start) return; // 공백만 선택 등
+      setPendingSel({ para: paraIndex, start, end, quote: stripWS(p.slice(startWS, endWS)) });
+    };
+    document.addEventListener('selectionchange', onSelectionChange);
+    return () => document.removeEventListener('selectionchange', onSelectionChange);
+  }, [editMode, note]);
+
+  // 색 적용 → 로컬 marks 추가
+  const applyColor = (color: HighlightColor) => {
+    if (!pendingSel) return;
+    const { para, start, end, quote } = pendingSel;
+    setHighlights((cur) => [...cur, { id: genMarkId(), para, start, end, quote, color }]);
+    clearSelection();
+    setDirty(true);
+  };
+
+  // 지우기 → 선택 범위와 겹치는 강조 제거(같은 문단)
+  const eraseSelection = () => {
+    if (!pendingSel) return;
+    const { para, start, end } = pendingSel;
+    setHighlights((cur) => {
+      const next = cur.filter((m) => {
+        if (m.para !== para) return true;
+        const ms = m.start ?? -1;
+        const me = m.end ?? -1;
+        const overlaps = ms < end && start < me; // 범위 교집합
+        return !overlaps;
+      });
+      if (next.length !== cur.length) setDirty(true);
+      return next;
+    });
+    clearSelection();
+  };
+
+  // 저장 → Firestore 덮어쓰기
+  const handleSave = async () => {
+    if (!date || saving) return;
+    setSaving(true);
+    try {
+      await saveHighlights(date, highlights);
+      setDirty(false);
+      toast.success('형광펜을 저장했습니다.');
+    } catch (e) {
+      toast.error('저장 실패: ' + (e instanceof Error ? e.message : '알 수 없는 오류'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const showEditTools = isAdmin && editMode && tab === 'word';
   const reading = "'Noto Sans KR', sans-serif";
 
   return (
@@ -216,6 +370,31 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
                 </button>
               </div>
             </div>
+
+            {/* 관리자 전용: 형광펜 모드 토글 (말씀 탭에서만) */}
+            {isAdmin && tab === 'word' && (
+              <div className="mt-2 flex items-center gap-2 pr-14">
+                <button
+                  type="button"
+                  onClick={toggleEdit}
+                  className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors"
+                  style={{
+                    borderColor: editMode ? 'rgba(45,212,191,.6)' : 'rgba(255,255,255,.18)',
+                    background: editMode ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'rgba(255,255,255,.05)',
+                    color: editMode ? '#04221e' : 'rgba(255,255,255,.8)',
+                  }}
+                >
+                  <Highlighter className="h-4 w-4" />
+                  {editMode ? '형광펜 끄기' : '형광펜'}
+                </button>
+                {editMode && (
+                  <span className="text-xs text-white/45">
+                    {pendingSel ? '색을 고르세요' : '본문을 드래그·길게눌러 선택하세요'}
+                    {dirty && <span className="ml-1 text-amber-300">· 저장 안 됨</span>}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
         </header>
 
@@ -238,7 +417,7 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
           ) : !note ? (
             <div className="mt-16 text-center text-white/50">불러오는 중…</div>
           ) : tab === 'word' ? (
-            <WordTab note={note} fontSize={fontSize} />
+            <WordTab note={note} fontSize={fontSize} highlights={highlights} />
           ) : tab === 'share' ? (
             <ListTab items={note.questions} empty="나눔질문이 없습니다." accent="#2dd4bf" fontSize={fontSize} />
           ) : (
@@ -247,6 +426,65 @@ export default function SarangbangPage({ onClose }: SarangbangPageProps = {}) {
           </main>
         </div>
       </div>
+
+      {/* 형광펜 하단 고정 바(관리자·말씀 탭·편집 모드). OS 선택 팝업과 안 겹치게 하단.
+          ★fixed: iOS에서 100vh(h-screen)가 보이는 화면보다 커서 absolute bottom-0이
+          화면 밖으로 밀리는 문제를 피하려고 뷰포트 기준 고정으로 둔다. */}
+      {showEditTools && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10"
+          style={{ background: 'rgba(13,15,20,.96)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-3 py-2.5 sm:px-4">
+            {/* 색 팔레트 */}
+            {(['yellow', 'green', 'pink'] as HighlightColor[]).map((c) => (
+              <button
+                key={c}
+                type="button"
+                onClick={() => applyColor(c)}
+                disabled={!pendingSel}
+                aria-label={`${c} 형광`}
+                className="h-9 w-9 shrink-0 rounded-full border border-white/25 transition-transform active:scale-90 disabled:opacity-35"
+                style={{ background: HL_COLORS[c] }}
+              />
+            ))}
+            {/* 지우기 */}
+            <button
+              type="button"
+              onClick={eraseSelection}
+              disabled={!pendingSel}
+              aria-label="지우기"
+              title="선택 범위의 형광 지우기"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/5 text-white/80 transition-colors hover:bg-white/10 disabled:opacity-35"
+            >
+              <Eraser className="h-4 w-4" />
+            </button>
+
+            <div className="ml-auto flex items-center gap-2">
+              {pendingSel && (
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  className="rounded-lg px-2.5 py-2 text-sm text-white/60 transition-colors hover:text-white/90"
+                >
+                  선택 해제
+                </button>
+              )}
+              {/* 저장 */}
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={!dirty || saving}
+                className="flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-bold transition-colors disabled:opacity-40"
+                style={{ background: dirty ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'rgba(255,255,255,.08)', color: dirty ? '#04221e' : 'rgba(255,255,255,.6)' }}
+              >
+                <Check className="h-4 w-4" />
+                {saving ? '저장 중…' : dirty ? '저장' : '저장됨'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -265,8 +503,59 @@ function renderScripture(text: string) {
   );
 }
 
+// 형광펜 색 — 어두운 배경(#0d0f14)에서 흰 글자가 잘 보이는 반투명 톤.
+// (값은 dev에서 보며 미세 조정 가능)
+const HL_COLORS: Record<HighlightColor, string> = {
+  yellow: 'rgba(250, 204, 21, 0.40)',
+  green: 'rgba(74, 222, 128, 0.38)',
+  pink: 'rgba(244, 130, 190, 0.42)',
+};
+
+const hlStyle = (color: HighlightColor): CSSProperties => ({
+  background: HL_COLORS[color],
+  color: '#ffffff',
+  borderRadius: 3,
+  padding: '0.05em 0.12em',
+  // 줄바꿈 시에도 각 줄에 배경이 칠해지도록(끊김 방지)
+  boxDecorationBreak: 'clone',
+  WebkitBoxDecorationBreak: 'clone',
+});
+
+// 문단 원문 + 그 문단의 강조들 → 형광 span 섞인 노드 배열.
+// 강조가 없으면 원문 문자열 그대로 반환.
+function renderHighlighted(p: string, marks: HighlightMark[]) {
+  if (!marks.length) return p;
+  const segs = buildSegments(p, marks);
+  return segs.map((s, i) =>
+    s.color ? (
+      <span key={i} style={hlStyle(s.color)}>
+        {s.text}
+      </span>
+    ) : (
+      <span key={i}>{s.text}</span>
+    )
+  );
+}
+
 // 말씀 탭: 제목·설교자·성경표기 + 성경본문 + 설교 본문 문단(설교자 문단마다 순서 번호)
-function WordTab({ note, fontSize }: { note: NoteData; fontSize: number }) {
+// 본문은 항상 renderHighlighted(연속 구간)로 렌더 + data-para 부여.
+// 편집 모드의 글자 선택은 부모(SarangbangPage)의 selectionchange 리스너가 처리.
+function WordTab({
+  note,
+  fontSize,
+  highlights,
+}: {
+  note: NoteData;
+  fontSize: number;
+  highlights: HighlightMark[];
+}) {
+  // 강조를 문단(para)별로 묶어 빠르게 조회
+  const byPara = useMemo(() => {
+    const m: Record<number, HighlightMark[]> = {};
+    for (const h of highlights) (m[h.para] ||= []).push(h);
+    return m;
+  }, [highlights]);
+
   return (
     <article className="pb-32">
       {/* 날짜(어느 주인지) → 제목·설교자·성경표기. 본문과 함께 스크롤 */}
@@ -301,10 +590,11 @@ function WordTab({ note, fontSize }: { note: NoteData; fontSize: number }) {
               {i + 1}
             </span>
             <p
+              data-para={i}
               className="flex-1 text-left leading-[1.7] text-white/[.92] break-keep"
               style={{ fontSize }}
             >
-              {p}
+              {renderHighlighted(p, byPara[i] ?? [])}
             </p>
           </li>
         ))}

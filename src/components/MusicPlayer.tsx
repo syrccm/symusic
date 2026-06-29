@@ -2855,7 +2855,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       {/* 사랑방(말씀나눔지 텍스트 3탭): 동일하게 오버레이로 표시 */}
       {isSarangbangOpen && (
         <div className="fixed inset-0 z-[100] w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain" style={{ touchAction: 'pan-y' }}>
-          <SarangbangPage onClose={() => setIsSarangbangOpen(false)} />
+          <SarangbangPage onClose={() => setIsSarangbangOpen(false)} isAdmin={isAdminRoute && isAdmin} />
         </div>
       )}
 
