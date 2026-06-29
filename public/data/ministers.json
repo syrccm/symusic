@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-06-15T15:22:04.008Z",
+  "updatedAt": "2026-06-29T13:12:54.828Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/minister.jsp",
   "count": 160,
   "ministers": [
@@ -7,14 +7,14 @@
       "role": "목사",
       "name": "김호진",
       "photoUrl": "/data/ministers/4e224155ce60.jpg",
-      "department": "목회행정/로드맵미니스트리총괄",
+      "department": "목회행정",
       "order": 0
     },
     {
       "role": "목사",
       "name": "김나빈",
       "photoUrl": "/data/ministers/8d17334c0078.jpg",
-      "department": "목회비서(기획)",
+      "department": "목회비서(기획)/로드맵미니스트리총괄",
       "order": 1
     },
     {
