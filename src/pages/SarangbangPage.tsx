@@ -836,7 +836,11 @@ function ListTab({
   if (!items?.length) return <div className="mt-16 text-center text-white/50">{empty}</div>;
   const editable = !!onAnswerChange;
   return (
-    <ol className="space-y-4 pb-32">
+    <ol
+      className={`space-y-4 ${editable ? '' : 'pb-32'}`}
+      // 나눔 탭: 저장 바(fixed) + iOS safe-area가 마지막 입력칸을 가리지 않게 넉넉히
+      style={editable ? { paddingBottom: 'calc(160px + env(safe-area-inset-bottom))' } : undefined}
+    >
       {items.map((t, i) => (
         <li key={i} className="flex gap-3">
           <span
@@ -867,8 +871,13 @@ function ListTab({
                 }}
                 rows={1}
                 placeholder="나눔 전에 내 답을 적어두기 (이 기기에만 저장됩니다)"
-                className="w-full resize-none rounded-lg border border-white/15 bg-white/5 px-3 py-2 leading-[1.6] text-white placeholder:text-white/30 focus:border-teal-400/50 focus:outline-none"
-                style={{ fontSize: Math.max(16, fontSize) }} // iOS 줌 방지: 16px 이상
+                className="w-full resize-none rounded-lg border border-teal-400/20 px-3 py-2 leading-[1.6] placeholder:text-white/30 focus:border-teal-400/50 focus:outline-none"
+                style={{
+                  fontSize: Math.max(16, fontSize), // iOS 줌 방지: 16px 이상
+                  background: 'rgba(45,212,191,0.08)', // 옅은 teal — 질문과 구분
+                  borderLeft: '3px solid #2dd4bf', // "내 답" 직관 표시
+                  color: '#5eead4', // teal-300: 다크 배경에서 또렷
+                }}
               />
             )}
           </div>
