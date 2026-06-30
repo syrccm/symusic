@@ -91,6 +91,41 @@ function loadFont(): number {
   return DEFAULT_FONT;
 }
 
+// ── 나눔 답변(기기 로컬 저장; 날짜별) ──────────────────────────────────────
+const ANSWERS_PREFIX = 'sarangbang.answers.';
+function loadAnswers(date: string): string[] {
+  try {
+    const raw = localStorage.getItem(ANSWERS_PREFIX + date);
+    if (raw) {
+      const a = JSON.parse(raw);
+      if (Array.isArray(a)) return a;
+    }
+  } catch {
+    /* 불가 환경 */
+  }
+  return [];
+}
+function saveAnswers(date: string, answers: string[]) {
+  try {
+    localStorage.setItem(ANSWERS_PREFIX + date, JSON.stringify(answers));
+  } catch {
+    /* 무시 */
+  }
+}
+// 오래된 답변 키 청소: 현재 date 외의 sarangbang.answers.* 제거
+function cleanupOldAnswers(currentDate: string) {
+  try {
+    for (let i = localStorage.length - 1; i >= 0; i--) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(ANSWERS_PREFIX) && k !== ANSWERS_PREFIX + currentDate) {
+        localStorage.removeItem(k);
+      }
+    }
+  } catch {
+    /* 무시 */
+  }
+}
+
 // ── 문단 나누기(표시 단계에서만; JSON 원본 불변) ───────────────────────────
 interface SarangbangPageProps {
   /** 오버레이로 띄울 때 닫기 콜백. 없으면 라우트 모드(뒤로가기). */
@@ -108,6 +143,10 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
   const [tab, setTab] = useState<Tab>('word');
   const [fontSize, setFontSize] = useState<number>(loadFont);
   const [highlights, setHighlights] = useState<HighlightMark[]>([]); // 형광펜(표시·편집 공용)
+
+  // ── 나눔 답변(기기 로컬) ──────────────────────────────────────────────────
+  const [answers, setAnswers] = useState<string[]>([]); // 질문 index 기준 답변
+  const [answersDirty, setAnswersDirty] = useState(false); // 미저장 변경(형광 dirty와 분리)
 
   // ── 형광펜 작성(관리자) ──────────────────────────────────────────────────
   const [editMode, setEditMode] = useState(false); // 형광펜 모드
@@ -208,6 +247,37 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
       alive = false;
     };
   }, [date]);
+
+  // 나눔 답변 로드. 날짜·질문 수가 정해지면 저장값을 길이에 맞춰 복원 + 오래된 키 청소.
+  useEffect(() => {
+    setAnswersDirty(false);
+    if (!date || !note) {
+      setAnswers([]);
+      return;
+    }
+    const saved = loadAnswers(date);
+    const len = note.questions?.length ?? 0;
+    setAnswers(Array.from({ length: len }, (_, i) => saved[i] ?? ''));
+    cleanupOldAnswers(date);
+  }, [date, note]);
+
+  // 한 질문 답변 갱신
+  const onAnswerChange = (i: number, v: string) => {
+    setAnswers((cur) => {
+      const next = cur.slice();
+      next[i] = v;
+      return next;
+    });
+    setAnswersDirty(true);
+  };
+
+  // 나눔 답변 저장(기기 로컬, 동기)
+  const handleSaveAnswers = () => {
+    if (!date) return;
+    saveAnswers(date, answers);
+    setAnswersDirty(false);
+    toast.success('나눔 답을 저장했습니다');
+  };
 
   // ── 형광펜 작성 핸들러 ─────────────────────────────────────────────────
   // 선택 해제(상태 + 브라우저 네이티브 선택 모두)
@@ -471,7 +541,14 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
           ) : tab === 'word' ? (
             <WordTab note={note} fontSize={fontSize} highlights={highlights} />
           ) : tab === 'share' ? (
-            <ListTab items={note.questions} empty="나눔질문이 없습니다." accent="#2dd4bf" fontSize={fontSize} />
+            <ListTab
+              items={note.questions}
+              empty="나눔질문이 없습니다."
+              accent="#2dd4bf"
+              fontSize={fontSize}
+              answers={answers}
+              onAnswerChange={onAnswerChange}
+            />
           ) : (
             <ListTab items={note.prayers} empty="기도제목이 없습니다." accent="#e8c24a" fontSize={fontSize} />
           )}
@@ -567,6 +644,34 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
               </button>
             </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 나눔 탭 전용 — 답변 통합 저장 바(전체 사용자). 형광 바(말씀 탭)와 탭이 달라 동시 노출 없음. */}
+      {tab === 'share' && note && (note.questions?.length ?? 0) > 0 && (
+        <div
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10"
+          style={{ background: 'rgba(13,15,20,.96)', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
+          <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-3 py-2.5 sm:px-4">
+            <span className="text-xs text-white/45">
+              내 답은 이 기기에만 저장됩니다
+              {answersDirty && <span className="ml-1 text-amber-300">· 저장 안 됨</span>}
+            </span>
+            <button
+              type="button"
+              onClick={handleSaveAnswers}
+              disabled={!answersDirty}
+              className="ml-auto flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-sm font-bold transition-colors disabled:opacity-40"
+              style={{
+                background: answersDirty ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'rgba(255,255,255,.08)',
+                color: answersDirty ? '#04221e' : 'rgba(255,255,255,.6)',
+              }}
+            >
+              <Check className="h-4 w-4" />
+              {answersDirty ? '저장' : '저장됨'}
+            </button>
           </div>
         </div>
       )}
@@ -712,18 +817,24 @@ function WordTab({
 }
 
 // 나눔/기도 탭: 번호 매긴 목록 (사용자 글자 크기 적용)
+// answers/onAnswerChange가 주어지면(나눔 탭) 각 항목 밑에 답변 textarea를 렌더한다.
 function ListTab({
   items,
   empty,
   accent,
   fontSize,
+  answers,
+  onAnswerChange,
 }: {
   items: string[];
   empty: string;
   accent: string;
   fontSize: number;
+  answers?: string[];
+  onAnswerChange?: (i: number, v: string) => void;
 }) {
   if (!items?.length) return <div className="mt-16 text-center text-white/50">{empty}</div>;
+  const editable = !!onAnswerChange;
   return (
     <ol className="space-y-4 pb-32">
       {items.map((t, i) => (
@@ -734,9 +845,33 @@ function ListTab({
           >
             {i + 1}
           </span>
-          <p className="flex-1 text-left leading-[1.8] text-white/[.92] break-keep" style={{ fontSize }}>
-            {t}
-          </p>
+          <div className="flex flex-1 flex-col gap-2">
+            <p className="text-left leading-[1.8] text-white/[.92] break-keep" style={{ fontSize }}>
+              {t}
+            </p>
+            {editable && (
+              <textarea
+                value={answers?.[i] ?? ''}
+                ref={(el) => {
+                  // 마운트·복원 시 내용 높이에 맞춤(여러 줄 답도 처음부터 펼쳐 보이게)
+                  if (el) {
+                    el.style.height = 'auto';
+                    el.style.height = `${el.scrollHeight}px`;
+                  }
+                }}
+                onChange={(e) => {
+                  onAnswerChange?.(i, e.target.value);
+                  // 자동 높이: 내용에 맞춰 늘어나게
+                  e.target.style.height = 'auto';
+                  e.target.style.height = `${e.target.scrollHeight}px`;
+                }}
+                rows={1}
+                placeholder="나눔 전에 내 답을 적어두기 (이 기기에만 저장됩니다)"
+                className="w-full resize-none rounded-lg border border-white/15 bg-white/5 px-3 py-2 leading-[1.6] text-white placeholder:text-white/30 focus:border-teal-400/50 focus:outline-none"
+                style={{ fontSize: Math.max(16, fontSize) }} // iOS 줌 방지: 16px 이상
+              />
+            )}
+          </div>
         </li>
       ))}
     </ol>
