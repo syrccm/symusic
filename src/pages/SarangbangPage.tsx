@@ -257,7 +257,54 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
   const applyColor = (color: HighlightColor) => {
     if (!pendingSel) return;
     const { para, start, end, quote } = pendingSel;
-    setHighlights((cur) => [...cur, { id: genMarkId(), para, start, end, quote, color }]);
+
+    // 부분 덮어쓰기: 같은 para의 겹치는 기존 mark를 잘라낸 뒤 새 mark 삽입.
+    // 좌표는 공백제외 오프셋. 잘린 mark의 quote는 원문에서 같은 좌표로 다시 잘라 갱신
+    // (quote는 resolveRange 검증에 쓰이므로 좌표와 항상 일치해야 함).
+    const p = note?.body[para] ?? '';
+    const strippedP = stripWS(p);
+    const q = (s: number, e: number) => strippedP.slice(s, e); // 공백제외 좌표 → quote 문자열
+
+    setHighlights((cur) => {
+      const rebuilt: HighlightMark[] = [];
+      for (const m of cur) {
+        if (m.para !== para) {
+          rebuilt.push(m);
+          continue;
+        }
+        const ms = m.start ?? -1;
+        const me = m.end ?? -1;
+        // 좌표 없는(quote-only) 기존 mark는 안전하게 그대로 유지
+        if (ms < 0 || me < 0) {
+          rebuilt.push(m);
+          continue;
+        }
+        // 안 겹침
+        if (me <= start || end <= ms) {
+          rebuilt.push(m);
+          continue;
+        }
+        // 새 구간이 기존 mark를 완전히 덮음 → 제거
+        if (ms >= start && me <= end) {
+          continue;
+        }
+        // 새 구간이 기존 mark 내부에 쏙 들어감 → 좌우 잔여로 분할(같은 기존 색)
+        if (ms < start && end < me) {
+          rebuilt.push({ ...m, id: genMarkId(), start: ms, end: start, quote: q(ms, start) });
+          rebuilt.push({ ...m, id: genMarkId(), start: end, end: me, quote: q(end, me) });
+          continue;
+        }
+        // 왼쪽만 걸침(ms<start<me<=end) → 왼쪽 잔여만
+        if (ms < start) {
+          rebuilt.push({ ...m, start: ms, end: start, quote: q(ms, start) });
+          continue;
+        }
+        // 오른쪽만 걸침(start<=ms<end<me) → 오른쪽 잔여만
+        rebuilt.push({ ...m, start: end, end: me, quote: q(end, me) });
+      }
+      rebuilt.push({ id: genMarkId(), para, start, end, quote, color });
+      return rebuilt;
+    });
     clearSelection();
     setDirty(true);
   };
@@ -441,16 +488,18 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
               <button
                 key={c}
                 type="button"
+                onMouseDown={(e) => e.preventDefault()} // PC: 버튼 클릭이 본문 선택을 풀지 않게(pendingSel 보존)
                 onClick={() => applyColor(c)}
                 disabled={!pendingSel}
                 aria-label={`${c} 형광`}
-                className="h-9 w-9 shrink-0 rounded-full border border-white/25 transition-transform active:scale-90 disabled:opacity-35"
-                style={{ background: HL_COLORS[c] }}
+                className="h-9 w-9 shrink-0 rounded-full border border-white/40 transition-transform active:scale-90 disabled:opacity-35"
+                style={{ background: HL_SWATCH[c] }}
               />
             ))}
             {/* 지우기 */}
             <button
               type="button"
+              onMouseDown={(e) => e.preventDefault()} // PC: 클릭 시 본문 선택 풀림 방지(pendingSel 보존)
               onClick={eraseSelection}
               disabled={!pendingSel}
               aria-label="지우기"
@@ -511,11 +560,20 @@ const HL_COLORS: Record<HighlightColor, string> = {
   pink: 'rgba(244, 130, 190, 0.42)',
 };
 
+// 색 바 버튼 표시용 불투명 색(검은 바 위에서 또렷이 보이게). 형광 실제 색(HL_COLORS)과 별개.
+const HL_SWATCH: Record<HighlightColor, string> = {
+  yellow: '#facc15',
+  green: '#4ade80',
+  pink: '#f472b6',
+};
+
 const hlStyle = (color: HighlightColor): CSSProperties => ({
   background: HL_COLORS[color],
   color: '#ffffff',
   borderRadius: 3,
-  padding: '0.05em 0.12em',
+  // padding 제거(인접 인라인 span 선택 경계가 iOS에서 깨지는 문제 회피).
+  // 같은 여백 느낌은 배경색을 바깥으로 2px 번지게 하는 box-shadow로 대체.
+  boxShadow: `0 0 0 2px ${HL_COLORS[color]}`,
   // 줄바꿈 시에도 각 줄에 배경이 칠해지도록(끊김 방지)
   boxDecorationBreak: 'clone',
   WebkitBoxDecorationBreak: 'clone',
@@ -526,13 +584,15 @@ const hlStyle = (color: HighlightColor): CSSProperties => ({
 function renderHighlighted(p: string, marks: HighlightMark[]) {
   if (!marks.length) return p;
   const segs = buildSegments(p, marks);
+  // 비형광 조각은 span 래핑 없이 순수 문자열로 반환(인접 인라인 요소 최소화 → iOS 선택 안정).
+  // 형광 조각만 style 있는 span. 문자열·엘리먼트 혼합 배열은 React가 그대로 렌더.
   return segs.map((s, i) =>
     s.color ? (
       <span key={i} style={hlStyle(s.color)}>
         {s.text}
       </span>
     ) : (
-      <span key={i}>{s.text}</span>
+      s.text
     )
   );
 }
