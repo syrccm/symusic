@@ -9,6 +9,7 @@ import {
   saveHighlights,
   genMarkId,
   type HighlightColor,
+  type HighlightKind,
   type HighlightMark,
 } from '@/utils/noteHighlights';
 
@@ -110,6 +111,7 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
 
   // ── 형광펜 작성(관리자) ──────────────────────────────────────────────────
   const [editMode, setEditMode] = useState(false); // 형광펜 모드
+  const [editKind, setEditKind] = useState<HighlightKind>('highlight'); // 적용 종류: 형광/글자색
   const [pendingSel, setPendingSel] = useState<PendingSel | null>(null); // 편집 중 선택(글자 단위)
   const [dirty, setDirty] = useState(false); // 미저장 변경
   const [saving, setSaving] = useState(false);
@@ -218,10 +220,13 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
     }
   };
 
-  // 형광펜 모드 토글. 끌 때 선택은 비운다(미저장 변경은 유지 — 실수 방지).
+  // 형광펜 모드 토글. 끌 때 선택은 비우고 종류도 형광으로 되돌린다(미저장 변경은 유지).
   const toggleEdit = () => {
     setEditMode((on) => {
-      if (on) clearSelection();
+      if (on) {
+        clearSelection();
+        setEditKind('highlight');
+      }
       return !on;
     });
   };
@@ -254,7 +259,7 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
   }, [editMode, note]);
 
   // 색 적용 → 로컬 marks 추가
-  const applyColor = (color: HighlightColor) => {
+  const applyColor = (color: HighlightColor, kind: HighlightKind) => {
     if (!pendingSel) return;
     const { para, start, end, quote } = pendingSel;
 
@@ -302,7 +307,7 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
         // 오른쪽만 걸침(start<=ms<end<me) → 오른쪽 잔여만
         rebuilt.push({ ...m, start: end, end: me, quote: q(end, me) });
       }
-      rebuilt.push({ id: genMarkId(), para, start, end, quote, color });
+      rebuilt.push({ id: genMarkId(), para, start, end, quote, color, kind });
       return rebuilt;
     });
     clearSelection();
@@ -482,16 +487,46 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
           className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10"
           style={{ background: 'rgba(13,15,20,.96)', paddingBottom: 'env(safe-area-inset-bottom)' }}
         >
-          <div className="mx-auto flex w-full max-w-3xl items-center gap-2 px-3 py-2.5 sm:px-4">
+          <div className="mx-auto w-full max-w-3xl px-3 py-2.5 sm:px-4">
+            {/* 1행: 형광 / 글자색 모드 토글 */}
+            <div className="mb-2 flex items-center gap-1">
+              {(
+                [
+                  ['highlight', '형광'],
+                  ['text', '글자색'],
+                ] as [HighlightKind, string][]
+              ).map(([k, label]) => {
+                const active = editKind === k;
+                return (
+                  <button
+                    key={k}
+                    type="button"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => setEditKind(k)}
+                    className="rounded-full border px-3 py-1 text-sm font-semibold transition-colors"
+                    style={{
+                      borderColor: active ? 'rgba(45,212,191,.6)' : 'rgba(255,255,255,.18)',
+                      background: active ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'rgba(255,255,255,.05)',
+                      color: active ? '#04221e' : 'rgba(255,255,255,.8)',
+                    }}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* 2행: 색 원 3개 + 지우개 + 저장 */}
+            <div className="flex items-center gap-2">
             {/* 색 팔레트 */}
             {(['yellow', 'green', 'pink'] as HighlightColor[]).map((c) => (
               <button
                 key={c}
                 type="button"
                 onMouseDown={(e) => e.preventDefault()} // PC: 버튼 클릭이 본문 선택을 풀지 않게(pendingSel 보존)
-                onClick={() => applyColor(c)}
+                onClick={() => applyColor(c, editKind)}
                 disabled={!pendingSel}
-                aria-label={`${c} 형광`}
+                aria-label={`${c} ${editKind === 'text' ? '글자색' : '형광'}`}
                 className="h-9 w-9 shrink-0 rounded-full border border-white/40 transition-transform active:scale-90 disabled:opacity-35"
                 style={{ background: HL_SWATCH[c] }}
               />
@@ -530,6 +565,7 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
                 <Check className="h-4 w-4" />
                 {saving ? '저장 중…' : dirty ? '저장' : '저장됨'}
               </button>
+            </div>
             </div>
           </div>
         </div>
@@ -579,22 +615,34 @@ const hlStyle = (color: HighlightColor): CSSProperties => ({
   WebkitBoxDecorationBreak: 'clone',
 });
 
-// 문단 원문 + 그 문단의 강조들 → 형광 span 섞인 노드 배열.
+// 글자색 — 배경 없이 글자만(불투명 HL_SWATCH 재사용). padding/배경 없어 iOS 선택 안전.
+const textStyle = (color: HighlightColor): CSSProperties => ({
+  color: HL_SWATCH[color],
+  fontWeight: 600,
+});
+
+// 문단 원문 + 그 문단의 강조들 → 형광/글자색 span 섞인 노드 배열.
 // 강조가 없으면 원문 문자열 그대로 반환.
 function renderHighlighted(p: string, marks: HighlightMark[]) {
   if (!marks.length) return p;
   const segs = buildSegments(p, marks);
-  // 비형광 조각은 span 래핑 없이 순수 문자열로 반환(인접 인라인 요소 최소화 → iOS 선택 안정).
-  // 형광 조각만 style 있는 span. 문자열·엘리먼트 혼합 배열은 React가 그대로 렌더.
-  return segs.map((s, i) =>
-    s.color ? (
+  // 비강조 조각은 span 래핑 없이 순수 문자열로 반환(인접 인라인 요소 최소화 → iOS 선택 안정).
+  // 강조 조각만 style 있는 span. 문자열·엘리먼트 혼합 배열은 React가 그대로 렌더.
+  return segs.map((s, i) => {
+    if (!s.color) return s.text;
+    if (s.kind === 'text') {
+      return (
+        <span key={i} style={textStyle(s.color)}>
+          {s.text}
+        </span>
+      );
+    }
+    return (
       <span key={i} style={hlStyle(s.color)}>
         {s.text}
       </span>
-    ) : (
-      s.text
-    )
-  );
+    );
+  });
 }
 
 // 말씀 탭: 제목·설교자·성경표기 + 성경본문 + 설교 본문 문단(설교자 문단마다 순서 번호)

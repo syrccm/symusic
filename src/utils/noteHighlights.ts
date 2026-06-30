@@ -15,6 +15,9 @@ import { db } from '@/lib/firebase';
 export type HighlightColor = 'yellow' | 'green' | 'pink';
 const COLORS: HighlightColor[] = ['yellow', 'green', 'pink'];
 
+// 강조 종류: 형광(배경) / 글자색(글자만). 한 구간은 둘 중 하나(택일).
+export type HighlightKind = 'highlight' | 'text';
+
 export interface HighlightMark {
   id?: string; // 로컬 식별용(편집 시 키·삭제). Firestore 저장 시엔 제외.
   para: number; // body 문단 인덱스
@@ -22,6 +25,7 @@ export interface HighlightMark {
   end?: number; // 공백 제외 글자 오프셋(제외)
   quote: string; // 강조 텍스트(검증·폴백용). 공백이 있어도 됨(비교 시 제거).
   color: HighlightColor;
+  kind?: HighlightKind; // 없으면 'highlight'(기존 데이터 하위호환)
 }
 
 /** 로컬 마크 식별자. randomUUID 미지원 환경 폴백 포함. */
@@ -77,6 +81,7 @@ export function resolveRange(p: string, mark: HighlightMark): { start: number; e
 export interface Segment {
   text: string;
   color?: HighlightColor;
+  kind?: HighlightKind;
 }
 
 /**
@@ -87,9 +92,12 @@ export function buildSegments(p: string, marks: HighlightMark[]): Segment[] {
   const ranges = marks
     .map((m) => {
       const r = resolveRange(p, m);
-      return r ? { start: r.start, end: r.end, color: m.color } : null;
+      return r ? { start: r.start, end: r.end, color: m.color, kind: m.kind ?? 'highlight' } : null;
     })
-    .filter((r): r is { start: number; end: number; color: HighlightColor } => r !== null)
+    .filter(
+      (r): r is { start: number; end: number; color: HighlightColor; kind: HighlightKind } =>
+        r !== null
+    )
     .sort((a, b) => a.start - b.start);
 
   const segs: Segment[] = [];
@@ -97,7 +105,7 @@ export function buildSegments(p: string, marks: HighlightMark[]): Segment[] {
   for (const r of ranges) {
     if (r.start < cur) continue; // 앞 강조와 겹침 → 건너뜀
     if (r.start > cur) segs.push({ text: p.slice(cur, r.start) });
-    segs.push({ text: p.slice(r.start, r.end), color: r.color });
+    segs.push({ text: p.slice(r.start, r.end), color: r.color, kind: r.kind });
     cur = r.end;
   }
   if (cur < p.length) segs.push({ text: p.slice(cur) });
@@ -119,7 +127,8 @@ export async function fetchHighlights(date: string): Promise<HighlightMark[]> {
         const color = COLORS.includes(o.color as HighlightColor)
           ? (o.color as HighlightColor)
           : 'yellow';
-        const out: HighlightMark = { id: genMarkId(), para: o.para, quote: o.quote, color };
+        const kind: HighlightKind = o.kind === 'text' ? 'text' : 'highlight'; // 없으면 형광(하위호환)
+        const out: HighlightMark = { id: genMarkId(), para: o.para, quote: o.quote, color, kind };
         if (typeof o.start === 'number') out.start = o.start;
         if (typeof o.end === 'number') out.end = o.end;
         return out;
@@ -133,7 +142,12 @@ export async function fetchHighlights(date: string): Promise<HighlightMark[]> {
 /** marks 전체를 noteHighlights/{date} 에 저장(문서 덮어쓰기). id 는 저장하지 않는다. */
 export async function saveHighlights(date: string, marks: HighlightMark[]): Promise<void> {
   const clean = marks.map((m) => {
-    const o: Record<string, unknown> = { para: m.para, quote: m.quote, color: m.color };
+    const o: Record<string, unknown> = {
+      para: m.para,
+      quote: m.quote,
+      color: m.color,
+      kind: m.kind ?? 'highlight',
+    };
     if (typeof m.start === 'number') o.start = m.start;
     if (typeof m.end === 'number') o.end = m.end;
     return o;
