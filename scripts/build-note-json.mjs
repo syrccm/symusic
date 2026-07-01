@@ -10,7 +10,7 @@
 //   node scripts/build-note-json.mjs <pdf경로> [...]  # 지정한 PDF만(역시 신규만, --force 시 전체)
 // 전체(폴더) 모드에선 PDF가 없는 notes-text/*.json(고아)을 자동 삭제하고 index.json 을 재생성한다.
 // API 키는 .env 또는 환경변수(ANTHROPIC_API_KEY)에서 읽는다. 키 없거나 API 실패 시 원문 폴백.
-import { readdirSync, mkdirSync, writeFileSync, readFileSync, existsSync, unlinkSync } from 'node:fs';
+import { readdirSync, mkdirSync, writeFileSync, readFileSync, existsSync } from 'node:fs';
 import { join, basename } from 'node:path';
 import Anthropic from '@anthropic-ai/sdk';
 import { extractNote } from './extract-note-text.mjs';
@@ -95,20 +95,12 @@ for (const pdfPath of pdfs) {
   }
 }
 
-// 고아 정리: notes/ 에 PDF 없는 notes-text/*.json 삭제 (폴더 전체 모드에서만)
-let removed = 0;
-if (fullMode) {
-  const pdfDates = new Set(
-    readdirSync(NOTES_DIR).filter((f) => f.toLowerCase().endsWith('.pdf')).map((f) => f.replace(/\D/g, '').slice(0, 8))
-  );
-  for (const f of readdirSync(OUT_DIR).filter((f) => /^\d{8}\.json$/.test(f))) {
-    if (!pdfDates.has(f.replace('.json', ''))) {
-      unlinkSync(join(OUT_DIR, f));
-      removed++;
-      console.log(`🗑️  고아 삭제 ${f} (대응 PDF 없음)`);
-    }
-  }
-}
+// ★고아 정리 비활성화(영구 보존 정책): notes-text/*.json 은 대응 PDF 유무와 무관하게
+// 절대 삭제하지 않는다. PDF 는 소스일 뿐이고(60일 만료로 회전), 텍스트 추출이 끝난
+// JSON 은 사랑방 열람용 독립 보존 자산이다. 과거에 여기서 "PDF 없는 JSON"을 지웠으나,
+// PDF 60일 만료와 맞물려 과거 나눔지가 사라지는 연쇄를 유발하므로 삭제 루프를 제거했다.
+// (index.json 은 아래에서 살아남은 JSON 전체로 재생성 → JSON 이 안 지워지므로 자동 누적)
+const removed = 0; // 더 이상 자동 삭제하지 않음(요약 로그 호환용)
 
 const sum = summary.reduce(
   (a, s) => ({ fixed: a.fixed + s.fixed, reverted: a.reverted + s.reverted, error: a.error + s.error }),
