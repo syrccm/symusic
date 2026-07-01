@@ -76,6 +76,11 @@ const TABS: [Tab, string][] = [
 const fmtDate = (d: string) => d.replace(/-/g, '.');
 // "2026-06-14" → "20260614" (파일명)
 const fileKey = (d: string) => d.replace(/-/g, '');
+// "2026-06-21" → "6/21" (드롭다운 라벨용 — 앞의 0 제거한 월/일)
+const fmtShort = (d: string) => {
+  const [, m, day] = d.split('-');
+  return `${Number(m)}/${Number(day)}`;
+};
 
 // ── 글자 크기(읽는 텍스트만) ──────────────────────────────────────────────
 const FONT_STEPS = [14, 16, 18, 20, 22];
@@ -112,19 +117,8 @@ function saveAnswers(date: string, answers: string[]) {
     /* 무시 */
   }
 }
-// 오래된 답변 키 청소: 현재 date 외의 sarangbang.answers.* 제거
-function cleanupOldAnswers(currentDate: string) {
-  try {
-    for (let i = localStorage.length - 1; i >= 0; i--) {
-      const k = localStorage.key(i);
-      if (k && k.startsWith(ANSWERS_PREFIX) && k !== ANSWERS_PREFIX + currentDate) {
-        localStorage.removeItem(k);
-      }
-    }
-  } catch {
-    /* 무시 */
-  }
-}
+// (과거) 오래된 답변 키 청소 함수는 제거함 — 나눔지 영구 보존 정책에 맞춰
+// 과거 날짜에 적어둔 답변도 그대로 남긴다(드롭다운으로 과거 주차 열람 가능).
 
 // ── 문단 나누기(표시 단계에서만; JSON 원본 불변) ───────────────────────────
 interface SarangbangPageProps {
@@ -137,6 +131,7 @@ interface SarangbangPageProps {
 export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangPageProps = {}) {
   const navigate = useNavigate();
   const [indexError, setIndexError] = useState(false);
+  const [notes, setNotes] = useState<IndexEntry[]>([]); // 전체 나눔지 목록(드롭다운용, 내림차순)
   const [date, setDate] = useState<string>(''); // 최신 노트 날짜
   const [note, setNote] = useState<NoteData | null>(null);
   const [noteError, setNoteError] = useState(false);
@@ -205,7 +200,10 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
       .then((d: IndexData) => {
         if (!alive) return;
         // index.json은 날짜 내림차순 → 첫 항목이 가장 최신 나눔지
-        if (d.notes?.length) setDate(d.notes[0].date);
+        if (d.notes?.length) {
+          setNotes(d.notes); // 드롭다운 목록(전체 보관)
+          setDate(d.notes[0].date); // 기본은 최신 자동 로드(현행 유지)
+        }
       })
       .catch(() => alive && setIndexError(true));
     return () => {
@@ -248,7 +246,7 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
     };
   }, [date]);
 
-  // 나눔 답변 로드. 날짜·질문 수가 정해지면 저장값을 길이에 맞춰 복원 + 오래된 키 청소.
+  // 나눔 답변 로드. 날짜·질문 수가 정해지면 저장값을 길이에 맞춰 복원(과거 답도 보존).
   useEffect(() => {
     setAnswersDirty(false);
     if (!date || !note) {
@@ -258,7 +256,6 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
     const saved = loadAnswers(date);
     const len = note.questions?.length ?? 0;
     setAnswers(Array.from({ length: len }, (_, i) => saved[i] ?? ''));
-    cleanupOldAnswers(date);
   }, [date, note]);
 
   // 한 질문 답변 갱신
@@ -492,6 +489,29 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
                 </button>
               </div>
             </div>
+
+            {/* 날짜(주차) 선택 — 기본 최신, 과거 나눔지도 열람. 전 탭 공통 노출. */}
+            {notes.length > 0 && (
+              <div className="mt-2 pr-14">
+                <select
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  aria-label="나눔지 날짜 선택"
+                  className="w-full rounded-lg border border-white/15 px-3 py-2 text-white transition-colors hover:border-white/25 focus:border-teal-400/50 focus:outline-none"
+                  style={{
+                    background: 'rgba(255,255,255,.06)',
+                    fontSize: 16, // iOS 줌 방지
+                    minHeight: 40, // 모바일 탭 타깃
+                  }}
+                >
+                  {notes.map((n) => (
+                    <option key={n.date} value={n.date} style={{ background: '#0d0f14', color: '#fff' }}>
+                      {fmtShort(n.date)} · {n.title}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             {/* 관리자 전용: 형광펜 모드 토글 (말씀 탭에서만) */}
             {isAdmin && tab === 'word' && (
