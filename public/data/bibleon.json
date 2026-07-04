@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-06-28T10:59:15.335Z",
+  "updatedAt": "2026-07-04T06:17:29.129Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.06.28",
+      "seq": 333,
+      "youtubeId": "EErxlkWheE8",
+      "title": "하늘에 계신 우리 아버지여!",
+      "noteSeq": 503,
+      "notePdfUrl": "/data/notes/20260628.pdf"
+    },
     {
       "date": "2026.06.21",
       "seq": 332,
@@ -63,21 +71,13 @@
       "date": "2026.05.03",
       "seq": 324,
       "youtubeId": "JKLuo7nWqJg",
-      "title": "사랑은 자란다",
-      "noteSeq": 495,
-      "notePdfUrl": "/data/notes/20260503.pdf"
+      "title": "사랑은 자란다"
     },
     {
       "date": "2026.04.19",
       "seq": 323,
       "youtubeId": "9bdTLzchPjU",
       "title": "빛은 어둠을 이긴다"
-    },
-    {
-      "date": "2026.04.12",
-      "seq": 322,
-      "youtubeId": "7pInychiV30",
-      "title": "그리스도인의 정체성"
     }
   ]
 }

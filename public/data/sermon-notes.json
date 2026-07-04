@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-06-28T00:13:32.681Z",
+  "updatedAt": "2026-07-04T06:17:40.576Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
   "count": 13,
   "notes": [
+    {
+      "seq": 503,
+      "title": "하늘에 계신 우리 아버지여!",
+      "date": "2026.07.03",
+      "pdfUrl": "/data/notes/20260628.pdf",
+      "normTitle": "하늘에계신우리아버지여"
+    },
     {
       "seq": 502,
       "title": "너무나 모범적인, 그러나",
@@ -57,7 +64,7 @@
       "seq": 495,
       "title": "사랑은 자란다",
       "date": "2026.05.08",
-      "pdfUrl": "/data/notes/20260503.pdf",
+      "pdfUrl": null,
       "normTitle": "사랑은자란다"
     },
     {
@@ -87,13 +94,6 @@
       "date": "2026.04.10",
       "pdfUrl": null,
       "normTitle": "부활을입고일상을살다"
-    },
-    {
-      "seq": 490,
-      "title": "그는 실로 우리의 질고를 지고",
-      "date": "2026.04.03",
-      "pdfUrl": null,
-      "normTitle": "그는실로우리의질고를지고"
     }
   ]
 }
