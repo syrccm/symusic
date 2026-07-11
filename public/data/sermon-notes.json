@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-07-04T06:17:40.576Z",
+  "updatedAt": "2026-07-11T05:38:03.311Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 13,
+  "count": 12,
   "notes": [
+    {
+      "seq": 504,
+      "title": "먼저 기도해야 할 것이 있다",
+      "date": "2026.07.10",
+      "pdfUrl": "/data/notes/20260705.pdf",
+      "normTitle": "먼저기도해야할것이있다"
+    },
     {
       "seq": 503,
       "title": "하늘에 계신 우리 아버지여!",
@@ -57,7 +64,7 @@
       "seq": 496,
       "title": "위험한 열심",
       "date": "2026.05.15",
-      "pdfUrl": "/data/notes/20260510.pdf",
+      "pdfUrl": null,
       "normTitle": "위험한열심"
     },
     {
@@ -80,20 +87,6 @@
       "date": "2026.04.24",
       "pdfUrl": null,
       "normTitle": "빛은어둠을이긴다"
-    },
-    {
-      "seq": 492,
-      "title": "그리스도인의 정체성",
-      "date": "2026.04.18",
-      "pdfUrl": null,
-      "normTitle": "그리스도인의정체성"
-    },
-    {
-      "seq": 491,
-      "title": "부활을 입고 일상을 살다",
-      "date": "2026.04.10",
-      "pdfUrl": null,
-      "normTitle": "부활을입고일상을살다"
     }
   ]
 }

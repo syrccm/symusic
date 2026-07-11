@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-07-05T10:58:09.822Z",
+  "updatedAt": "2026-07-11T05:37:52.191Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.07.05",
+      "seq": 334,
+      "youtubeId": "YR6yWfx1qpM",
+      "title": "먼저 기도해야 할 것이 있다",
+      "noteSeq": 504,
+      "notePdfUrl": "/data/notes/20260705.pdf"
+    },
     {
       "date": "2026.06.28",
       "seq": 333,
@@ -63,21 +71,13 @@
       "date": "2026.05.10",
       "seq": 325,
       "youtubeId": "a3vbh7iBpAo",
-      "title": "위험한 열심",
-      "noteSeq": 496,
-      "notePdfUrl": "/data/notes/20260510.pdf"
+      "title": "위험한 열심"
     },
     {
       "date": "2026.05.03",
       "seq": 324,
       "youtubeId": "JKLuo7nWqJg",
       "title": "사랑은 자란다"
-    },
-    {
-      "date": "2026.04.19",
-      "seq": 323,
-      "youtubeId": "9bdTLzchPjU",
-      "title": "빛은 어둠을 이긴다"
     }
   ]
 }
