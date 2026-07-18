@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-07-11T05:38:03.311Z",
+  "updatedAt": "2026-07-18T05:21:57.383Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 12,
+  "count": 13,
   "notes": [
+    {
+      "seq": 505,
+      "title": "날아가는 것은 무엇인가? 시간인가, 우리인가?",
+      "date": "2026.07.17",
+      "pdfUrl": null,
+      "normTitle": "날아가는것은무엇인가시간인가우리인가"
+    },
     {
       "seq": 504,
       "title": "먼저 기도해야 할 것이 있다",
@@ -57,7 +64,7 @@
       "seq": 497,
       "title": "예배보다 먼저 할 일이 있다",
       "date": "2026.05.22",
-      "pdfUrl": "/data/notes/20260517.pdf",
+      "pdfUrl": null,
       "normTitle": "예배보다먼저할일이있다"
     },
     {
