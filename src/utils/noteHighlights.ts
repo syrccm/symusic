@@ -26,6 +26,7 @@ export interface HighlightMark {
   quote: string; // 강조 텍스트(검증·폴백용). 공백이 있어도 됨(비교 시 제거).
   color: HighlightColor;
   kind?: HighlightKind; // 없으면 'highlight'(기존 데이터 하위호환)
+  questionIndex?: number; // 나눔 질문 연결(0-base). 없으면 일반 형광(하위호환).
 }
 
 /** 로컬 마크 식별자. randomUUID 미지원 환경 폴백 포함. */
@@ -131,6 +132,7 @@ export async function fetchHighlights(date: string): Promise<HighlightMark[]> {
         const out: HighlightMark = { id: genMarkId(), para: o.para, quote: o.quote, color, kind };
         if (typeof o.start === 'number') out.start = o.start;
         if (typeof o.end === 'number') out.end = o.end;
+        if (typeof o.questionIndex === 'number') out.questionIndex = o.questionIndex; // 없으면 undefined(일반 형광)
         return out;
       })
       .filter((m: HighlightMark | null): m is HighlightMark => m !== null);
@@ -150,6 +152,7 @@ export async function saveHighlights(date: string, marks: HighlightMark[]): Prom
     };
     if (typeof m.start === 'number') o.start = m.start;
     if (typeof m.end === 'number') o.end = m.end;
+    if (typeof m.questionIndex === 'number') o.questionIndex = m.questionIndex; // 연결 없으면 저장 안 함
     return o;
   });
   await setDoc(doc(db, 'noteHighlights', date), { marks: clean, updatedAt: Date.now() });

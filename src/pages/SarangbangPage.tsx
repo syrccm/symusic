@@ -146,6 +146,7 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
   // ── 형광펜 작성(관리자) ──────────────────────────────────────────────────
   const [editMode, setEditMode] = useState(false); // 형광펜 모드
   const [editKind, setEditKind] = useState<HighlightKind>('highlight'); // 적용 종류: 형광/글자색
+  const [linkQ, setLinkQ] = useState<number | null>(null); // 형광에 연결할 질문번호(1-base 표시, null=없음)
   const [pendingSel, setPendingSel] = useState<PendingSel | null>(null); // 편집 중 선택(글자 단위)
   const [dirty, setDirty] = useState(false); // 미저장 변경
   const [saving, setSaving] = useState(false);
@@ -154,6 +155,8 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
   // 같은 노트 안에서 탭만 오갈 때 각 탭의 마지막 위치 복원. 날짜 바뀌면 0으로.
   const scrollRef = useRef<HTMLDivElement>(null);
   const scrollPos = useRef<Record<Tab, number>>({ word: 0, share: 0, pray: 0 });
+  const [jumpPara, setJumpPara] = useState<number | null>(null); // 나눔 탭 '본문 보기' 목표 문단
+  const jumpingRef = useRef(false); // 점프 회차 동안 스크롤 위치 복원을 막는 플래그
 
   // 탭 전환: 떠나는 탭의 현재 위치 저장 후 전환
   const selectTab = (next: Tab) => {
@@ -162,10 +165,31 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
     setTab(next);
   };
 
-  // 탭이 바뀌면 저장된 위치로 복원(레이아웃 단계 — 깜빡임 없음)
+  // 나눔 탭 '본문 보기' → 말씀 탭 전환 + 목표 문단 저장(마운트 후 스크롤 useEffect가 이동)
+  const jumpToPara = (para: number) => {
+    jumpingRef.current = true; // 이 전환은 복원 스킵(점프가 위치를 정함)
+    setJumpPara(para);
+    selectTab('word');
+  };
+
+  // 탭이 바뀌면 저장된 위치로 복원(레이아웃 단계 — 깜빡임 없음).
+  // 의존성은 [tab]만 — setJumpPara(null)이 복원을 재트리거하지 않게 한다.
   useLayoutEffect(() => {
+    if (jumpingRef.current) return; // 점프 회차엔 복원 스킵(scrollIntoView가 위치 결정)
     if (scrollRef.current) scrollRef.current.scrollTop = scrollPos.current[tab] ?? 0;
   }, [tab]);
+
+  // 점프: 말씀 탭 마운트 후 목표 문단(data-para)으로 스크롤. note 재렌더까지 기다림.
+  useEffect(() => {
+    if (tab !== 'word' || jumpPara == null) return;
+    const el = scrollRef.current?.querySelector(`[data-para="${jumpPara}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setJumpPara(null);
+    // smooth 애니메이션이 끝날 때까지 복원 스킵 유지 후 해제(다음 일반 전환은 정상 복원)
+    setTimeout(() => {
+      jumpingRef.current = false;
+    }, 600);
+  }, [tab, jumpPara, note]);
 
   // 날짜(노트)가 바뀌면 위치 초기화 + 맨 위로
   useEffect(() => {
@@ -293,6 +317,7 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
       if (on) {
         clearSelection();
         setEditKind('highlight');
+        setLinkQ(null); // 질문 연결 선택도 초기화
       }
       return !on;
     });
@@ -374,7 +399,17 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
         // 오른쪽만 걸침(start<=ms<end<me) → 오른쪽 잔여만
         rebuilt.push({ ...m, start: end, end: me, quote: q(end, me) });
       }
-      rebuilt.push({ id: genMarkId(), para, start, end, quote, color, kind });
+      rebuilt.push({
+        id: genMarkId(),
+        para,
+        start,
+        end,
+        quote,
+        color,
+        kind,
+        // 형광 모드 + 질문 연결 선택 시에만 questionIndex(0-base) 부여. 아니면 일반 형광.
+        ...(kind === 'highlight' && linkQ != null ? { questionIndex: linkQ - 1 } : {}),
+      });
       return rebuilt;
     });
     clearSelection();
@@ -568,6 +603,8 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
               fontSize={fontSize}
               answers={answers}
               onAnswerChange={onAnswerChange}
+              highlights={highlights}
+              onJumpToPara={jumpToPara}
             />
           ) : (
             <ListTab items={note.prayers} empty="기도제목이 없습니다." accent="#e8c24a" fontSize={fontSize} />
@@ -613,10 +650,36 @@ export default function SarangbangPage({ onClose, isAdmin = false }: SarangbangP
               })}
             </div>
 
+            {/* 1.5행: 질문 연결(선택) — 형광 모드 + 질문이 있을 때만. 기본 [없음]=일반 형광. */}
+            {editKind === 'highlight' && note && note.questions.length > 0 && (
+              <div className="mb-2 flex items-center gap-1.5 overflow-x-auto">
+                <span className="shrink-0 text-xs text-white/50">질문 연결:</span>
+                {[null, ...note.questions.map((_, i) => i + 1)].map((n) => {
+                  const active = linkQ === n;
+                  return (
+                    <button
+                      key={n ?? 'none'}
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()} // 본문 선택(pendingSel) 보존
+                      onClick={() => setLinkQ(n)}
+                      className="shrink-0 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors"
+                      style={{
+                        borderColor: active ? 'rgba(45,212,191,.6)' : 'rgba(255,255,255,.18)',
+                        background: active ? 'linear-gradient(135deg,#2dd4bf,#0e8a7c)' : 'rgba(255,255,255,.05)',
+                        color: active ? '#04221e' : 'rgba(255,255,255,.7)',
+                      }}
+                    >
+                      {n ?? '없음'}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* 2행: 색 원 3개 + 지우개 + 저장 */}
             <div className="flex items-center gap-2">
             {/* 색 팔레트 */}
-            {(['yellow', 'green', 'pink'] as HighlightColor[]).map((c) => (
+            {(['green', 'pink'] as HighlightColor[]).map((c) => (
               <button
                 key={c}
                 type="button"
@@ -845,6 +908,8 @@ function ListTab({
   fontSize,
   answers,
   onAnswerChange,
+  highlights,
+  onJumpToPara,
 }: {
   items: string[];
   empty: string;
@@ -852,6 +917,8 @@ function ListTab({
   fontSize: number;
   answers?: string[];
   onAnswerChange?: (i: number, v: string) => void;
+  highlights?: HighlightMark[];
+  onJumpToPara?: (para: number) => void;
 }) {
   if (!items?.length) return <div className="mt-16 text-center text-white/50">{empty}</div>;
   const editable = !!onAnswerChange;
@@ -873,6 +940,20 @@ function ListTab({
             <p className="text-left leading-[1.8] text-white/[.92] break-keep" style={{ fontSize }}>
               {t}
             </p>
+            {(() => {
+              // 이 질문(i)에 연결된 형광이 있으면 '본문 보기' 버튼(첫 형광 para로 점프)
+              const linked = highlights?.find((h) => h.questionIndex === i);
+              if (!linked || !onJumpToPara) return null;
+              return (
+                <button
+                  type="button"
+                  onClick={() => onJumpToPara(linked.para)}
+                  className="self-start rounded-full border border-teal-400/40 px-2.5 py-1 text-xs font-semibold text-teal-300 transition-colors hover:bg-teal-400/10"
+                >
+                  본문 보기
+                </button>
+              );
+            })()}
             {editable && (
               <textarea
                 value={answers?.[i] ?? ''}
