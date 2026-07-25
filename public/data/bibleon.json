@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-07-19T10:19:46.911Z",
+  "updatedAt": "2026-07-25T05:41:42.803Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.07.19",
+      "seq": 335,
+      "youtubeId": "LyV2io7fGg0",
+      "title": "공급의 원천은 어디인가?",
+      "noteSeq": 506,
+      "notePdfUrl": "/data/notes/20260719.pdf"
+    },
     {
       "date": "2026.07.05",
       "seq": 334,
@@ -55,9 +63,7 @@
       "date": "2026.05.24",
       "seq": 327,
       "youtubeId": "sq5dWSkq7gk",
-      "title": "성적 유혹_ 어떻게 할 것인가?",
-      "noteSeq": 498,
-      "notePdfUrl": "/data/notes/20260524.pdf"
+      "title": "성적 유혹_ 어떻게 할 것인가?"
     },
     {
       "date": "2026.05.17",
@@ -70,12 +76,6 @@
       "seq": 325,
       "youtubeId": "a3vbh7iBpAo",
       "title": "위험한 열심"
-    },
-    {
-      "date": "2026.05.03",
-      "seq": 324,
-      "youtubeId": "JKLuo7nWqJg",
-      "title": "사랑은 자란다"
     }
   ]
 }
