@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-07-06T12:55:37.900Z",
+  "updatedAt": "2026-07-27T12:30:43.223Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/minister.jsp",
-  "count": 160,
+  "count": 159,
   "ministers": [
     {
       "role": "목사",
@@ -474,157 +474,150 @@
     },
     {
       "role": "목사",
-      "name": "가브리엘",
-      "photoUrl": "/data/ministers/871e63101e76.jpg",
-      "department": "영어예배부",
-      "order": 67
-    },
-    {
-      "role": "목사",
       "name": "김영훈",
       "photoUrl": "/data/ministers/dd7ef0f5fd02.jpg",
       "department": "국제어린이주일학교",
-      "order": 68
+      "order": 67
     },
     {
       "role": "목사",
       "name": "김평화",
       "photoUrl": "/data/ministers/f16fade4e406.png",
       "department": "영어청소년부",
-      "order": 69
+      "order": 68
     },
     {
       "role": "목사",
       "name": "미스난",
       "photoUrl": "/data/ministers/40d259230f57.jpg",
       "department": "인도네시아어예배부",
-      "order": 70
+      "order": 69
     },
     {
       "role": "목사",
       "name": "알투로",
       "photoUrl": "/data/ministers/70fd6b8d800b.jpg",
       "department": "필리핀어예배부",
-      "order": 71
+      "order": 70
     },
     {
       "role": "목사",
       "name": "운바낙",
       "photoUrl": "/data/ministers/f069ce84f1c6.jpg",
       "department": "캄보디아어예배부",
-      "order": 72
+      "order": 71
     },
     {
       "role": "목사",
       "name": "유홍빈",
       "photoUrl": "/data/ministers/4f5acdd08fe8.gif",
       "department": "중국어예배부",
-      "order": 73
+      "order": 72
     },
     {
       "role": "목사",
       "name": "최다니엘",
       "photoUrl": "/data/ministers/8e2a47792536.gif",
       "department": "베트남어예배부",
-      "order": 74
+      "order": 73
     },
     {
       "role": "목사",
       "name": "틴아웅쉐",
       "photoUrl": "/data/ministers/095700d59625.jpg",
       "department": "미얀마어예배부",
-      "order": 75
+      "order": 74
     },
     {
       "role": "목사",
       "name": "디벤드라",
       "photoUrl": "/data/ministers/14a9577d9884.jpg",
       "department": "네팔어예배부",
-      "order": 76
+      "order": 75
     },
     {
       "role": "목사",
       "name": "정요셉",
       "photoUrl": "/data/ministers/84937a221575.gif",
       "department": "우즈벡어예배부",
-      "order": 77
+      "order": 76
     },
     {
       "role": "목사",
       "name": "나랑바타르",
       "photoUrl": "/data/ministers/1806ba4be0ac.jpg",
       "department": "몽골어예배부",
-      "order": 78
+      "order": 77
     },
     {
       "role": "목사",
       "name": "조우현",
       "photoUrl": "/data/ministers/f3fb67bd3975.jpg",
       "department": "서울로교회",
-      "order": 79
+      "order": 78
     },
     {
       "role": "목사",
       "name": "김지찬",
       "photoUrl": "/data/ministers/0c782ae50ea6.jpg",
       "department": "협동목사",
-      "order": 80
+      "order": 79
     },
     {
       "role": "목사",
       "name": "이진수",
       "photoUrl": "/data/ministers/89eafa1b9144.jpg",
       "department": "목회개발",
-      "order": 81
+      "order": 80
     },
     {
       "role": "목사",
       "name": "조원상",
       "photoUrl": "/data/ministers/590dac49cd4e.jpg",
       "department": "목회개발",
-      "order": 82
+      "order": 81
     },
     {
       "role": "목사",
       "name": "박남주",
       "photoUrl": "/data/ministers/ca080fc8a2d9.jpg",
       "department": "목회개발",
-      "order": 83
+      "order": 82
     },
     {
       "role": "목사",
       "name": "안성수",
       "photoUrl": "/data/ministers/36274b422b02.jpg",
       "department": "목회개발",
-      "order": 84
+      "order": 83
     },
     {
       "role": "목사",
       "name": "정용태",
       "photoUrl": "/data/ministers/d065978f7ff5.jpg",
       "department": "목회개발",
-      "order": 85
+      "order": 84
     },
     {
       "role": "목사",
       "name": "정철",
       "photoUrl": "/data/ministers/84b99495295b.jpg",
       "department": "목회개발",
-      "order": 86
+      "order": 85
     },
     {
       "role": "목사",
       "name": "고갑균",
       "photoUrl": "/data/ministers/ae97e8dec4e2.jpg",
       "department": "목회개발",
-      "order": 87
+      "order": 86
     },
     {
       "role": "목사",
       "name": "강지훈",
       "photoUrl": "/data/ministers/f9f6226900a2.jpg",
       "department": "목회개발",
-      "order": 88
+      "order": 87
     },
     {
       "role": "강도사",
