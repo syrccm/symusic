@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-07-26T10:28:53.325Z",
+  "updatedAt": "2026-08-01T05:52:56.805Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.07.26",
+      "seq": 336,
+      "youtubeId": "2CFLaIhXLKg",
+      "title": "빠뜨리면 안될 기도들",
+      "noteSeq": 507,
+      "notePdfUrl": "/data/notes/20260726.pdf"
+    },
     {
       "date": "2026.07.19",
       "seq": 335,
@@ -55,9 +63,7 @@
       "date": "2026.05.31",
       "seq": 328,
       "youtubeId": "FuWALMIylQw",
-      "title": "말과 삶의 격차 줄이기",
-      "noteSeq": 499,
-      "notePdfUrl": "/data/notes/20260531.pdf"
+      "title": "말과 삶의 격차 줄이기"
     },
     {
       "date": "2026.05.24",
@@ -70,12 +76,6 @@
       "seq": 326,
       "youtubeId": "gz36bIjgjEA",
       "title": "예배보다 먼저 할 일이 있다"
-    },
-    {
-      "date": "2026.05.10",
-      "seq": 325,
-      "youtubeId": "a3vbh7iBpAo",
-      "title": "위험한 열심"
     }
   ]
 }
