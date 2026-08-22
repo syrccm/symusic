@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-08-15T03:36:03.363Z",
+  "updatedAt": "2026-08-22T03:39:24.341Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 14,
+  "count": 15,
   "notes": [
+    {
+      "seq": 510,
+      "title": "내 영혼의 우슬초",
+      "date": "2026.08.21",
+      "pdfUrl": null,
+      "normTitle": "내영혼의우슬초"
+    },
     {
       "seq": 509,
       "title": "하나님의 동역자들",
@@ -57,7 +64,7 @@
       "seq": 502,
       "title": "너무나 모범적인, 그러나",
       "date": "2026.06.26",
-      "pdfUrl": "/data/notes/20260621.pdf",
+      "pdfUrl": null,
       "normTitle": "너무나모범적인그러나"
     },
     {
