@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-08-22T03:39:24.341Z",
+  "updatedAt": "2026-08-29T09:42:03.422Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
   "count": 15,
   "notes": [
+    {
+      "seq": 511,
+      "title": "염려로부터 자유하는 삶",
+      "date": "2026.08.28",
+      "pdfUrl": "/data/notes/20260823.pdf",
+      "normTitle": "염려로부터자유하는삶"
+    },
     {
       "seq": 510,
       "title": "내 영혼의 우슬초",
@@ -57,7 +64,7 @@
       "seq": 503,
       "title": "하늘에 계신 우리 아버지여!",
       "date": "2026.07.03",
-      "pdfUrl": "/data/notes/20260628.pdf",
+      "pdfUrl": null,
       "normTitle": "하늘에계신우리아버지여"
     },
     {
@@ -101,13 +108,6 @@
       "date": "2026.05.22",
       "pdfUrl": null,
       "normTitle": "예배보다먼저할일이있다"
-    },
-    {
-      "seq": 496,
-      "title": "위험한 열심",
-      "date": "2026.05.15",
-      "pdfUrl": null,
-      "normTitle": "위험한열심"
     }
   ]
 }

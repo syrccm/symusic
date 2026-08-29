@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-08-23T09:17:57.607Z",
+  "updatedAt": "2026-08-29T09:41:50.869Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.08.23",
+      "seq": 338,
+      "youtubeId": "mNN3fLsnmPo",
+      "title": "염려로부터 자유하는 삶",
+      "noteSeq": 511,
+      "notePdfUrl": "/data/notes/20260823.pdf"
+    },
     {
       "date": "2026.08.02",
       "seq": 337,
@@ -39,9 +47,7 @@
       "date": "2026.06.28",
       "seq": 333,
       "youtubeId": "EErxlkWheE8",
-      "title": "하늘에 계신 우리 아버지여!",
-      "noteSeq": 503,
-      "notePdfUrl": "/data/notes/20260628.pdf"
+      "title": "하늘에 계신 우리 아버지여!"
     },
     {
       "date": "2026.06.21",
@@ -66,12 +72,6 @@
       "seq": 328,
       "youtubeId": "FuWALMIylQw",
       "title": "말과 삶의 격차 줄이기"
-    },
-    {
-      "date": "2026.05.24",
-      "seq": 327,
-      "youtubeId": "sq5dWSkq7gk",
-      "title": "성적 유혹_ 어떻게 할 것인가?"
     }
   ]
 }
