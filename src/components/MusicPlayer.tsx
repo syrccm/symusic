@@ -1295,14 +1295,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     });
   }, [currentSongIndex]);
 
-  // 'NEW' 표시 대상 곡 id 집합.
-  // 대상: category 가 '금철' 또는 '주일' 인 곡 중, 그 구분에서 created_at 이
-  // 가장 최신인 1곡이 추가 6일 이내이면 NEW. (전체 곡 기준 — 탭/필터와 무관)
+  // 'NEW' 표시 대상 곡 id 집합. (전체 곡 기준 — 탭/필터와 무관)
+  // - 금철/주일: 각 구분에서 created_at 이 가장 최신인 1곡이 추가 6일 이내이면 NEW.
+  // - 기타: created_at 이 7일 이내인 곡은 전부 NEW (최신 1곡 제한 없음).
   // ★ 훅 규칙: 반드시 아래 early return(if (loading))보다 위에 둔다.
   const NEW_BADGE_MAX_AGE_MS = 6 * 24 * 60 * 60 * 1000;
+  const OTHER_NEW_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
   const newSongIds = useMemo(() => {
     const now = Date.now();
     const result = new Set<string>();
+    // 금철/주일: 각 분류 최신 1곡, 6일 이내
     for (const category of ['금철', '주일']) {
       let latest: { id: string; time: number } | null = null;
       for (const song of songs) {
@@ -1316,6 +1318,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       }
       if (latest && now - latest.time <= NEW_BADGE_MAX_AGE_MS) {
         result.add(latest.id);
+      }
+    }
+    // 기타: 7일 이내면 전부 (최신 1곡 제한 없음)
+    for (const song of songs) {
+      if (song.category !== '기타') continue;
+      if (!song.created_at) continue;
+      const time = new Date(song.created_at).getTime();
+      if (Number.isNaN(time)) continue; // 파싱 실패 곡 제외
+      if (now - time <= OTHER_NEW_MAX_AGE_MS) {
+        result.add(song.id);
       }
     }
     return result;
