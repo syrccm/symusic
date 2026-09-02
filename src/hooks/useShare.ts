@@ -6,10 +6,23 @@ interface ShareSongInput {
   title: string;
 }
 
+interface SharePlaylistInput {
+  id: string;
+  title: string;
+}
+
 const SHARE_BASE_URL = 'https://www.symusic.win';
 
 function buildShareUrl(songId: string) {
   return `${SHARE_BASE_URL}/song/${encodeURIComponent(songId)}`;
+}
+
+function buildPlaylistShareUrl(playlistId: string) {
+  return `${SHARE_BASE_URL}/playlist/${encodeURIComponent(playlistId)}`;
+}
+
+function buildPlaylistShareText(title: string) {
+  return `🎁 찬양 플레이리스트 선물이 도착했어요!\n\n"${title}"\n순서대로 이어서 함께 들어보세요 🎵`;
 }
 
 function buildShareText(title: string) {
@@ -87,5 +100,37 @@ export function useShare() {
     }
   }, []);
 
-  return { shareSong };
+  // 플레이리스트 공유 — shareSong 과 동일한 흐름(모바일 navigator.share → 실패/데스크톱 시 클립보드 복사 + 토스트)
+  const sharePlaylist = useCallback(async (playlist: SharePlaylistInput) => {
+    const shareUrl = buildPlaylistShareUrl(playlist.id);
+    const shareText = buildPlaylistShareText(playlist.title);
+    const fullMessage = `${shareText}
+
+${shareUrl}`;
+
+    if (isMobileUserAgent() && typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({
+          title: playlist.title,
+          text: fullMessage,
+          url: shareUrl,
+        });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return; // 사용자가 공유 시트를 닫음
+        }
+        // 그 외 실패는 클립보드 fallback
+      }
+    }
+
+    const copied = await copyToClipboard(fullMessage);
+    if (copied) {
+      toast.success('📋 플레이리스트 링크가 복사되었습니다.\n카톡 등에 붙여넣어 공유하세요!');
+    } else {
+      toast.error('공유에 실패했습니다. 브라우저 설정을 확인해주세요.');
+    }
+  }, []);
+
+  return { shareSong, sharePlaylist };
 }

@@ -14,6 +14,7 @@ import {
   Music,
   Pause,
   Play,
+  Share2,
   SkipBack,
   SkipForward,
   Smartphone,
@@ -24,6 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/lib/firebase';
 import { useSongs, type Song } from '@/hooks/useSongs';
+import { useShare } from '@/hooks/useShare';
 import { PlayPromptModal } from '@/components/PlayPromptModal';
 import { InstallGuideModal } from '@/components/InstallGuideModal';
 import { detectInstallMethod, type InstallMethod } from '@/utils/deviceDetect';
@@ -57,6 +59,7 @@ const parseSermon = (description?: string) =>
 
 export default function PlaylistPlayer() {
   const { playlistId } = useParams<{ playlistId: string }>();
+  const { sharePlaylist } = useShare();
   const navigate = useNavigate();
   const { songs } = useSongs({ silent: true });
 
@@ -333,6 +336,18 @@ export default function PlaylistPlayer() {
                 {playlist.title || '플레이리스트'}
               </h2>
               <p className="text-xs text-gray-400">{list.length}곡 · 순서대로 이어서 재생돼요</p>
+              {/* 공유 버튼 — 누구나(관리자 조건 없음). 모바일: 네이티브 공유 시트 / 데스크톱: 링크 복사 + 토스트 */}
+              {playlistId && (
+                <button
+                  type="button"
+                  onClick={() => sharePlaylist({ id: playlistId, title: playlist.title || '플레이리스트' })}
+                  aria-label="이 플레이리스트 공유하기"
+                  className="mt-2 inline-flex items-center gap-2 rounded-full border border-teal-400/60 bg-teal-500/15 px-4 py-2 text-sm font-semibold text-teal-200 transition-colors hover:bg-teal-500/30 hover:text-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
+                >
+                  <Share2 className="h-4 w-4" />
+                  이 플레이리스트 공유하기
+                </button>
+              )}
             </div>
 
             {/* 곡 목록 — 현재 재생곡 강조, 클릭하면 그 곡부터 재생 */}
