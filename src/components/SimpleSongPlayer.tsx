@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useSongs, type Song } from '@/hooks/useSongs';
 import { useShare } from '@/hooks/useShare';
+import { SongTitle } from '@/components/SongTitle';
 import { PlayPromptModal } from '@/components/PlayPromptModal';
 import { InstallGuideModal } from '@/components/InstallGuideModal';
 import CatechismRefs from '@/components/CatechismRefs';
@@ -309,9 +310,12 @@ export default function SimpleSongPlayer() {
             </div>
 
             {song.title && (
-              <h3 className="text-2xl font-bold text-white text-center break-keep">
-                {song.title}
-              </h3>
+              <SongTitle
+                as="h3"
+                title={song.title}
+                className="text-2xl font-bold text-white text-center break-keep"
+                tagClassName="text-sm font-semibold text-purple-300 tracking-wide mb-0.5"
+              />
             )}
 
             <div className="min-h-[140px] bg-slate-700/30 rounded-lg p-4">

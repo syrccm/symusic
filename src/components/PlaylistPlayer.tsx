@@ -26,6 +26,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { db } from '@/lib/firebase';
 import { useSongs, type Song } from '@/hooks/useSongs';
 import { useShare } from '@/hooks/useShare';
+import { SongTitle } from '@/components/SongTitle';
 import { PlayPromptModal } from '@/components/PlayPromptModal';
 import { InstallGuideModal } from '@/components/InstallGuideModal';
 import { detectInstallMethod, type InstallMethod } from '@/utils/deviceDetect';
@@ -368,11 +369,11 @@ export default function PlaylistPlayer() {
                     <span className="text-gray-400 font-mono w-5 flex-shrink-0 text-sm text-center">
                       {isCurrent && isPlaying ? '▶' : i + 1}
                     </span>
-                    <span
+                    <SongTitle
+                      title={s.title}
                       className={`text-sm break-keep ${isCurrent ? 'text-white font-semibold' : 'text-gray-200'}`}
-                    >
-                      {s.title}
-                    </span>
+                      tagClassName="text-xs text-purple-300/80 leading-tight"
+                    />
                   </button>
                 );
               })}
@@ -431,9 +432,12 @@ export default function PlaylistPlayer() {
             })()}
 
             {/* 현재 곡 제목 */}
-            <h3 className="text-xl font-bold text-white text-center break-keep">
-              {song.title}
-            </h3>
+            <SongTitle
+              as="h3"
+              title={song.title}
+              className="text-xl font-bold text-white text-center break-keep"
+              tagClassName="text-sm font-semibold text-purple-300 tracking-wide mb-0.5"
+            />
 
             {/* 진행 바 + 재생 컨트롤 — 가사 위로 배치(스크롤 없이 조작) */}
             <div className="space-y-1">

@@ -29,6 +29,7 @@ import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 import { NoticePanel } from '@/components/NoticePanel';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import { fixSermonSeparator } from '@/utils/sermonDescription';
+import { SongTitle } from '@/components/SongTitle';
 import { generateAndSaveTags } from '@/lib/autoTags';
 import CatechismMatcher from '@/components/CatechismMatcher';
 import CatechismRefs from '@/components/CatechismRefs';
@@ -1453,7 +1454,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 </span>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1">
-                    <span className="text-white text-base line-clamp-2 break-words">{song.title}</span>
+                    <SongTitle
+                      title={song.title}
+                      className="text-white text-base break-words"
+                      tagClassName="text-xs text-purple-300/80 leading-tight"
+                      restClassName="line-clamp-1"
+                    />
                     {newSongIds.has(song.id) && (
                       <span className="new-badge flex-shrink-0 text-[10px] font-bold text-teal-400">
                         NEW
@@ -1812,7 +1818,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                 </CardHeader>
                 <CardContent className="px-2 pt-0 pb-2 sm:px-2 sm:pt-0 sm:pb-2">
                   {/* 미니탭(전체/즐겨찾기/검색) 공용 곡 목록 — 스크롤바 항상 표시 */}
-                  <div className="max-h-32 overflow-y-scroll scrollbar-visible">
+                  <div className="max-h-40 overflow-y-scroll scrollbar-visible">
                     {filteredSongs.length === 0 ? (
                       <div className="text-center py-3">
                         <Music className="h-6 w-6 text-gray-600 mx-auto mb-1" />
@@ -1843,9 +1849,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                                   {index + 1}
                                 </span>
                                 <div className="flex-1 min-w-0 flex items-center space-x-1">
-                                  <span className="text-white text-base line-clamp-2 break-words">
-                                    {song.title}
-                                  </span>
+                                  <SongTitle
+                                    title={song.title}
+                                    className="text-white text-base break-words"
+                                    tagClassName="text-xs text-purple-300/80 leading-tight"
+                                    restClassName="line-clamp-1"
+                                  />
                                   {newSongIds.has(song.id) && (
                                     <span className="new-badge flex-shrink-0 text-[10px] font-bold text-teal-400">
                                       NEW
@@ -2050,9 +2059,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           })()}
                         </div>
                         {currentSong.title && (
-                          <h3 className="text-2xl font-bold text-white text-center break-keep">
-                            {currentSong.title}
-                          </h3>
+                          <SongTitle
+                            as="h3"
+                            title={currentSong.title}
+                            className="text-2xl font-bold text-white text-center break-keep"
+                            tagClassName="text-sm font-semibold text-purple-300 tracking-wide mb-0.5"
+                          />
                         )}
                         <div className="whitespace-pre-line text-white leading-relaxed text-center text-base break-keep">
                           {currentSong.lyrics}
