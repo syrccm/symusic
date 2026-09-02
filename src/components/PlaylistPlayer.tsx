@@ -342,41 +342,53 @@ export default function PlaylistPlayer() {
                 <button
                   type="button"
                   onClick={() => sharePlaylist({ id: playlistId, title: playlist.title || '플레이리스트' })}
-                  aria-label="이 플레이리스트 공유하기"
-                  className="mt-2 inline-flex items-center gap-2 rounded-full border border-teal-400/60 bg-teal-500/15 px-4 py-2 text-sm font-semibold text-teal-200 transition-colors hover:bg-teal-500/30 hover:text-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
+                  aria-label={`${playlist.title || '플레이리스트'} 공유하기`}
+                  className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full border border-teal-400/60 bg-teal-500/15 px-4 py-2 text-sm font-semibold text-teal-200 break-keep transition-colors hover:bg-teal-500/30 hover:text-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
                 >
-                  <Share2 className="h-4 w-4" />
-                  이 플레이리스트 공유하기
+                  <Share2 className="h-4 w-4 flex-shrink-0" />
+                  {/* 제목 자동: "{제목} 공유하기", 제목 없으면 "플레이리스트 공유하기" */}
+                  {playlist.title ? `${playlist.title} 공유하기` : '플레이리스트 공유하기'}
                 </button>
               )}
             </div>
 
-            {/* 곡 목록 — 현재 재생곡 강조, 클릭하면 그 곡부터 재생 */}
-            <div className="space-y-1 max-h-56 overflow-y-auto">
-              {list.map((s, i) => {
-                const isCurrent = i === index;
-                return (
-                  <button
-                    key={s.id}
-                    type="button"
-                    onClick={() => setIndex(i)}
-                    className={`w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 transition-colors ${
-                      isCurrent
-                        ? 'bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-400/50'
-                        : 'bg-slate-700/30 hover:bg-slate-700/60'
-                    }`}
-                  >
-                    <span className="text-gray-400 font-mono w-5 flex-shrink-0 text-sm text-center">
-                      {isCurrent && isPlaying ? '▶' : i + 1}
-                    </span>
-                    <SongTitle
-                      title={s.title}
-                      className={`text-sm break-keep ${isCurrent ? 'text-white font-semibold' : 'text-gray-200'}`}
-                      tagClassName="text-xs text-purple-300/80 leading-tight"
-                    />
-                  </button>
-                );
-              })}
+            {/* 곡 목록 — 곡마다 독립 카드(메인 곡 목록 행 팔레트 재사용), 현재곡은 강조 배경 + 왼쪽 강조바 + ▶ 배지.
+                클릭하면 그 곡부터 재생. 아래 설교정보와는 구분선으로 분리 */}
+            <div className="pb-4 border-b border-slate-700">
+              <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {list.map((s, i) => {
+                  const isCurrent = i === index;
+                  return (
+                    <button
+                      key={s.id}
+                      type="button"
+                      onClick={() => setIndex(i)}
+                      aria-current={isCurrent ? 'true' : undefined}
+                      className={`w-full text-left rounded-xl border px-3 py-2.5 flex items-center gap-3 transition-colors ${
+                        isCurrent
+                          ? 'bg-gradient-to-r from-purple-500/25 to-pink-500/25 border-purple-400/60 border-l-4 border-l-pink-400 shadow-lg shadow-purple-900/30'
+                          : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-700/50 hover:border-slate-600 active:bg-slate-700/70'
+                      }`}
+                    >
+                      {/* 번호 원형 배지 — 현재곡은 ▶ */}
+                      <span
+                        className={`w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center text-xs font-mono ${
+                          isCurrent
+                            ? 'bg-gradient-to-r from-purple-500 to-pink-500 text-white'
+                            : 'bg-slate-700/70 text-gray-300'
+                        }`}
+                      >
+                        {isCurrent ? '▶' : i + 1}
+                      </span>
+                      <SongTitle
+                        title={s.title}
+                        className={`text-sm break-keep ${isCurrent ? 'text-white font-semibold' : 'text-gray-200'}`}
+                        tagClassName="text-xs text-purple-300/80 leading-tight"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* 설교 정보 (설교제목/본문/설교자/구분·날짜) — MusicPlayer 와 동일 블록, 현재 곡 기준 */}
