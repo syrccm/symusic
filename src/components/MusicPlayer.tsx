@@ -28,6 +28,7 @@ import { AboutModal } from '@/components/AboutModal';
 import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 import { NoticePanel } from '@/components/NoticePanel';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
+import { fixSermonSeparator } from '@/utils/sermonDescription';
 import { generateAndSaveTags } from '@/lib/autoTags';
 import CatechismMatcher from '@/components/CatechismMatcher';
 import CatechismRefs from '@/components/CatechismRefs';
@@ -541,7 +542,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       };
 
       if (newSong.description && newSong.description.trim()) {
-        songData.description = newSong.description.trim();
+        songData.description = fixSermonSeparator(newSong.description.trim());
       }
 
       if (newSong.youtubeUrl && newSong.youtubeUrl.trim()) {
@@ -632,7 +633,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       };
 
       if (editSongData.description && editSongData.description.trim()) {
-        updatedData.description = editSongData.description.trim();
+        updatedData.description = fixSermonSeparator(editSongData.description.trim());
       }
 
       if (editSongData.youtubeUrl && editSongData.youtubeUrl.trim()) {

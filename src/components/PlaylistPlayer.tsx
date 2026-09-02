@@ -48,6 +48,13 @@ function formatTime(time: number) {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
+// 곡 설명("제목|본문|설교자|구분|날짜") 파싱 — MusicPlayer.parseSermon 과 동일
+const parseSermon = (description?: string) =>
+  description
+    ?.split('|')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0) ?? [];
+
 export default function PlaylistPlayer() {
   const { playlistId } = useParams<{ playlistId: string }>();
   const navigate = useNavigate();
@@ -356,24 +363,64 @@ export default function PlaylistPlayer() {
               })}
             </div>
 
-            {/* 현재 곡 제목 + 가사 */}
+            {/* 설교 정보 (설교제목/본문/설교자/구분·날짜) — MusicPlayer 와 동일 블록, 현재 곡 기준 */}
+            {(() => {
+              const parts = parseSermon(song.description);
+              if (parts.length === 0) return null;
+              return (
+                <div className="text-left border-b border-slate-600 pb-2 text-base space-y-1 break-keep">
+                  {parts[0] && (
+                    <p>
+                      <span className="text-gray-500">· </span>
+                      <span className="text-gray-400">설교제목: </span>
+                      <span className="text-gray-200">{parts[0]}</span>
+                    </p>
+                  )}
+                  {parts[1] && (
+                    <p>
+                      <span className="text-gray-500">· </span>
+                      <span className="text-gray-400">설교본문: </span>
+                      <span className="text-gray-200">{parts[1]}</span>
+                    </p>
+                  )}
+                  {parts[2] && (
+                    <p>
+                      <span className="text-gray-500">· </span>
+                      <span className="text-gray-400">설교자: </span>
+                      <span className="text-gray-200">{parts[2]}</span>
+                    </p>
+                  )}
+                  {(parts[3] || parts[4]) && (
+                    <p>
+                      {parts[3] && (
+                        <>
+                          <span className="text-gray-500">· </span>
+                          <span className="text-gray-400">구분: </span>
+                          <span className="text-gray-200">{parts[3]}</span>
+                        </>
+                      )}
+                      {parts[3] && parts[4] && (
+                        <span className="mx-1 text-gray-500">|</span>
+                      )}
+                      {parts[4] && (
+                        <>
+                          <span className="text-gray-500">· </span>
+                          <span className="text-gray-400">날짜: </span>
+                          <span className="text-gray-200">{parts[4]}</span>
+                        </>
+                      )}
+                    </p>
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* 현재 곡 제목 */}
             <h3 className="text-xl font-bold text-white text-center break-keep">
               {song.title}
             </h3>
 
-            <div className="min-h-[120px] bg-slate-700/30 rounded-lg p-4">
-              {song.lyrics ? (
-                <div className="whitespace-pre-line text-white leading-relaxed text-center text-base break-keep">
-                  {song.lyrics}
-                </div>
-              ) : (
-                <p className="text-gray-400 text-xs text-center pt-6">
-                  가사가 준비되지 않았어요
-                </p>
-              )}
-            </div>
-
-            {/* 진행 바 */}
+            {/* 진행 바 + 재생 컨트롤 — 가사 위로 배치(스크롤 없이 조작) */}
             <div className="space-y-1">
               <div
                 className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
@@ -418,6 +465,19 @@ export default function PlaylistPlayer() {
               >
                 <SkipForward className="h-6 w-6" />
               </Button>
+            </div>
+
+            {/* 가사 */}
+            <div className="min-h-[120px] bg-slate-700/30 rounded-lg p-4">
+              {song.lyrics ? (
+                <div className="whitespace-pre-line text-white leading-relaxed text-center text-base break-keep">
+                  {song.lyrics}
+                </div>
+              ) : (
+                <p className="text-gray-400 text-xs text-center pt-6">
+                  가사가 준비되지 않았어요
+                </p>
+              )}
             </div>
 
             {song.youtubeUrl && (
