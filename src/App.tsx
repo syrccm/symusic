@@ -12,6 +12,7 @@ const ConfessionPage = lazy(() => import('./pages/ConfessionPage'));
 const MinistersPage = lazy(() => import('./pages/MinistersPage'));
 const BibleOnPage = lazy(() => import('./pages/BibleOnPage'));
 const SimpleSongPlayer = lazy(() => import('./components/SimpleSongPlayer'));
+const PlaylistPlayer = lazy(() => import('./components/PlaylistPlayer'));
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/song/:songId" element={<SimpleSongPlayer />} />
+              <Route path="/playlist/:playlistId" element={<PlaylistPlayer />} />
               <Route path="/confession" element={<ConfessionPage />} />
               <Route path="/ministers" element={<MinistersPage />} />
               <Route path="/bibleon" element={<BibleOnPage />} />
