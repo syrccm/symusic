@@ -69,7 +69,9 @@ import {
   BookMarked,
   Users,
   MonitorPlay,
-  HeartHandshake
+  HeartHandshake,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 // Types
@@ -132,7 +134,10 @@ interface MusicPlayerProps {
 
 export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) {
   // Songs (Firestore + LS 캐시) — 훅으로 추출
-  const { songs, loading, isOfflineMode, setSongsLocal } = useSongs();
+  const { songs: allSongs, loading, isOfflineMode, setSongsLocal } = useSongs();
+  // 비활성(active === false) 곡은 일반 사용자 목록(전체/즐겨찾기/검색·곡 개수)에서 제외.
+  // 관리 '기존 곡 관리' 목록은 allSongs 를 사용해 비활성 곡도 표시(토글 가능).
+  const songs = useMemo(() => allSongs.filter((s) => s.active !== false), [allSongs]);
 
   // State
   const [_categories, setCategories] = useState<Category[]>([]);
@@ -694,13 +699,42 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   };
 
   // Delete song handler
+  // 곡 비활성화/활성화 토글 — 일반 목록에서만 숨기고 관리 목록엔 남긴다
+  const handleToggleSongActive = async (song: Song) => {
+    if (!isAdmin) {
+      toast.error('관리자 권한이 필요합니다.');
+      return;
+    }
+    const nextActive = song.active === false; // 비활성이면 활성으로, 그 외(활성)면 비활성으로
+    try {
+      if (isOfflineMode || !db) {
+        setSongsLocal((prev) =>
+          prev.map((s) => (s.id === song.id ? { ...s, active: nextActive } : s))
+        );
+      } else {
+        await updateDoc(doc(db, 'songs', song.id), {
+          active: nextActive,
+          updated_at: new Date().toISOString(),
+        });
+      }
+      toast.success(
+        nextActive
+          ? `"${song.title}" 곡이 활성화되었습니다.`
+          : `"${song.title}" 곡이 비활성화되었습니다.`
+      );
+    } catch (error) {
+      console.error('❌ [ToggleActive] 실패:', error);
+      toast.error('상태 변경에 실패했습니다.');
+    }
+  };
+
   const handleDeleteSong = async (songId: string) => {
     if (!isAdmin) {
       toast.error('관리자 권한이 필요합니다.');
       return;
     }
 
-    const songToDelete = songs.find(song => song.id === songId);
+    const songToDelete = allSongs.find(song => song.id === songId);
 
     try {
       if (songToDelete && songs.indexOf(songToDelete) === currentSongIndex) {
@@ -2761,24 +2795,46 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       </p>
                     </div>
                     <h3 className="text-lg font-semibold text-white mb-4 pt-2">기존 곡 목록</h3>
-                    {songs.length === 0 ? (
+                    {allSongs.length === 0 ? (
                       <p className="text-gray-400 text-center py-4">곡이 없습니다.</p>
                     ) : (
                       <div className="max-h-96 overflow-y-auto space-y-2">
-                        {songs.map((song) => {
+                        {allSongs.map((song) => {
+                          const isInactive = song.active === false;
                           return (
                             <div
                               key={song.id}
-                              className="p-3 bg-slate-700/50 rounded-lg flex items-center justify-between"
+                              className={`p-3 bg-slate-700/50 rounded-lg flex items-center justify-between ${
+                                isInactive ? 'opacity-60' : ''
+                              }`}
                             >
                               <div className="flex-1 min-w-0">
                                 <h4 className="font-medium text-white truncate">
                                   {song.title}
+                                  {isInactive && (
+                                    <span className="ml-2 align-middle text-[10px] px-1.5 py-0.5 rounded bg-gray-600 text-gray-200">
+                                      비활성
+                                    </span>
+                                  )}
                                 </h4>
                                 <p className="text-xs text-gray-400">{song.category}</p>
                               </div>
 
                               <div className="flex items-center space-x-1 flex-shrink-0 ml-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => void handleToggleSongActive(song)}
+                                  aria-label={isInactive ? '활성화' : '비활성화'}
+                                  title={isInactive ? '활성화' : '비활성화'}
+                                  className={`p-1 ${
+                                    isInactive
+                                      ? 'text-green-400 hover:text-green-300'
+                                      : 'text-gray-400 hover:text-gray-200'
+                                  }`}
+                                >
+                                  {isInactive ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                                </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -2826,7 +2882,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         <AnalyticsDialog
           open={isAnalyticsOpen}
           onOpenChange={setIsAnalyticsOpen}
-          songs={songs}
+          songs={allSongs}
         />
       )}
 
@@ -2835,7 +2891,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           open={showPlaylistDialog}
           onOpenChange={setShowPlaylistDialog}
           isAdmin={isAdmin}
-          songs={songs}
+          songs={allSongs}
         />
       )}
 

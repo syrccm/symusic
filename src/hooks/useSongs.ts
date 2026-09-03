@@ -25,6 +25,8 @@ export interface Song {
   moodsGeneratedAt?: string;
   /** 매핑된 웨스트민스터 소요리문답 번호 목록 (1~107) */
   catechismRefs?: number[];
+  /** 비활성(숨김) 여부. false 면 일반 사용자 목록에서 제외, undefined/true 면 활성(하위호환) */
+  active?: boolean;
   created_at: string;
 }
 
