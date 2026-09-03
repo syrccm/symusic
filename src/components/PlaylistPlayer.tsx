@@ -168,7 +168,7 @@ export default function PlaylistPlayer() {
   }, [list.length]);
 
   // 4) song 결정되면: audio.src 설정 + 리스너 등록 + 자동 재생 시도 (SimpleSongPlayer 와 동일 구조)
-  //    차이: loop 없음, ended 시 다음 곡으로 진행, 마지막 곡이면 정지
+  //    차이: loop 없음, ended 시 다음 곡으로 진행, 마지막 곡이면 첫 곡으로 순환(전체 반복, STEP 2g)
   useEffect(() => {
     if (!song?.audioUrl) return;
     const audio = audioRef.current;
@@ -185,11 +185,22 @@ export default function PlaylistPlayer() {
       }
     };
     const handleEnded = () => {
-      setIsPlaying(false);
       const next = indexRef.current + 1;
       if (next < listLengthRef.current) {
+        // 다음 곡으로 진행 (기존 로직)
+        setIsPlaying(false);
         setIndex(next);
+        return;
       }
+      // STEP 2g: 마지막 곡 → 첫 곡으로 순환(전체 반복)
+      if (indexRef.current === 0) {
+        // 곡이 1개뿐: index 가 바뀌지 않아 effect 가 재실행되지 않으므로 직접 처음부터 다시 재생
+        audio.currentTime = 0;
+        audio.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+        return;
+      }
+      setIsPlaying(false);
+      setIndex(0);
     };
     const handleError = () => {
       setIsPlaying(false);
@@ -579,7 +590,7 @@ export default function PlaylistPlayer() {
           </button>
         )}
 
-        {/* loop 없음 — 곡 종료 시 handleEnded 가 다음 곡으로 진행 */}
+        {/* loop 없음 — 곡 종료 시 handleEnded 가 다음 곡으로 진행, 마지막 곡이면 첫 곡으로 순환 */}
         <audio ref={audioRef} crossOrigin="anonymous" preload="metadata" />
       </div>
 
