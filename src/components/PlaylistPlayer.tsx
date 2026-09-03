@@ -6,6 +6,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
+import { findPlaylistIdByShortCode } from '@/utils/playlistShortCode';
 import {
   ArrowRight,
   Home,
@@ -42,6 +43,7 @@ interface Playlist {
   title: string;
   songIds: string[];
   createdAt?: string;
+  shortCode?: string;
 }
 
 function formatTime(time: number) {
@@ -59,7 +61,8 @@ const parseSermon = (description?: string) =>
     .filter((s) => s.length > 0) ?? [];
 
 export default function PlaylistPlayer() {
-  const { playlistId } = useParams<{ playlistId: string }>();
+  // /playlist/:playlistId (문서 id, 구 주소) 또는 /p/:code (shortCode, 단축 주소) 둘 다 지원
+  const { playlistId: routePlaylistId, code: routeCode } = useParams<{ playlistId?: string; code?: string }>();
   const { sharePlaylist } = useShare();
   const navigate = useNavigate();
   const { songs } = useSongs({ silent: true });
@@ -80,16 +83,27 @@ export default function PlaylistPlayer() {
   const [isIOS] = useState(() => detectInstallMethod().startsWith('ios-'));
 
   // 1) 플레이리스트 문서 로드 (읽기 전용)
+  //    - /p/:code  → shortCode 로 query 해서 문서 id 를 찾은 뒤 getDoc
+  //    - /playlist/:playlistId → 기존대로 getDoc
   useEffect(() => {
-    if (!playlistId || !db) {
+    const firestore = db;
+    if ((!routePlaylistId && !routeCode) || !firestore) {
       setNotFound(true);
       return;
     }
     let cancelled = false;
-    getDoc(doc(db, 'playlists', playlistId))
+    const resolveId: Promise<string | null> = routeCode
+      ? findPlaylistIdByShortCode(firestore, routeCode.toLowerCase())
+      : Promise.resolve(routePlaylistId ?? null);
+
+    resolveId
+      .then((id) => {
+        if (cancelled || !id) return null;
+        return getDoc(doc(firestore, 'playlists', id));
+      })
       .then((snap) => {
         if (cancelled) return;
-        if (!snap.exists()) {
+        if (!snap || !snap.exists()) {
           setNotFound(true);
           return;
         }
@@ -102,17 +116,18 @@ export default function PlaylistPlayer() {
           title: typeof raw.title === 'string' ? raw.title : '',
           songIds,
           createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : undefined,
+          shortCode: typeof raw.shortCode === 'string' && raw.shortCode ? raw.shortCode : undefined,
         });
         setNotFound(false);
       })
       .catch((err) => {
-        console.error('[PlaylistPlayer] getDoc failed:', err);
+        console.error('[PlaylistPlayer] load failed:', err);
         if (!cancelled) setNotFound(true);
       });
     return () => {
       cancelled = true;
     };
-  }, [playlistId]);
+  }, [routePlaylistId, routeCode]);
 
   // 2) songIds 순서대로 재생목록 구성 (삭제된 곡 id 는 건너뜀)
   const list = useMemo<Song[]>(() => {
@@ -338,10 +353,16 @@ export default function PlaylistPlayer() {
               </h2>
               <p className="text-xs text-gray-400">{list.length}곡 · 순서대로 이어서 재생돼요</p>
               {/* 공유 버튼 — 누구나(관리자 조건 없음). 모바일: 네이티브 공유 시트 / 데스크톱: 링크 복사 + 토스트 */}
-              {playlistId && (
+              {playlist.id && (
                 <button
                   type="button"
-                  onClick={() => sharePlaylist({ id: playlistId, title: playlist.title || '플레이리스트' })}
+                  onClick={() =>
+                    sharePlaylist({
+                      id: playlist.id,
+                      title: playlist.title || '플레이리스트',
+                      shortCode: playlist.shortCode,
+                    })
+                  }
                   aria-label={`${playlist.title || '플레이리스트'} 공유하기`}
                   className="mt-2 inline-flex max-w-full items-center gap-2 rounded-full border border-teal-400/60 bg-teal-500/15 px-4 py-2 text-sm font-semibold text-teal-200 break-keep transition-colors hover:bg-teal-500/30 hover:text-white active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-teal-300"
                 >
@@ -451,52 +472,65 @@ export default function PlaylistPlayer() {
               tagClassName="text-sm font-semibold text-purple-300 tracking-wide mb-0.5"
             />
 
-            {/* 진행 바 + 재생 컨트롤 — 가사 위로 배치(스크롤 없이 조작) */}
-            <div className="space-y-1">
-              <div
-                className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
-                onClick={handleSeek}
-              >
-                <div
-                  className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-100"
-                  style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
-                />
-              </div>
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-              </div>
-            </div>
+            {/* 진행 바 + 재생 컨트롤 — 가사 위로 배치(스크롤 없이 조작)
+                스타일은 MusicPlayer "2. 플레이어" 카드와 동일(진행바 h-1.5, 시간 text-base,
+                이전/다음 ghost p-2 h-4 아이콘, 재생 w-12 h-12 보라 원형, space-x-3). 버튼은 3개만. */}
+            <Card className="bg-slate-800/50 border-slate-700">
+              <CardContent className="px-2 py-2 sm:px-2 sm:py-2">
+                <div className="space-y-3 py-0.5">
+                  <div className="space-y-1.5">
+                    <div
+                      className="w-full h-1.5 bg-slate-600 rounded-full cursor-pointer"
+                      onClick={handleSeek}
+                    >
+                      <div
+                        className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-100"
+                        style={{ width: duration ? `${(currentTime / duration) * 100}%` : '0%' }}
+                      />
+                    </div>
+                    <div className="flex justify-between text-base text-gray-400">
+                      <span>{formatTime(currentTime)}</span>
+                      <span>{formatTime(duration)}</span>
+                    </div>
+                  </div>
 
-            {/* 이전 / 재생·일시정지 / 다음 */}
-            <div className="flex items-center justify-center gap-6">
-              <Button
-                onClick={goPrev}
-                aria-label="이전 곡"
-                variant="ghost"
-                className="w-12 h-12 rounded-full text-purple-200 hover:bg-purple-500/20 disabled:opacity-30"
-                disabled={index === 0}
-              >
-                <SkipBack className="h-6 w-6" />
-              </Button>
-              <Button
-                onClick={togglePlay}
-                aria-label={isPlaying ? '일시정지' : '재생'}
-                className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-16 h-16 rounded-full"
-                disabled={!song.audioUrl}
-              >
-                {isPlaying ? <Pause className="h-7 w-7" /> : <Play className="h-7 w-7 ml-0.5" />}
-              </Button>
-              <Button
-                onClick={goNext}
-                aria-label="다음 곡"
-                variant="ghost"
-                className="w-12 h-12 rounded-full text-purple-200 hover:bg-purple-500/20 disabled:opacity-30"
-                disabled={index + 1 >= list.length}
-              >
-                <SkipForward className="h-6 w-6" />
-              </Button>
-            </div>
+                  {/* 이전 / 재생·일시정지 / 다음 */}
+                  <div className="flex items-center justify-center space-x-3">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={goPrev}
+                      aria-label="이전 곡"
+                      className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2 disabled:opacity-30"
+                      disabled={index === 0}
+                    >
+                      <SkipBack className="h-4 w-4" />
+                    </Button>
+
+                    <Button
+                      onClick={togglePlay}
+                      size="sm"
+                      aria-label={isPlaying ? '일시정지' : '재생'}
+                      className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 w-12 h-12 rounded-full"
+                      disabled={!song.audioUrl}
+                    >
+                      {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={goNext}
+                      aria-label="다음 곡"
+                      className="text-white hover:text-purple-300 hover:bg-purple-500/20 p-2 disabled:opacity-30"
+                      disabled={index + 1 >= list.length}
+                    >
+                      <SkipForward className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* 가사 */}
             <div className="min-h-[120px] bg-slate-700/30 rounded-lg p-4">

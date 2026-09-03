@@ -41,6 +41,7 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/song/:songId" element={<SimpleSongPlayer />} />
               <Route path="/playlist/:playlistId" element={<PlaylistPlayer />} />
+              <Route path="/p/:code" element={<PlaylistPlayer />} />
               <Route path="/confession" element={<ConfessionPage />} />
               <Route path="/ministers" element={<MinistersPage />} />
               <Route path="/bibleon" element={<BibleOnPage />} />

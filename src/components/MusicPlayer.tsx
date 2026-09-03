@@ -26,6 +26,7 @@ import { useSongs, type Song } from '@/hooks/useSongs';
 import { useNotices } from '@/hooks/useNotices';
 import { AboutModal } from '@/components/AboutModal';
 import { AnalyticsDialog } from '@/components/AnalyticsDialog';
+import { PlaylistManagerDialog } from '@/components/PlaylistManagerDialog';
 import { NoticePanel } from '@/components/NoticePanel';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import { fixSermonSeparator } from '@/utils/sermonDescription';
@@ -190,6 +191,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
   // Analytics dialog (관리자 모드 전용)
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [showPlaylistDialog, setShowPlaylistDialog] = useState(false); // 플레이리스트 관리 모달(관리자)
 
   // 햄버거 메뉴 + 카포·조옮김 / 메트로놈 모달
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1590,6 +1592,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             <button
                               type="button"
                               onClick={() => {
+                                setShowPlaylistDialog(true);
+                                setIsMusicMenuOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                            >
+                              🎵 플레이리스트 공유
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
                                 handleAdminLogout();
                                 setIsMusicMenuOpen(false);
                               }}
@@ -2814,6 +2826,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         <AnalyticsDialog
           open={isAnalyticsOpen}
           onOpenChange={setIsAnalyticsOpen}
+          songs={songs}
+        />
+      )}
+
+      {isAdminRoute && (
+        <PlaylistManagerDialog
+          open={showPlaylistDialog}
+          onOpenChange={setShowPlaylistDialog}
+          isAdmin={isAdmin}
           songs={songs}
         />
       )}

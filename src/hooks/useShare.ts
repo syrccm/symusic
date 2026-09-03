@@ -1,5 +1,6 @@
 import { useCallback } from 'react';
 import { toast } from 'sonner';
+import { buildPlaylistPath } from '@/utils/playlistShortCode';
 
 interface ShareSongInput {
   id: string;
@@ -9,6 +10,8 @@ interface ShareSongInput {
 interface SharePlaylistInput {
   id: string;
   title: string;
+  /** 단축 주소 코드. 있으면 /p/{code}, 없으면(구 데이터) /playlist/{id} */
+  shortCode?: string | null;
 }
 
 const SHARE_BASE_URL = 'https://www.symusic.win';
@@ -17,8 +20,8 @@ function buildShareUrl(songId: string) {
   return `${SHARE_BASE_URL}/song/${encodeURIComponent(songId)}`;
 }
 
-function buildPlaylistShareUrl(playlistId: string) {
-  return `${SHARE_BASE_URL}/playlist/${encodeURIComponent(playlistId)}`;
+function buildPlaylistShareUrl(playlist: SharePlaylistInput) {
+  return `${SHARE_BASE_URL}${buildPlaylistPath(playlist)}`;
 }
 
 function buildPlaylistShareText(title: string) {
@@ -102,7 +105,7 @@ export function useShare() {
 
   // 플레이리스트 공유 — shareSong 과 동일한 흐름(모바일 navigator.share → 실패/데스크톱 시 클립보드 복사 + 토스트)
   const sharePlaylist = useCallback(async (playlist: SharePlaylistInput) => {
-    const shareUrl = buildPlaylistShareUrl(playlist.id);
+    const shareUrl = buildPlaylistShareUrl(playlist);
     const shareText = buildPlaylistShareText(playlist.title);
     const fullMessage = `${shareText}
 
