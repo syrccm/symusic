@@ -1,13 +1,14 @@
 // 플레이리스트 관리 모달 (관리자 전용, /0691 음표 메뉴 → "🎵 플레이리스트 공유")
 // - STEP 2a: 제목만 입력해 빈 플레이리스트를 Firestore playlists 에 생성
 // - STEP 2b: 만든 플레이리스트를 편집 상태로 두고 곡 제목 검색 → 추가 → songIds 저장(updateDoc)
+// - STEP 2f: 목록 각 항목에 열기(새 탭) 버튼 + /p/코드 텍스트를 링크로
 // - STEP 2d: 단축 주소 코드(shortCode) — 입력하면 검증·중복검사, 비우면 랜덤 4자(중복 시 재생성)
 // - STEP 2ce: 모달 열 때 전체 목록(getDocs, 최신순) 표시 → [편집](getDoc 으로 title·songIds 불러와 순서↑↓·제거×·추가·제목 수정
 //             → updateDoc({title, songIds, updatedAt}, shortCode 불변) / [삭제](deleteDoc, 확인창)
 // - 데이터 구조: playlists/{autoId} = { title, songIds: string[](곡 문서 id, 담은 순서), shortCode, createdAt: ISO, updatedAt?: ISO }
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, updateDoc } from 'firebase/firestore';
-import { ListMusic, Loader2, Plus, Check, ArrowUp, ArrowDown, X, Pencil, Trash2, RefreshCw } from 'lucide-react';
+import { ListMusic, Loader2, Plus, Check, ArrowUp, ArrowDown, X, Pencil, Trash2, RefreshCw, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import {
@@ -439,9 +440,30 @@ export function PlaylistManagerDialog({ open, onOpenChange, isAdmin, songs }: Pl
                       <div className="text-white font-medium truncate">{p.title || '(제목 없음)'}</div>
                       <div className="text-[11px] text-gray-400 truncate">
                         {p.songIds.length}곡
-                        <span className="font-mono"> · {buildPlaylistPath(p)}</span>
+                        {' · '}
+                        <a
+                          href={buildPlaylistPath(p)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="font-mono underline-offset-2 hover:underline hover:text-purple-200"
+                          title="새 탭에서 열기"
+                        >
+                          {buildPlaylistPath(p)}
+                        </a>
                       </div>
                     </div>
+                    {/* STEP 2f: 열기(바로가기) — 공유 페이지를 새 탭에서 연다. 관리 모달은 유지 */}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => window.open(buildPlaylistPath(p), '_blank', 'noopener,noreferrer')}
+                      aria-label="열기"
+                      title="새 탭에서 열기"
+                      className="h-8 px-2 text-purple-300 hover:text-purple-200 hover:bg-purple-500/10 shrink-0"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </Button>
                     <Button
                       type="button"
                       variant="ghost"
