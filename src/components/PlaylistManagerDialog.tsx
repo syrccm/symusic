@@ -5,7 +5,8 @@
 // - STEP 2d: 단축 주소 코드(shortCode) — 입력하면 검증·중복검사, 비우면 랜덤 4자(중복 시 재생성)
 // - STEP 2ce: 모달 열 때 전체 목록(getDocs, 최신순) 표시 → [편집](getDoc 으로 title·songIds 불러와 순서↑↓·제거×·추가·제목 수정
 //             → updateDoc({title, songIds, updatedAt}, shortCode 불변) / [삭제](deleteDoc, 확인창)
-// - 데이터 구조: playlists/{autoId} = { title, songIds: string[](곡 문서 id, 담은 순서), shortCode, createdAt: ISO, updatedAt?: ISO }
+// - 데이터 구조: playlists/{autoId} = { title, songIds: string[](곡 문서 id, 담은 순서), shortCode, createdAt: ISO, updatedAt?: ISO, showSermon?: boolean }
+// - showSermon: true 면 공유 페이지에서 곡별 설교 인포그래픽 탭 표시(기본 false/없음, 관리 UI 체크박스로 토글)
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, updateDoc } from 'firebase/firestore';
 import { ListMusic, Loader2, Plus, Check, ArrowUp, ArrowDown, X, Pencil, Trash2, RefreshCw, ExternalLink } from 'lucide-react';
@@ -45,6 +46,7 @@ interface PlaylistDoc {
   songIds: string[];
   shortCode?: string;
   createdAt?: string;
+  showSermon?: boolean;
 }
 
 // 현재 편집 중인 플레이리스트. title·songIds 는 로컬 편집본, 저장 버튼으로 Firestore 반영.
@@ -52,6 +54,7 @@ interface EditingPlaylist {
   id: string;
   title: string;
   songIds: string[];
+  showSermon: boolean;
 }
 
 // 곡 제목은 Firestore 에 NFD(자모 분리)로 저장된 경우가 있어 검색 시 양쪽 모두 NFC 로 맞춘다.
@@ -66,6 +69,7 @@ function parsePlaylistDoc(id: string, raw: Record<string, unknown>): PlaylistDoc
       : [],
     shortCode: typeof raw.shortCode === 'string' && raw.shortCode ? raw.shortCode : undefined,
     createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : undefined,
+    showSermon: raw.showSermon === true,
   };
 }
 
@@ -86,7 +90,11 @@ export function PlaylistManagerDialog({ open, onOpenChange, isAdmin, songs }: Pl
   const [songQuery, setSongQuery] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   // 마지막 저장 시점의 스냅샷(변경 여부 판단용)
-  const [saved, setSaved] = useState<{ title: string; songIds: string[] }>({ title: '', songIds: [] });
+  const [saved, setSaved] = useState<{ title: string; songIds: string[]; showSermon: boolean }>({
+    title: '',
+    songIds: [],
+    showSermon: false,
+  });
 
   const songMap = useMemo(() => new Map(songs.map((s) => [s.id, s])), [songs]);
 
@@ -99,6 +107,7 @@ export function PlaylistManagerDialog({ open, onOpenChange, isAdmin, songs }: Pl
   const isDirty =
     editing !== null &&
     (editing.title !== saved.title ||
+      editing.showSermon !== saved.showSermon ||
       editing.songIds.length !== saved.songIds.length ||
       editing.songIds.some((id, i) => id !== saved.songIds[i]));
 
@@ -128,9 +137,10 @@ export function PlaylistManagerDialog({ open, onOpenChange, isAdmin, songs }: Pl
   const confirmDiscard = () =>
     !isDirty || window.confirm('저장하지 않은 변경이 있습니다. 버리고 이동할까요?');
 
-  const enterEditing = (p: { id: string; title: string; songIds: string[] }) => {
-    setEditing({ id: p.id, title: p.title, songIds: [...p.songIds] });
-    setSaved({ title: p.title, songIds: [...p.songIds] });
+  const enterEditing = (p: { id: string; title: string; songIds: string[]; showSermon?: boolean }) => {
+    const showSermon = p.showSermon === true;
+    setEditing({ id: p.id, title: p.title, songIds: [...p.songIds], showSermon });
+    setSaved({ title: p.title, songIds: [...p.songIds], showSermon });
     setSongQuery('');
   };
 
@@ -202,16 +212,18 @@ export function PlaylistManagerDialog({ open, onOpenChange, isAdmin, songs }: Pl
     setIsSavingEdit(true);
     try {
       const songIds = [...editing.songIds];
+      const showSermon = editing.showSermon;
       await updateDoc(doc(db, 'playlists', editing.id), {
         title: trimmedTitle,
         songIds,
+        showSermon,
         updatedAt: new Date().toISOString(),
       });
       console.log('✅ [Playlist] 저장 성공:', editing.id, songIds.length, '곡');
       setEditing({ ...editing, title: trimmedTitle });
-      setSaved({ title: trimmedTitle, songIds });
+      setSaved({ title: trimmedTitle, songIds, showSermon });
       setPlaylists((prev) =>
-        prev.map((x) => (x.id === editing.id ? { ...x, title: trimmedTitle, songIds } : x)),
+        prev.map((x) => (x.id === editing.id ? { ...x, title: trimmedTitle, songIds, showSermon } : x)),
       );
       toast.success(`저장되었습니다: ${trimmedTitle} (${songIds.length}곡)`);
     } catch (error) {
@@ -248,7 +260,7 @@ export function PlaylistManagerDialog({ open, onOpenChange, isAdmin, songs }: Pl
       setPlaylists((prev) => prev.filter((x) => x.id !== p.id));
       if (editing?.id === p.id) {
         setEditing(null);
-        setSaved({ title: '', songIds: [] });
+        setSaved({ title: '', songIds: [], showSermon: false });
       }
       toast.success(`삭제되었습니다: ${label}`);
     } catch (error) {
@@ -506,7 +518,7 @@ export function PlaylistManagerDialog({ open, onOpenChange, isAdmin, songs }: Pl
                   onClick={() => {
                     if (!confirmDiscard()) return;
                     setEditing(null);
-                    setSaved({ title: '', songIds: [] });
+                    setSaved({ title: '', songIds: [], showSermon: false });
                   }}
                   className="text-gray-400 hover:text-white hover:bg-slate-700"
                 >
@@ -534,6 +546,25 @@ export function PlaylistManagerDialog({ open, onOpenChange, isAdmin, songs }: Pl
                 disabled={isSavingEdit}
                 className="bg-slate-700 border-slate-600 text-white"
               />
+            </div>
+
+            {/* 설교 요약 표시 옵션 (showSermon) */}
+            <div className="rounded-lg bg-slate-900/50 px-3 py-2">
+              <label className="flex items-start gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={editing.showSermon}
+                  onChange={(e) => setEditing({ ...editing, showSermon: e.target.checked })}
+                  disabled={isSavingEdit}
+                  className="mt-0.5 flex-shrink-0 w-4 h-4 accent-purple-600 cursor-pointer"
+                />
+                <span className="min-w-0">
+                  <span className="block text-sm text-white">설교 요약 표시</span>
+                  <span className="block text-[11px] text-gray-400">
+                    켜면 이 플레이리스트 공유 페이지에서 각 곡의 설교 인포그래픽이 보입니다
+                  </span>
+                </span>
+              </label>
             </div>
 
             {/* 담긴 곡 목록 — ↑ ↓ × */}

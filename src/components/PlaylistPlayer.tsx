@@ -2,6 +2,8 @@
 // SimpleSongPlayer(1곡 공유)를 복제해 여러 곡 연속 재생으로 확장한 버전.
 // - Firestore playlists/{id} = { title, songIds[], createdAt } 를 읽기 전용으로 로드
 // - songIds 순서대로 useSongs 의 전체 곡에서 매핑(삭제된 곡 id 는 건너뜀)
+// - STEP 2b: showSermon: true 인 플레이리스트만 가사 영역을 [가사]/[설교 요약] 탭으로 표시.
+//   설교 요약 = 곡 제목 "(영권N)" → /data/sermon-images/yeonggwonN.jpg 인포그래픽(매칭 안 되면 그 곡은 탭 없음)
 // - index 상태 기반 연속 재생: 곡이 끝나면 다음 곡, 마지막 곡이면 정지
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -45,6 +47,17 @@ interface Playlist {
   songIds: string[];
   createdAt?: string;
   shortCode?: string;
+  /** true 면 가사 영역에 [설교 요약] 탭(인포그래픽) 표시. 관리 UI에서 토글 */
+  showSermon?: boolean;
+}
+
+type LyricsTab = 'lyrics' | 'sermon';
+
+// 곡 제목 "(영권N) ..." → 설교 인포그래픽 경로. 매칭 안 되면 null(그 곡은 설교 요약 없음)
+// 제목이 NFD(자모 분리)로 저장된 경우가 있어 NFC 로 맞춘 뒤 매칭한다.
+function getSermonImage(title: string): string | null {
+  const m = title.normalize('NFC').match(/\(영권(\d)\)/);
+  return m ? `/data/sermon-images/yeonggwon${m[1]}.jpg` : null;
 }
 
 function formatTime(time: number) {
@@ -82,6 +95,9 @@ export default function PlaylistPlayer() {
 
   // iOS는 PWA 설치 절차가 번거로워 설치 안내 대신 홈으로 보낸다 (SimpleSongPlayer 와 동일)
   const [isIOS] = useState(() => detectInstallMethod().startsWith('ios-'));
+  // 가사/설교 요약 탭 (showSermon 플레이리스트에서만 의미 있음). 곡이 바뀌면 가사로 리셋
+  const [lyricsTab, setLyricsTab] = useState<LyricsTab>('lyrics');
+  const [sermonImgError, setSermonImgError] = useState(false);
 
   // 1) 플레이리스트 문서 로드 (읽기 전용)
   //    - /p/:code  → shortCode 로 query 해서 문서 id 를 찾은 뒤 getDoc
@@ -118,6 +134,7 @@ export default function PlaylistPlayer() {
           songIds,
           createdAt: typeof raw.createdAt === 'string' ? raw.createdAt : undefined,
           shortCode: typeof raw.shortCode === 'string' && raw.shortCode ? raw.shortCode : undefined,
+          showSermon: raw.showSermon === true,
         });
         setNotFound(false);
       })
@@ -157,6 +174,15 @@ export default function PlaylistPlayer() {
     if (song && song.id === target.id) return;
     setSong(target);
   }, [list, index, song]);
+
+  // 곡이 바뀌면 탭을 가사로 되돌리고 이미지 오류 상태도 초기화
+  useEffect(() => {
+    setLyricsTab('lyrics');
+    setSermonImgError(false);
+  }, [song?.id]);
+
+  // 현재 곡의 설교 인포그래픽(showSermon 플레이리스트 + "(영권N)" 곡일 때만)
+  const sermonImage = playlist?.showSermon && song ? getSermonImage(song.title) : null;
 
   // handleEnded 가 최신 index/목록 길이를 리스너 재등록 없이 참조하기 위한 ref
   const indexRef = useRef(index);
@@ -545,18 +571,67 @@ export default function PlaylistPlayer() {
               </CardContent>
             </Card>
 
-            {/* 가사 */}
-            <div className="min-h-[120px] bg-slate-700/30 rounded-lg p-4">
-              {song.lyrics ? (
-                <div className="whitespace-pre-line text-white leading-relaxed text-center text-base break-keep">
-                  {song.lyrics}
-                </div>
-              ) : (
-                <p className="text-gray-400 text-xs text-center pt-6">
-                  가사가 준비되지 않았어요
-                </p>
-              )}
-            </div>
+            {/* 가사 / 설교 요약 탭 — showSermon 플레이리스트에서 현재 곡에 인포그래픽이 있을 때만 탭 표시 */}
+            {sermonImage && (
+              <div role="tablist" aria-label="가사 / 설교 요약" className="flex gap-1 p-1 rounded-lg bg-slate-800/60">
+                {(
+                  [
+                    { key: 'lyrics', label: '가사' },
+                    { key: 'sermon', label: '설교 요약' },
+                  ] as { key: LyricsTab; label: string }[]
+                ).map((t) => {
+                  const active = lyricsTab === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setLyricsTab(t.key)}
+                      className={`flex-1 rounded-md py-1.5 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 ${
+                        active ? 'bg-purple-600 text-white' : 'text-gray-300 hover:text-white hover:bg-slate-700/60'
+                      }`}
+                    >
+                      {t.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 가사 (탭 없거나 '가사' 탭 활성) */}
+            {(!sermonImage || lyricsTab === 'lyrics') && (
+              <div className="min-h-[120px] bg-slate-700/30 rounded-lg p-4">
+                {song.lyrics ? (
+                  <div className="whitespace-pre-line text-white leading-relaxed text-center text-base break-keep">
+                    {song.lyrics}
+                  </div>
+                ) : (
+                  <p className="text-gray-400 text-xs text-center pt-6">
+                    가사가 준비되지 않았어요
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* 설교 요약 (인포그래픽 이미지) */}
+            {sermonImage && lyricsTab === 'sermon' && (
+              <div className="min-h-[120px] bg-slate-700/30 rounded-lg p-2">
+                {sermonImgError ? (
+                  <p className="text-gray-400 text-xs text-center pt-6">
+                    설교 요약 이미지를 불러오지 못했어요
+                  </p>
+                ) : (
+                  <img
+                    src={sermonImage}
+                    alt="설교 요약"
+                    loading="lazy"
+                    onError={() => setSermonImgError(true)}
+                    className="w-full h-auto rounded-lg"
+                  />
+                )}
+              </div>
+            )}
 
             {song.youtubeUrl && (
               <button
