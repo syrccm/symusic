@@ -28,6 +28,7 @@ import { db } from '@/lib/firebase';
 import { useSongs, type Song } from '@/hooks/useSongs';
 import { useShare } from '@/hooks/useShare';
 import { SongTitle } from '@/components/SongTitle';
+import { parseTitle } from '@/utils/songTitle';
 import { PlayPromptModal } from '@/components/PlayPromptModal';
 import { InstallGuideModal } from '@/components/InstallGuideModal';
 import { detectInstallMethod, type InstallMethod } from '@/utils/deviceDetect';
@@ -396,7 +397,7 @@ export default function PlaylistPlayer() {
                       type="button"
                       onClick={() => setIndex(i)}
                       aria-current={isCurrent ? 'true' : undefined}
-                      className={`w-full text-left rounded-xl border px-3 py-2.5 flex items-center gap-3 transition-colors ${
+                      className={`w-full text-left rounded-xl border px-3 py-1.5 flex items-center gap-3 transition-colors ${
                         isCurrent
                           ? 'bg-gradient-to-r from-purple-500/25 to-pink-500/25 border-purple-400/60 border-l-4 border-l-pink-400 shadow-lg shadow-purple-900/30'
                           : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-700/50 hover:border-slate-600 active:bg-slate-700/70'
@@ -412,11 +413,12 @@ export default function PlaylistPlayer() {
                       >
                         {isCurrent ? '▶' : i + 1}
                       </span>
-                      <SongTitle
-                        title={s.title}
-                        className={`text-sm break-keep ${isCurrent ? 'text-white font-semibold' : 'text-gray-200'}`}
-                        tagClassName="text-xs text-purple-300/80 leading-tight"
-                      />
+                      {/* 공유 페이지 곡 목록은 태그 없이 제목만 한 줄 — 순서는 왼쪽 번호로 구분되므로 카드 얇게 */}
+                      <span
+                        className={`text-sm break-keep line-clamp-1 ${isCurrent ? 'text-white font-semibold' : 'text-gray-200'}`}
+                      >
+                        {parseTitle(s.title).rest}
+                      </span>
                     </button>
                   );
                 })}
