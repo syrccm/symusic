@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-08-30T14:04:31.489Z",
+  "updatedAt": "2026-09-05T07:21:07.627Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.08.30",
+      "seq": 339,
+      "youtubeId": "iNrBdG-98nI",
+      "title": "내일이 아닌 오늘을 살라",
+      "noteSeq": 512,
+      "notePdfUrl": "/data/notes/20260830.pdf"
+    },
     {
       "date": "2026.08.23",
       "seq": 338,
@@ -39,9 +47,7 @@
       "date": "2026.07.05",
       "seq": 334,
       "youtubeId": "YR6yWfx1qpM",
-      "title": "먼저 기도해야 할 것이 있다",
-      "noteSeq": 504,
-      "notePdfUrl": "/data/notes/20260705.pdf"
+      "title": "먼저 기도해야 할 것이 있다"
     },
     {
       "date": "2026.06.28",
@@ -66,12 +72,6 @@
       "seq": 330,
       "youtubeId": "MiWdl0TqxS8",
       "title": "정상이 아닌, 정상인"
-    },
-    {
-      "date": "2026.05.31",
-      "seq": 328,
-      "youtubeId": "FuWALMIylQw",
-      "title": "말과 삶의 격차 줄이기"
     }
   ]
 }

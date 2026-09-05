@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-08-29T09:42:03.422Z",
+  "updatedAt": "2026-09-05T07:21:19.196Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
   "count": 15,
   "notes": [
+    {
+      "seq": 512,
+      "title": "내일이 아닌 오늘을 살라",
+      "date": "2026.09.04",
+      "pdfUrl": "/data/notes/20260830.pdf",
+      "normTitle": "내일이아닌오늘을살라"
+    },
     {
       "seq": 511,
       "title": "염려로부터 자유하는 삶",
@@ -57,7 +64,7 @@
       "seq": 504,
       "title": "먼저 기도해야 할 것이 있다",
       "date": "2026.07.10",
-      "pdfUrl": "/data/notes/20260705.pdf",
+      "pdfUrl": null,
       "normTitle": "먼저기도해야할것이있다"
     },
     {
@@ -101,13 +108,6 @@
       "date": "2026.05.30",
       "pdfUrl": null,
       "normTitle": "성적유혹어떻게할것인가"
-    },
-    {
-      "seq": 497,
-      "title": "예배보다 먼저 할 일이 있다",
-      "date": "2026.05.22",
-      "pdfUrl": null,
-      "normTitle": "예배보다먼저할일이있다"
     }
   ]
 }
