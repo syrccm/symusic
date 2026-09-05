@@ -4,6 +4,7 @@
 // - songIds 순서대로 useSongs 의 전체 곡에서 매핑(삭제된 곡 id 는 건너뜀)
 // - STEP 2b: showSermon: true 인 플레이리스트만 가사 영역을 [가사]/[설교 요약] 탭으로 표시.
 //   설교 요약 = 곡 제목 "(영권N)" → /data/sermon-images/yeonggwonN.jpg 인포그래픽(매칭 안 되면 그 곡은 탭 없음)
+//   인포그래픽을 탭하면 SermonImageViewer 로 전체화면 확대(핀치 줌·드래그·두 번 탭, X/배경 탭/ESC 닫기)
 // - index 상태 기반 연속 재생: 곡이 끝나면 다음 곡, 마지막 곡이면 정지
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -22,6 +23,7 @@ import {
   SkipForward,
   Smartphone,
   Youtube,
+  ZoomIn,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -33,6 +35,7 @@ import { SongTitle } from '@/components/SongTitle';
 import { parseTitle } from '@/utils/songTitle';
 import { PlayPromptModal } from '@/components/PlayPromptModal';
 import { InstallGuideModal } from '@/components/InstallGuideModal';
+import { SermonImageViewer } from '@/components/SermonImageViewer';
 import { detectInstallMethod, type InstallMethod } from '@/utils/deviceDetect';
 import { trackInstall, trackSongPlay } from '@/utils/analyticsTracker';
 
@@ -98,6 +101,7 @@ export default function PlaylistPlayer() {
   // 가사/설교 요약 탭 (showSermon 플레이리스트에서만 의미 있음). 곡이 바뀌면 가사로 리셋
   const [lyricsTab, setLyricsTab] = useState<LyricsTab>('lyrics');
   const [sermonImgError, setSermonImgError] = useState(false);
+  const [sermonZoom, setSermonZoom] = useState(false);
 
   // 1) 플레이리스트 문서 로드 (읽기 전용)
   //    - /p/:code  → shortCode 로 query 해서 문서 id 를 찾은 뒤 getDoc
@@ -179,6 +183,7 @@ export default function PlaylistPlayer() {
   useEffect(() => {
     setLyricsTab('lyrics');
     setSermonImgError(false);
+    setSermonZoom(false);
   }, [song?.id]);
 
   // 현재 곡의 설교 인포그래픽(showSermon 플레이리스트 + "(영권N)" 곡일 때만)
@@ -622,13 +627,24 @@ export default function PlaylistPlayer() {
                     설교 요약 이미지를 불러오지 못했어요
                   </p>
                 ) : (
-                  <img
-                    src={sermonImage}
-                    alt="설교 요약"
-                    loading="lazy"
-                    onError={() => setSermonImgError(true)}
-                    className="w-full h-auto rounded-lg"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setSermonZoom(true)}
+                    aria-label="설교 요약 크게 보기"
+                    className="block w-full rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
+                  >
+                    {/* 안내 문구 — 이미지 위, 작은 teal 톤 */}
+                    <span className="mb-1.5 inline-flex items-center gap-1 text-xs text-teal-300/90">
+                      <ZoomIn className="h-3.5 w-3.5" /> 이미지를 눌러 크게 볼 수 있어요
+                    </span>
+                    <img
+                      src={sermonImage}
+                      alt="설교 요약"
+                      loading="lazy"
+                      onError={() => setSermonImgError(true)}
+                      className="w-full h-auto rounded-lg cursor-zoom-in"
+                    />
+                  </button>
                 )}
               </div>
             )}
@@ -670,6 +686,10 @@ export default function PlaylistPlayer() {
         {/* loop 없음 — 곡 종료 시 handleEnded 가 다음 곡으로 진행, 마지막 곡이면 첫 곡으로 순환 */}
         <audio ref={audioRef} crossOrigin="anonymous" preload="metadata" />
       </div>
+
+      {sermonZoom && sermonImage && (
+        <SermonImageViewer src={sermonImage} alt="설교 요약" onClose={() => setSermonZoom(false)} />
+      )}
 
       {promptingPlay && (
         <PlayPromptModal
