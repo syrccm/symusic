@@ -24,6 +24,8 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useShare } from '@/hooks/useShare';
 import { useSongs, type Song } from '@/hooks/useSongs';
 import { useNotices } from '@/hooks/useNotices';
+import { useBanner } from '@/hooks/useBanner';
+import { PlaylistBanner } from '@/components/PlaylistBanner';
 import { AboutModal } from '@/components/AboutModal';
 import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 import { PlaylistManagerDialog } from '@/components/PlaylistManagerDialog';
@@ -135,6 +137,16 @@ interface MusicPlayerProps {
 export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) {
   // Songs (Firestore + LS 캐시) — 훅으로 추출
   const { songs: allSongs, loading, isOfflineMode, setSongsLocal } = useSongs();
+  // 메인 배너(config/banner). 켜져 있을 때만 값이 있고, 관리자 여부와 무관하게 모두에게 표시.
+  const banner = useBanner();
+  // 배너는 항상 새 탭으로 연다. 내부 경로(/p/코드 등)는 현재 origin 을 붙여 전체 주소로 만든다.
+  const handleBannerClick = () => {
+    if (!banner) return;
+    const url = /^https?:\/\//i.test(banner.link)
+      ? banner.link
+      : window.location.origin + banner.link;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
   // 비활성(active === false) 곡은 일반 사용자 목록(전체/즐겨찾기/검색·곡 개수)에서 제외.
   // 관리 '기존 곡 관리' 목록은 allSongs 를 사용해 비활성 곡도 표시(토글 가능).
   const songs = useMemo(() => allSongs.filter((s) => s.active !== false), [allSongs]);
@@ -1853,6 +1865,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <span>검색 ({searchCount})</span>
                 </button>
               </div>
+
+              {/* 0-1. 배너 — config/banner 가 enabled 일 때만 (관리자 무관, 모든 사용자) */}
+              {banner && <PlaylistBanner text={banner.text} onClick={handleBannerClick} />}
 
               {/* 1. 곡 목록 박스 — 고정 높이(5곡), 내부 스크롤 */}
               <Card className="bg-slate-800/50 border-slate-700">
