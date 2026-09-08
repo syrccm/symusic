@@ -1801,8 +1801,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         >
           {/* --- 🎵 찬양 탭 (기존 3단 레이아웃 복원) --- */}
           {activeTab === 'songs' && (
-            <div className="px-3 py-2 space-y-2">
-              {/* 0. 미니 탭 바 — [전체] [즐겨찾기] [검색] 3개 상시 노출
+            <div className="px-3 py-1.5 space-y-1.5">
+              {/* 0. 미니 탭 바 — [전체] [즐겨찾기] [검색] 3개 상시 노출 (높이 h-10 = 40px, 터치 최소 영역 유지)
                   - [검색]은 첫 검색 재생 전까지 흐리게(비활성), 클릭 불가
                   - 활성 배경색은 violet-800 (#5B21B6) */}
               <div className="flex items-stretch gap-2">
@@ -1814,7 +1814,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     if (activeMiniTab === 'all') return;
                     playAllFromStart();
                   }}
-                  className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                  className={`flex-1 h-10 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'all'
                       ? 'bg-violet-800 text-white shadow-sm shadow-violet-900/40'
                       : 'bg-slate-700/50 text-gray-400 hover:bg-slate-700/70'
@@ -1832,7 +1832,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     if (favoriteSongs.length === 0) return;
                     playFavorites();
                   }}
-                  className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                  className={`flex-1 h-10 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'favorites'
                       ? 'bg-violet-800 text-white shadow-sm shadow-violet-900/40'
                       : favoriteSongs.length > 0
@@ -1854,7 +1854,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     if (activeMiniTab === 'search') return;
                     playSearchFromStart();
                   }}
-                  className={`flex-1 h-11 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                  className={`flex-1 h-10 rounded-lg text-base font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     activeMiniTab === 'search'
                       ? 'bg-violet-800 text-white shadow-sm shadow-violet-900/40'
                       : searchTabCreated
