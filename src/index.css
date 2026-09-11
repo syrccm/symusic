@@ -187,9 +187,29 @@
 .new-badge {
   animation: newBlink 1.3s ease-in-out infinite;
 }
+
+/* 메인 배너 'CLICK' 배지 — 분홍(#ED93B1) ↔ 보색 청록(#3FCDB8) 부드러운 교차 + 청록 구간 은은한 글로우.
+   색·그림자만 바뀌고 크기·패딩은 그대로. 애니메이션 미지원 환경은 bg-[#ED93B1] 폴백. */
+@keyframes badge-blink {
+  0%,
+  100% {
+    background-color: #ED93B1;
+    box-shadow: none;
+  }
+  50% {
+    background-color: #3FCDB8;
+    box-shadow: 0 0 8px 2px rgba(63, 205, 184, 0.5);
+  }
+}
+.animate-badge-blink {
+  animation: badge-blink 1.6s ease-in-out infinite;
+}
 /* 모션 최소화 선호 시 깜빡임 끄고 항상 보이게 */
 @media (prefers-reduced-motion: reduce) {
   .new-badge {
+    animation: none;
+  }
+  .animate-badge-blink {
     animation: none;
   }
 }
