@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-09-06T12:27:30.126Z",
+  "updatedAt": "2026-09-12T07:38:35.831Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.09.06",
+      "seq": 340,
+      "youtubeId": "hSDMHuxGsFg",
+      "title": "비판할 것이 눈에 띈다면",
+      "noteSeq": 513,
+      "notePdfUrl": "/data/notes/20260906.pdf"
+    },
     {
       "date": "2026.08.30",
       "seq": 339,
@@ -66,12 +74,6 @@
       "seq": 331,
       "youtubeId": "55O3ewx2kFo",
       "title": "사랑 너머 사랑"
-    },
-    {
-      "date": "2026.06.07",
-      "seq": 330,
-      "youtubeId": "MiWdl0TqxS8",
-      "title": "정상이 아닌, 정상인"
     }
   ]
 }

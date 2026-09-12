@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-09-05T07:21:19.196Z",
+  "updatedAt": "2026-09-12T07:38:47.657Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
   "count": 15,
   "notes": [
+    {
+      "seq": 513,
+      "title": "비판할 것이 눈에 띈다면",
+      "date": "2026.09.11",
+      "pdfUrl": "/data/notes/20260906.pdf",
+      "normTitle": "비판할것이눈에띈다면"
+    },
     {
       "seq": 512,
       "title": "내일이 아닌 오늘을 살라",
@@ -101,13 +108,6 @@
       "date": "2026.06.05",
       "pdfUrl": null,
       "normTitle": "말과삶의격차줄이기"
-    },
-    {
-      "seq": 498,
-      "title": "성적 유혹 어떻게 할 것인가?",
-      "date": "2026.05.30",
-      "pdfUrl": null,
-      "normTitle": "성적유혹어떻게할것인가"
     }
   ]
 }
