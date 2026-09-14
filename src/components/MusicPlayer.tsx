@@ -40,6 +40,7 @@ import ConfessionPage from '@/pages/ConfessionPage';
 import MinistersPage from '@/pages/MinistersPage';
 import BibleOnPage from '@/pages/BibleOnPage';
 import SarangbangPage from '@/pages/SarangbangPage';
+import DaylongPage from '@/pages/DaylongPage';
 import MemoryPage from '@/pages/MemoryPage';
 import BibleReader from '@/components/BibleReader';
 import {
@@ -224,6 +225,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isBibleOnOpen, setIsBibleOnOpen] = useState(false);
   // 사랑방(말씀나눔지 텍스트 3탭): 동일하게 오버레이로 표시
   const [isSarangbangOpen, setIsSarangbangOpen] = useState(false);
+  // daylong 모임 회비 관리(음표 메뉴 '모임'): 동일하게 오버레이로 표시
+  const [isDaylongOpen, setIsDaylongOpen] = useState(false);
   // 성경암송: 동일하게 오버레이로 표시
   const [isMemoryOpen, setIsMemoryOpen] = useState(false);
   // 성경말씀(전체 성경 뷰어): 동일하게 오버레이로 표시
@@ -1607,6 +1610,20 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                       🎹 메트로놈
                     </button>
 
+                    {/* 모임 — 모든 사용자에게 표시. daylong 회비 관리(PIN 게이트는 페이지 안에서 처리) */}
+                    <div className="my-1 h-px bg-white/20" />
+                    <p className="px-3 pt-0.5 pb-0.5 text-[11px] font-medium tracking-wide text-gray-500">모임</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsDaylongOpen(true);
+                        setIsMusicMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                    >
+                      🗓️ daylong
+                    </button>
+
                     {/* 관리(관리자 전용) — /0691(isAdminRoute)일 때만. 일반 사용자는 음악 도구만. */}
                     {isAdminRoute && (
                       <>
@@ -2973,6 +2990,13 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       {isSarangbangOpen && (
         <div className="fixed inset-0 z-[100] w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain" style={{ touchAction: 'pan-y' }}>
           <SarangbangPage onClose={() => setIsSarangbangOpen(false)} isAdmin={isAdminRoute && isAdmin} />
+        </div>
+      )}
+
+      {/* daylong 모임 회비 관리: 동일하게 오버레이로 표시 */}
+      {isDaylongOpen && (
+        <div className="fixed inset-0 z-[100] w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain" style={{ touchAction: 'pan-y' }}>
+          <DaylongPage onClose={() => setIsDaylongOpen(false)} />
         </div>
       )}
 

@@ -11,6 +11,7 @@ const Index = lazy(() => import('./pages/Index'));
 const ConfessionPage = lazy(() => import('./pages/ConfessionPage'));
 const MinistersPage = lazy(() => import('./pages/MinistersPage'));
 const BibleOnPage = lazy(() => import('./pages/BibleOnPage'));
+const DaylongPage = lazy(() => import('./pages/DaylongPage'));
 const SimpleSongPlayer = lazy(() => import('./components/SimpleSongPlayer'));
 const PlaylistPlayer = lazy(() => import('./components/PlaylistPlayer'));
 
@@ -45,6 +46,7 @@ const App = () => {
               <Route path="/confession" element={<ConfessionPage />} />
               <Route path="/ministers" element={<MinistersPage />} />
               <Route path="/bibleon" element={<BibleOnPage />} />
+              <Route path="/daylong" element={<DaylongPage />} />
               <Route path="/0691" element={<Index isAdminRoute />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
