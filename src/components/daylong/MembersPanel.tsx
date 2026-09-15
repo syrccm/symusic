@@ -1,4 +1,5 @@
-// daylong 회원 관리 패널(관리자 전용 탭) — 추가 / 이름 인라인 편집 / 활성 토글 / 순서 ▲▼ / 삭제.
+// daylong 회원 관리 패널(관리자 전용 탭) — 추가 / 이름 인라인 편집 / 월 회비 / 활성 토글 / 순서 ▲▼ / 삭제.
+// - 월 회비(monthlyDue): 행의 숫자 입력. 포커스가 빠지거나 Enter 면 값이 바뀐 경우에만 updateMember. 기본값 DEFAULT_MONTHLY_DUE.
 // - 추가: order = 현재 최대값 + 1, active true. 같은 이름이 있으면 confirm 후 진행 가능.
 // - 순서: 정렬된 목록에서 이웃과 자리를 바꾼 뒤, 위치와 다른 order 를 가진 회원만 갱신(order 가 비어 있던 문서도 함께 정돈).
 // - 삭제: 해당 회원의 거래가 1건 이상이면 삭제 대신 비활성 전환 안내, 0건이면 confirm 후 deleteDoc.
@@ -8,7 +9,7 @@ import { Check, ChevronDown, ChevronUp, Loader2, Pencil, Plus, Trash2, X } from 
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { Input } from '@/components/ui/input';
-import type { DaylongMember, DaylongTransaction } from '@/types/daylong';
+import { memberMonthlyDue, type DaylongMember, type DaylongTransaction } from '@/types/daylong';
 import { addMember, deleteMember, updateMember } from '@/utils/daylongFirestore';
 import { describeFirestoreError } from './format';
 
@@ -25,6 +26,8 @@ export function MembersPanel({ isAdmin, members, transactions }: MembersPanelPro
   const [busyId, setBusyId] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
+  /** 회원 id → 편집 중인 월 회비 문자열(없으면 저장값 표시) */
+  const [dueDrafts, setDueDrafts] = useState<Record<string, string>>({});
 
   const busy = adding || busyId !== null;
 
@@ -166,6 +169,50 @@ export function MembersPanel({ isAdmin, members, transactions }: MembersPanelPro
     }
   };
 
+  // ── 월 회비 ──
+  const clearDueDraft = (id: string) =>
+    setDueDrafts((d) => {
+      if (!(id in d)) return d;
+      const next = { ...d };
+      delete next[id];
+      return next;
+    });
+  const handleSaveDue = async (m: DaylongMember) => {
+    const draft = dueDrafts[m.id];
+    if (draft === undefined) return;
+    if (draft === '') {
+      clearDueDraft(m.id);
+      return;
+    }
+    const value = Number(draft);
+    if (value === memberMonthlyDue(m)) {
+      clearDueDraft(m.id);
+      return;
+    }
+    if (!guard()) return;
+    if (!Number.isInteger(value) || value < 0) {
+      toast.error('월 회비는 0 이상의 정수로 입력해주세요.');
+      return;
+    }
+    if (!db) {
+      toast.error('Firebase 연결이 필요합니다.');
+      return;
+    }
+    if (busy) return;
+
+    setBusyId(m.id);
+    try {
+      await updateMember(m.id, { monthlyDue: value });
+      toast.success(`'${m.name}' 월 회비를 ${value.toLocaleString('ko-KR')}원으로 저장했습니다.`);
+    } catch (error) {
+      console.error('❌ [Daylong] 월 회비 저장 오류:', error);
+      toast.error(describeFirestoreError(error, '월 회비 저장 중 오류가 발생했습니다.'));
+    } finally {
+      clearDueDraft(m.id);
+      setBusyId(null);
+    }
+  };
+
   // ── 삭제 ──
   const handleDelete = async (m: DaylongMember) => {
     if (!guard()) return;
@@ -287,6 +334,31 @@ export function MembersPanel({ isAdmin, members, transactions }: MembersPanelPro
                       <span className="shrink-0 text-[11px] text-purple-200/50 tabular-nums">거래 {count}</span>
                     )}
                   </button>
+                )}
+
+                {/* 월 회비 */}
+                {!editing && (
+                  <span className="relative flex shrink-0 items-center">
+                    <Input
+                      inputMode="numeric"
+                      aria-label={`${m.name} 월 회비`}
+                      title="월 회비"
+                      value={dueDrafts[m.id] ?? String(memberMonthlyDue(m))}
+                      disabled={busy}
+                      onChange={(e) =>
+                        setDueDrafts((d) => ({
+                          ...d,
+                          [m.id]: e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, ''),
+                        }))
+                      }
+                      onBlur={() => void handleSaveDue(m)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                      }}
+                      className="h-8 w-[4.75rem] bg-slate-700 border-slate-600 pr-5 text-right text-xs text-white tabular-nums"
+                    />
+                    <span className="pointer-events-none absolute right-1.5 text-[10px] text-gray-400">원</span>
+                  </span>
                 )}
 
                 {/* 순서 / 삭제 */}

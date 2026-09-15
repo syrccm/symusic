@@ -1,23 +1,24 @@
-// daylong 모임 회비 관리 페이지 — 회원용 읽기 화면(STEP 1) + 관리자 편집(STEP 2).
+// daylong 모임 회비 관리 페이지 — 회원용 읽기 화면(STEP 1) + 관리자 편집(STEP 2) + 모임가계부 방식 보강(STEP 3).
 // - 진입: 음표 메뉴 '모임 → daylong'(오버레이) 또는 /daylong 직접 접속(라우트). SarangbangPage 처럼 양쪽 지원.
 //   닫기 = onClose ? onClose() : navigate('/').
 // - PIN 게이트: config/daylong.pinHash(SHA-256) 와 입력 해시를 비교. 통과하면 localStorage 'daylong.unlocked' 에
 //   해시를 저장해 다음 방문부터 바로 진입. 관리자가 PIN 을 바꾸면(해시 변경) 자동으로 다시 잠긴다.
 //   ※ 읽기 규칙이 개방된 소프트 게이트다. 민감 정보는 두지 않는다. 관리자도 PIN 을 동일하게 거친다.
 // - 관리자 = useAdminAuth().isAdmin(Firebase 로그인 사용자, 규칙의 request.auth != null 과 같은 기준).
-//   관리자 전용 요소는 모두 isAdmin 조건 안에 있어 비관리자 렌더 결과는 STEP 1 과 같다.
-//   · 헤더: '관리' 배지 + 설정(톱니) → SettingsDialog(제목·기초 잔액·PIN 변경)
+//   관리자 전용 요소는 모두 isAdmin 조건 안에 있어 비관리자 렌더 결과에 편집 요소가 없다.
+//   · 헤더: '관리' 배지 + 설정(톱니) → SettingsDialog(제목·기초 잔액·기준일·PIN 변경)
 //   · 입출금 내역: '+ 기록 추가', 행 편집·삭제 → TransactionDialog / deleteTransaction(window.confirm)
-//   · 월 납입 현황: 빈 셀 → 미리 채운 추가 폼, 금액 셀 → 1건이면 편집, 여러 건이면 내역 탭으로 이동
-//   · 세 번째 탭 '회원' → MembersPanel
+//   · 월 납입 현황: 빈 셀 → 미리 채운 납부 폼, 납입·면제 셀 → 1건이면 편집, 여러 건이면 내역 탭으로 이동
+//   · 세 번째 탭 '회원' → MembersPanel(이름·월 회비·활성·순서)
+// - 헤더 공유(Share2, 모든 사용자): navigator.share 가 있으면 { title, url: origin + '/daylong' }, 없으면 클립보드 복사 + toast.
 // - 통과 후: 잔액 카드 + 탭(입출금 내역 / 월 납입 현황 / [관리자] 회원).
-//   · 잔액 = (openingBalance ?? 0) + Σ입금 − Σ출금
-//   · 월 납입 현황 = 회비 납입 거래(type in + memberId + dueMonth)를 회원×월로 합산. 최근 12개월(이번 달 포함).
+//   · 잔액 = openingBalance + Σ(기준일 이후 거래). 기준일(openingBalanceDate)이 없으면 전체 거래. → utils/daylongCalc
+//   · 월 납입 현황 = 회비 납입 거래를 회원×월로 집계(납입 합계·최근 납부일·면제). 선택 월 −2 ~ +2 (5개월).
 // - 데이터 구독(회원·거래)은 PIN 통과 후에만 시작(enabled 플래그).
 // - 레이아웃: MinistersPage 헤더 패턴(보라 그라데이션, sticky 헤더, 제목 + 오른쪽 X). 모바일 우선.
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { X, Loader2, Lock, Wallet, Plus, Settings } from 'lucide-react';
+import { X, Loader2, Lock, Wallet, Plus, Settings, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -25,9 +26,11 @@ import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useDaylongConfig } from '@/hooks/useDaylongConfig';
 import { useDaylongMembers } from '@/hooks/useDaylongMembers';
 import { useDaylongTransactions } from '@/hooks/useDaylongTransactions';
-import { isDuesPayment, type DaylongMember, type DaylongTransaction } from '@/types/daylong';
+import { copyToClipboard } from '@/hooks/useShare';
+import { isDuesExempt, isDuesPayment, type DaylongMember, type DaylongTransaction } from '@/types/daylong';
 import { hashPin, readUnlockedHash, saveUnlockedHash } from '@/utils/daylongStorage';
 import { deleteTransaction } from '@/utils/daylongFirestore';
+import { buildDuesCells, computeBalance, type DuesCell } from '@/utils/daylongCalc';
 import { TransactionList } from '@/components/daylong/TransactionList';
 import { DuesGrid } from '@/components/daylong/DuesGrid';
 import { MembersPanel } from '@/components/daylong/MembersPanel';
@@ -36,10 +39,11 @@ import { SettingsDialog } from '@/components/daylong/SettingsDialog';
 import {
   describeFirestoreError,
   describeReadError,
-  formatDate,
+  describeTransaction,
+  formatDateFull,
   formatMonth,
   formatWon,
-  recentMonths,
+  thisMonth,
 } from '@/components/daylong/format';
 
 interface DaylongPageProps {
@@ -47,8 +51,6 @@ interface DaylongPageProps {
 }
 
 type DaylongTab = 'transactions' | 'dues' | 'members';
-
-const MONTH_COUNT = 12;
 
 // ── 공통 조각 ────────────────────────────────────────────────
 
@@ -70,6 +72,9 @@ function Notice({ children }: { children: React.ReactNode }) {
 
 const tabTriggerClass =
   'rounded-md py-2 text-sm text-gray-300 data-[state=active]:bg-purple-600 data-[state=active]:text-white data-[state=active]:shadow-none';
+
+const headerBtnClass =
+  'flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-purple-500/30 bg-slate-800/90 text-white shadow-lg transition-colors hover:bg-slate-700';
 
 // ── 페이지 ──────────────────────────────────────────────────
 
@@ -125,6 +130,9 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
     if (!isAdmin && tab === 'members') setTab('transactions');
   }, [isAdmin, tab]);
 
+  // 월 납입 현황의 중앙 월
+  const [selectedMonth, setSelectedMonth] = useState(() => thisMonth());
+
   // 관리자 모달 상태
   const [txDialogOpen, setTxDialogOpen] = useState(false);
   const [editingTx, setEditingTx] = useState<DaylongTransaction | null>(null);
@@ -132,11 +140,8 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // 잔액
-  const balance = useMemo(() => {
-    const opening = config?.openingBalance ?? 0;
-    return transactions.reduce((acc, t) => acc + (t.type === 'in' ? t.amount : -t.amount), opening);
-  }, [config?.openingBalance, transactions]);
+  // 잔액(기준일 규칙 적용)
+  const { balance, countedCount } = useMemo(() => computeBalance(transactions, config), [transactions, config]);
 
   // 회원 id → 이름
   const memberName = useMemo(() => {
@@ -145,21 +150,29 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
     return map;
   }, [members]);
 
-  // 월 납입 현황: `${memberId}|${dueMonth}` → 합계
-  const months = useMemo(() => recentMonths(MONTH_COUNT), []);
-  const duesByCell = useMemo(() => {
-    const map = new Map<string, number>();
-    transactions.forEach((t) => {
-      if (!isDuesPayment(t)) return;
-      const key = `${t.memberId}|${t.dueMonth}`;
-      map.set(key, (map.get(key) ?? 0) + t.amount);
-    });
-    return map;
-  }, [transactions]);
+  // 월 납입 현황 셀 집계
+  const duesCells = useMemo(() => buildDuesCells(transactions), [transactions]);
   const activeMembers = useMemo(() => members.filter((m) => m.active), [members]);
 
   const dataError = membersError ?? txError;
   const dataLoading = membersLoading || txLoading;
+
+  // ── 공유(모든 사용자) ──
+  const handleShare = async () => {
+    const url = `${window.location.origin}/daylong`;
+    if (typeof navigator !== 'undefined' && typeof navigator.share === 'function') {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') return; // 사용자가 공유 시트를 닫음
+        // 그 외 실패는 클립보드 복사로 진행
+      }
+    }
+    const copied = await copyToClipboard(url);
+    if (copied) toast.success('주소를 복사했습니다');
+    else toast.error('주소 복사에 실패했습니다. 브라우저 설정을 확인해주세요.');
+  };
 
   // ── 관리자 핸들러 ──
   const openAddTx = (prefill: TransactionPrefill | null = null) => {
@@ -183,12 +196,10 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
       return;
     }
     if (deletingId !== null) return;
-    const label = isDuesPayment(t)
-      ? `회비 · ${memberName.get(t.memberId!) ?? '(알 수 없음)'} · ${t.dueMonth}`
-      : t.memo || (t.type === 'in' ? '입금' : '출금');
+    const amountLabel = isDuesExempt(t) ? '면제' : `${t.type === 'in' ? '+' : '−'}${formatWon(t.amount)}`;
     if (
       !window.confirm(
-        `이 기록을 삭제할까요?\n\n${formatDate(t.date)} · ${label}\n${t.type === 'in' ? '+' : '−'}${formatWon(t.amount)}\n\n되돌릴 수 없습니다.`,
+        `이 기록을 삭제할까요?\n\n${formatDateFull(t.date)} · ${describeTransaction(t, memberName)}\n${amountLabel}\n\n되돌릴 수 없습니다.`,
       )
     )
       return;
@@ -205,10 +216,10 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
     }
   };
 
-  // 월 납입 현황 셀 탭(관리자): 빈 셀 → 미리 채운 추가, 1건 → 편집, 여러 건 → 내역 탭으로
-  const handleDuesCell = (member: DaylongMember, monthKey: string, amount: number) => {
+  // 월 납입 현황 셀 탭(관리자): 없음 → 미리 채운 납부 폼, 1건(납입·면제) → 편집, 여러 건 → 내역 탭으로
+  const handleDuesCell = (member: DaylongMember, monthKey: string, cell: DuesCell | undefined) => {
     if (!isAdmin) return;
-    if (!amount) {
+    if (!cell) {
       openAddTx({ kind: 'dues', memberId: member.id, dueMonth: monthKey });
       return;
     }
@@ -222,6 +233,10 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
     setTab('transactions');
     toast.info(`${member.name} ${formatMonth(monthKey)} 회비 기록이 ${matches.length}건입니다. 입출금 내역에서 선택해 수정하세요.`);
   };
+
+  const balanceNote = config?.openingBalanceDate
+    ? `기준일 ${formatDateFull(config.openingBalanceDate)} 잔액 ${formatWon(config.openingBalance ?? 0)} + 이후 거래 ${countedCount}건`
+    : `기초 잔액 ${formatWon(config?.openingBalance ?? 0)} + 거래 ${countedCount}건`;
 
   // ── 본문 분기 ──
   let body: React.ReactNode;
@@ -288,9 +303,7 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
           >
             {formatWon(balance)}
           </div>
-          <div className="mt-0.5 text-[11px] text-purple-200/50">
-            기초 잔액 {formatWon(config.openingBalance ?? 0)} · 거래 {transactions.length}건
-          </div>
+          <div className="mt-0.5 text-[11px] text-purple-200/50">{balanceNote}</div>
         </section>
 
         {/* 탭 */}
@@ -328,6 +341,7 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
             <TransactionList
               transactions={transactions}
               memberName={memberName}
+              config={config}
               isAdmin={isAdmin}
               onEdit={openEditTx}
               onDelete={(t) => void handleDeleteTx(t)}
@@ -343,8 +357,9 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
             )}
             <DuesGrid
               members={activeMembers}
-              months={months}
-              duesByCell={duesByCell}
+              selectedMonth={selectedMonth}
+              onSelectMonth={setSelectedMonth}
+              cells={duesCells}
               isAdmin={isAdmin}
               onCellClick={handleDuesCell}
             />
@@ -366,7 +381,7 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
       style={{ background: 'linear-gradient(160deg, #3A0D6E 0%, #4A1290 100%)' }}
     >
       <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col">
-        {/* 헤더 + 닫기(X) — MinistersPage 패턴. 관리자면 '관리' 배지 + 설정(톱니) */}
+        {/* 헤더 + 닫기(X) — MinistersPage 패턴. 공유(모든 사용자) · 관리자면 '관리' 배지 + 설정(톱니) */}
         <header className="sticky top-0 z-20 bg-[#3A0D6E]/95 px-3 pt-3 pb-2.5 backdrop-blur-sm sm:px-4">
           <div className="flex items-center justify-between gap-2">
             <div className="flex min-w-0 items-center gap-2">
@@ -378,13 +393,22 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
               )}
             </div>
             <div className="flex shrink-0 items-center gap-2">
+              <button
+                type="button"
+                onClick={() => void handleShare()}
+                aria-label="공유"
+                title="공유"
+                className={headerBtnClass}
+              >
+                <Share2 className="h-5 w-5" />
+              </button>
               {isAdmin && unlocked && config?.pinHash && (
                 <button
                   type="button"
                   onClick={() => setSettingsOpen(true)}
                   aria-label="설정"
                   title="설정"
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-purple-500/30 bg-slate-800/90 text-white shadow-lg transition-colors hover:bg-slate-700"
+                  className={headerBtnClass}
                 >
                   <Settings className="h-5 w-5" />
                 </button>
@@ -394,7 +418,7 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
                 onClick={() => (onClose ? onClose() : navigate('/'))}
                 aria-label="닫기"
                 title="닫기"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-purple-500/30 bg-slate-800/90 text-white shadow-lg transition-colors hover:bg-slate-700"
+                className={headerBtnClass}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -418,6 +442,7 @@ export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
           }}
           isAdmin={isAdmin}
           members={members}
+          config={config}
           editing={editingTx}
           prefill={txPrefill}
         />

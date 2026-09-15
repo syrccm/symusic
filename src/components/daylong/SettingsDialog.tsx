@@ -1,5 +1,7 @@
-// daylong 설정 모달(관리자) — 제목·기초 잔액 편집, PIN 변경.
-// - 기본 정보: updateConfig({ title, openingBalance }) → config/daylong.
+// daylong 설정 모달(관리자) — 제목·기초 잔액(+기준일) 편집, PIN 변경.
+// - 기본 정보: updateConfig({ title, openingBalance, openingBalanceDate }) → config/daylong.
+//   · 기준일(openingBalanceDate) = "이 날 마감 시점의 잔액이 기초 잔액". 잔액 계산은 기준일 이후(date > 기준일) 거래만 누적.
+//   · 기준일을 비우면 필드를 제거(updateConfig 가 deleteField 처리) → 전체 거래 누적.
 // - PIN 변경: 새 PIN 4자리 + 확인 4자리 일치 시 hashPin → updateConfig({ pinHash }).
 //   갱신 직후 saveUnlockedHash(새 해시) 로 이 기기의 통과 기록을 갱신해 관리자 기기가 잠기지 않게 한다.
 //   다른 기기는 config.pinHash 변경을 구독으로 감지해 자동 재잠금(DaylongPage 현행 동작).
@@ -30,9 +32,12 @@ function sanitizeSignedInt(v: string): string {
   return (neg ? '-' : '') + digits;
 }
 
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 export function SettingsDialog({ open, onOpenChange, isAdmin, config }: SettingsDialogProps) {
   const [title, setTitle] = useState('');
   const [openingStr, setOpeningStr] = useState('');
+  const [openingDate, setOpeningDate] = useState('');
   const [savingInfo, setSavingInfo] = useState(false);
 
   const [pin1, setPin1] = useState('');
@@ -43,9 +48,10 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
     if (!open) return;
     setTitle(config.title ?? '');
     setOpeningStr(config.openingBalance !== undefined ? String(config.openingBalance) : '');
+    setOpeningDate(config.openingBalanceDate ?? '');
     setPin1('');
     setPin2('');
-  }, [open, config.title, config.openingBalance]);
+  }, [open, config.title, config.openingBalance, config.openingBalanceDate]);
 
   const opening = openingStr === '' || openingStr === '-' ? 0 : Number(openingStr);
   const busy = savingInfo || savingPin;
@@ -59,6 +65,10 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
       toast.error('기초 잔액은 정수로 입력해주세요.');
       return;
     }
+    if (openingDate && !DATE_RE.test(openingDate)) {
+      toast.error('기준일 형식이 올바르지 않습니다.');
+      return;
+    }
     if (!db) {
       toast.error('Firebase 연결이 필요합니다.');
       return;
@@ -67,7 +77,7 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
 
     setSavingInfo(true);
     try {
-      await updateConfig({ title: title.trim(), openingBalance: opening });
+      await updateConfig({ title: title.trim(), openingBalance: opening, openingBalanceDate: openingDate });
       toast.success('설정을 저장했습니다.');
     } catch (error) {
       console.error('❌ [Daylong] 설정 저장 오류:', error);
@@ -142,21 +152,41 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
                 className="bg-slate-700 border-slate-600 text-white"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="daylong-opening" className="text-white text-xs">기초 잔액</Label>
-              <Input
-                id="daylong-opening"
-                inputMode="numeric"
-                placeholder="0"
-                value={openingStr}
-                disabled={busy}
-                onChange={(e) => setOpeningStr(sanitizeSignedInt(e.target.value))}
-                className="bg-slate-700 border-slate-600 text-white tabular-nums"
-              />
-              <p className="min-h-[1rem] text-right text-xs text-purple-200/70 tabular-nums">
-                {Number.isInteger(opening) ? formatWon(opening) : ''}
-              </p>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="daylong-opening" className="text-white text-xs">기초 잔액</Label>
+                <Input
+                  id="daylong-opening"
+                  inputMode="numeric"
+                  placeholder="0"
+                  value={openingStr}
+                  disabled={busy}
+                  onChange={(e) => setOpeningStr(sanitizeSignedInt(e.target.value))}
+                  className="bg-slate-700 border-slate-600 text-white tabular-nums"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="daylong-opening-date" className="text-white text-xs">기준일</Label>
+                <Input
+                  id="daylong-opening-date"
+                  type="date"
+                  value={openingDate}
+                  disabled={busy}
+                  onChange={(e) => setOpeningDate(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
             </div>
+            <p className="min-h-[1rem] text-right text-xs text-purple-200/70 tabular-nums">
+              {Number.isInteger(opening)
+                ? openingDate
+                  ? `${openingDate} 기준 잔액 ${formatWon(opening)}`
+                  : formatWon(opening)
+                : ''}
+            </p>
+            <p className="-mt-2 text-[11px] text-gray-400">
+              기준일을 지정하면 그 날까지의 거래는 잔액에 넣지 않고, 기준일 이후 거래만 기초 잔액에 누적합니다. 비우면 전체 거래를 누적합니다.
+            </p>
             <div className="flex justify-end">
               <button
                 type="button"
