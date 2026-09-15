@@ -1,10 +1,12 @@
 // daylong 입출금 내역 — 모임가계부 '수입/지출' 방식.
 // - 상단 기간 필터: 시작일·종료일(type=date) + '전체' 토글. 기본 = 오늘 기준 최근 3개월. 필터는 화면 표시에만 적용.
-// - 요약 카드: 가로 막대(지출 rose / 수입 emerald 비율) + 좌 '지출 합계' 우 '수입 합계'(필터 기간 기준, '잔액 조정' 거래 제외).
+// - '잔액 조정' 거래(isBalanceAdjustment)는 목록·합계에서 완전히 제외한다(회원·관리자 모두). 잔액에는 반영되며,
+//   그 금액은 직전 일반 거래 행의 '잔액' 에 흡수되어 보인다(computeRunningBalances). 관리자 조회·삭제는 SettingsDialog.
+// - 요약 카드: 가로 막대(지출 rose / 수입 emerald 비율) + 좌 '지출 합계' 우 '수입 합계'(필터 기간 기준).
 //   잔액 큰 숫자는 여기 두지 않는다 — 페이지 상단 '현재 잔액' 카드와 중복되므로(DaylongPage).
 // - 행: 왼쪽 날짜 'YYYY.MM.DD' + 아래 `${memo} (${category})`(회비는 `${회원명} (정기회비)`),
-//       오른쪽 금액(출금 −rose / 입금 +emerald, 면제는 teal '면제', '잔액 조정'은 gray) + 아래 '잔액 N원' = 그 거래 직후 누적 잔액.
-//       모든 행에 누적 잔액이 있다. 정렬은 compareTransactions 역순(조정 거래는 같은 날짜의 맨 위). 조정 거래도 편집·삭제 가능.
+//       오른쪽 금액(출금 −rose / 입금 +emerald, 면제는 teal '면제') + 아래 '잔액 N원' = 그 거래 직후 누적 잔액.
+//       모든 행에 누적 잔액이 있다. 정렬은 compareTransactions 역순.
 // - 관리자에게만 행 오른쪽에 편집·삭제 아이콘. 비관리자 렌더에 편집 요소 없음.
 import { useMemo, useState } from 'react';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
@@ -14,7 +16,7 @@ import { computeRunningBalances } from '@/utils/daylongCalc';
 import { describeTransaction, formatDateFull, formatWon, shiftDateMonths, todayISO } from './format';
 
 interface TransactionListProps {
-  /** 전체 거래(최신 → 오래된). 누적 잔액은 이 전체를 기준으로 계산한다. */
+  /** 전체 거래(최신 → 오래된, 조정 거래 포함). 누적 잔액은 이 전체를 기준으로 계산하고, 표시는 조정 거래를 뺀다. */
   transactions: DaylongTransaction[];
   memberName: Map<string, string>;
   isAdmin?: boolean;
@@ -38,17 +40,18 @@ export function TransactionList({
   const [all, setAll] = useState(false);
 
   const running = useMemo(() => computeRunningBalances(transactions), [transactions]);
+  // 조정 거래는 목록에 나오지 않는다(잔액에만 반영).
+  const listed = useMemo(() => transactions.filter((t) => !isBalanceAdjustment(t)), [transactions]);
 
   const visible = useMemo(() => {
-    if (all) return transactions;
-    return transactions.filter((t) => (!from || t.date >= from) && (!to || t.date <= to));
-  }, [transactions, all, from, to]);
+    if (all) return listed;
+    return listed.filter((t) => (!from || t.date >= from) && (!to || t.date <= to));
+  }, [listed, all, from, to]);
 
   const totals = useMemo(() => {
     let inSum = 0;
     let outSum = 0;
     for (const t of visible) {
-      if (isBalanceAdjustment(t)) continue; // 조정 거래는 합계에서 제외(잔액에는 포함)
       if (t.type === 'in') inSum += t.amount;
       else outSum += t.amount;
     }
@@ -117,14 +120,13 @@ export function TransactionList({
       {/* 목록 */}
       {visible.length === 0 ? (
         <div className="rounded-xl border border-purple-500/30 bg-slate-800/60 px-4 py-10 text-center text-sm text-purple-200/70">
-          {transactions.length === 0 ? '아직 입출금 내역이 없습니다.' : '선택한 기간에 내역이 없습니다.'}
+          {listed.length === 0 ? '아직 입출금 내역이 없습니다.' : '선택한 기간에 내역이 없습니다.'}
         </div>
       ) : (
         <ul className="divide-y divide-white/10 overflow-hidden rounded-xl border border-purple-500/30 bg-slate-800/60">
           {visible.map((t) => {
             const isIn = t.type === 'in';
             const exempt = isDuesExempt(t);
-            const adjustment = isBalanceAdjustment(t);
             const deleting = deletingId === t.id;
             const after = running.get(t.id) ?? 0;
             return (
@@ -138,9 +140,7 @@ export function TransactionList({
                     <span className="text-sm font-semibold text-teal-300">면제</span>
                   ) : (
                     <span
-                      className={`text-sm font-semibold tabular-nums ${
-                        adjustment ? 'text-gray-300' : isIn ? 'text-emerald-300' : 'text-rose-300'
-                      }`}
+                      className={`text-sm font-semibold tabular-nums ${isIn ? 'text-emerald-300' : 'text-rose-300'}`}
                     >
                       {isIn ? '+' : '−'}
                       {formatWon(t.amount)}

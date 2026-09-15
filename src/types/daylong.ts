@@ -2,6 +2,7 @@
 // - config/daylong (단일 문서): { pinHash, title?, categories? }
 //   · 잔액 = 모든 거래의 합. 시작 잔액 필드는 없다(콘솔에 남은 openingBalance / openingBalanceDate 는 읽지 않고 무시).
 //     통장 잔액과 어긋나면 설정 모달 '잔액 맞추기'가 선택일까지의 차액을 category ADJUST_CATEGORY('잔액 조정') 거래 1건으로 남긴다.
+//     조정 거래는 잔액에만 반영되고 입출금 내역·합계·건수에는 나오지 않는다(관리자는 설정 모달에서 조회·삭제).
 //   · categories = { in: string[], out: string[] } 수입·지출 분류 목록. 비어 있으면 DEFAULT_CATEGORIES 사용.
 // - daylongMembers/{id}: { name, order, active, monthlyDue? }  · monthlyDue = 회원별 월 회비(기본 DEFAULT_MONTHLY_DUE)
 // - daylongTransactions/{id}: { date, type, amount, memo, category?, memberId?, dueMonth?, createdAt }
@@ -49,7 +50,7 @@ export interface DaylongTransaction {
 }
 
 export const DUES_CATEGORY = '정기회비';
-/** 잔액 맞추기로 생성되는 조정 거래의 분류. 수입/지출 합계에서는 제외, 잔액에는 포함. */
+/** 잔액 맞추기로 생성되는 조정 거래의 분류. 잔액에만 포함 — 입출금 내역 행·수입/지출 합계·건수에서 제외. */
 export const ADJUST_CATEGORY = '잔액 조정';
 export const DEFAULT_MONTHLY_DUE = 30000;
 export const DEFAULT_CATEGORIES: DaylongCategories = {

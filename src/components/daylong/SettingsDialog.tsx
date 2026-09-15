@@ -1,23 +1,25 @@
-// daylong 설정 모달(관리자) — 제목 편집, 잔액 맞추기, PIN 변경.
+// daylong 설정 모달(관리자) — 제목 편집, 잔액 맞추기(+ 조정 내역 조회·삭제), PIN 변경.
 // - 기본 정보: updateConfig({ title }) → config/daylong. 시작 잔액 필드는 모델에서 제거됨.
 // - 잔액 맞추기: '통장 실제 잔액' + 날짜(기본 오늘) 입력. 아래에 '선택일까지 계산 잔액 N원'(props.transactions 로
 //   computeBalanceAsOf(date <= 선택일, 같은 날짜 전부 포함)) 과 차액 표시.
 //   저장 = addBalanceAdjustment(실제, 선택일까지 계산 잔액, 날짜) → 차액 0 이면 '이미 일치합니다' toast, 아니면 '잔액 조정' 거래 1건 생성
 //   (type = 차액>0 ? in : out, amount = |차액|, memo '잔액 맞추기 (통장 X원)', createdAt 선택일 23:59:59).
+// - 잔액 조정 내역: 조정 거래는 입출금 내역에 나오지 않으므로 여기서만 본다(최신 → 오래된). 행마다 삭제(window.confirm → deleteTransaction).
+//   편집은 없다 — 잘못 맞췄으면 삭제 후 다시 잔액 맞추기.
 // - PIN 변경: 새 PIN 4자리 + 확인 4자리 일치 시 hashPin → updateConfig({ pinHash }).
 //   갱신 직후 saveUnlockedHash(새 해시) 로 이 기기의 통과 기록을 갱신해 관리자 기기가 잠기지 않게 한다.
 //   다른 기기는 config.pinHash 변경을 구독으로 감지해 자동 재잠금(DaylongPage 현행 동작).
 // - 핸들러 순서는 PlaylistManagerDialog 패턴.
 import { useEffect, useMemo, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { DaylongConfig, DaylongTransaction } from '@/types/daylong';
+import { isBalanceAdjustment, type DaylongConfig, type DaylongTransaction } from '@/types/daylong';
 import { computeBalanceAsOf } from '@/utils/daylongCalc';
-import { addBalanceAdjustment, updateConfig } from '@/utils/daylongFirestore';
+import { addBalanceAdjustment, deleteTransaction, updateConfig } from '@/utils/daylongFirestore';
 import { hashPin, saveUnlockedHash } from '@/utils/daylongStorage';
 import { describeFirestoreError, formatDateFull, formatWon, todayISO } from './format';
 
@@ -26,7 +28,7 @@ interface SettingsDialogProps {
   onOpenChange: (open: boolean) => void;
   isAdmin: boolean;
   config: DaylongConfig;
-  /** 전체 거래. 잔액 맞추기의 '선택일까지 계산 잔액' 을 여기서 구한다. */
+  /** 전체 거래(최신 → 오래된). 잔액 맞추기의 '선택일까지 계산 잔액' 과 '잔액 조정 내역' 을 여기서 구한다. */
   transactions: DaylongTransaction[];
 }
 
@@ -46,6 +48,7 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, transactio
   const [actualStr, setActualStr] = useState('');
   const [adjustDate, setAdjustDate] = useState(todayISO());
   const [savingAdjust, setSavingAdjust] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const [pin1, setPin1] = useState('');
   const [pin2, setPin2] = useState('');
@@ -68,7 +71,8 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, transactio
   );
   const actual = actualStr === '' || actualStr === '-' ? NaN : Number(actualStr);
   const diff = Number.isInteger(actual) ? actual - computedAsOf : NaN;
-  const busy = savingInfo || savingAdjust || savingPin;
+  const busy = savingInfo || savingAdjust || savingPin || deletingId !== null;
+  const adjustments = useMemo(() => transactions.filter(isBalanceAdjustment), [transactions]);
 
   const handleSaveInfo = async () => {
     if (!isAdmin) {
@@ -126,6 +130,36 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, transactio
       toast.error(describeFirestoreError(error, '잔액 맞추기 중 오류가 발생했습니다.'));
     } finally {
       setSavingAdjust(false);
+    }
+  };
+
+  const handleDeleteAdjustment = async (t: DaylongTransaction) => {
+    if (!isAdmin) {
+      toast.error('관리자 권한이 필요합니다.');
+      return;
+    }
+    if (!db) {
+      toast.error('Firebase 연결이 필요합니다.');
+      return;
+    }
+    if (busy) return;
+    const sign = t.type === 'in' ? '+' : '−';
+    if (
+      !window.confirm(
+        `이 잔액 조정 기록을 삭제할까요?\n\n${formatDateFull(t.date)} · ${t.memo}\n${sign}${formatWon(t.amount)}\n\n삭제하면 잔액이 그만큼 되돌아갑니다.`,
+      )
+    )
+      return;
+
+    setDeletingId(t.id);
+    try {
+      await deleteTransaction(t.id);
+      toast.success('잔액 조정 기록을 삭제했습니다.');
+    } catch (error) {
+      console.error('❌ [Daylong] 잔액 조정 삭제 오류:', error);
+      toast.error(describeFirestoreError(error, '삭제 중 오류가 발생했습니다.'));
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -250,7 +284,7 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, transactio
               </span>
             </div>
             <p className="text-[11px] text-gray-400">
-              선택한 날짜의 통장 잔액을 입력하세요. 그날까지의 계산 잔액과의 차액이 그날 마지막 '잔액 조정' 기록으로 남습니다.
+              선택한 날짜의 통장 잔액을 입력하세요. 차액은 잔액에만 반영되고 입출금 내역에는 표시되지 않습니다.
             </p>
             <div className="flex justify-end">
               <button
@@ -261,6 +295,42 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, transactio
               >
                 {savingAdjust ? <Loader2 className="h-4 w-4 animate-spin" /> : '잔액 맞추기'}
               </button>
+            </div>
+
+            {/* 잔액 조정 내역(관리자 전용 조회·삭제) */}
+            <div className="space-y-1.5">
+              <div className="text-[11px] font-semibold text-purple-200/70">잔액 조정 내역</div>
+              {adjustments.length === 0 ? (
+                <p className="text-[11px] text-gray-500">아직 조정 기록이 없습니다.</p>
+              ) : (
+                <ul className="divide-y divide-white/10 overflow-hidden rounded-lg border border-slate-600 bg-slate-700/40">
+                  {adjustments.map((t) => {
+                    const deleting = deletingId === t.id;
+                    return (
+                      <li key={t.id} className="flex items-center gap-2 px-2.5 py-1.5 text-xs">
+                        <span className="min-w-0 flex-1">
+                          <span className="block tabular-nums text-purple-200/70">{formatDateFull(t.date)}</span>
+                          <span className="block truncate text-gray-200">{t.memo || '잔액 맞추기'}</span>
+                        </span>
+                        <span className={`shrink-0 font-semibold tabular-nums ${t.type === 'in' ? 'text-emerald-300' : 'text-rose-300'}`}>
+                          {t.type === 'in' ? '+' : '−'}
+                          {formatWon(t.amount)}
+                        </span>
+                        <button
+                          type="button"
+                          aria-label="조정 기록 삭제"
+                          title="삭제"
+                          disabled={busy}
+                          onClick={() => void handleDeleteAdjustment(t)}
+                          className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-rose-300/80 hover:bg-rose-500/10 hover:text-rose-200 disabled:opacity-40"
+                        >
+                          {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
             </div>
           </section>
 
