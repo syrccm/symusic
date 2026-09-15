@@ -1,7 +1,8 @@
-// daylong 설정 모달(관리자) — 제목·기초 잔액(+기준일) 편집, PIN 변경.
-// - 기본 정보: updateConfig({ title, openingBalance, openingBalanceDate }) → config/daylong.
-//   · 기준일(openingBalanceDate) = "이 날 시작 시점의 잔액이 기초 잔액". 잔액 계산은 기준일 당일부터(date >= 기준일) 거래만 누적.
-//   · 기준일을 비우면 필드를 제거(updateConfig 가 deleteField 처리) → 전체 거래 누적.
+// daylong 설정 모달(관리자) — 제목 편집, 잔액 맞추기, PIN 변경.
+// - 기본 정보: updateConfig({ title }) → config/daylong. 기초 잔액·기준일 입력은 제거(openingBalance 는 읽기만, UI 편집 없음).
+// - 잔액 맞추기: '통장 실제 잔액' + 날짜(기본 오늘) 입력, 옆에 현재 계산 잔액(props.computedBalance) 표시.
+//   저장 = addBalanceAdjustment(실제, 계산, 날짜) → 차액 0 이면 '이미 일치합니다' toast, 아니면 '잔액 조정' 거래 1건 생성
+//   (type = 차액>0 ? in : out, amount = |차액|, memo '잔액 맞추기 (통장 X원)').
 // - PIN 변경: 새 PIN 4자리 + 확인 4자리 일치 시 hashPin → updateConfig({ pinHash }).
 //   갱신 직후 saveUnlockedHash(새 해시) 로 이 기기의 통과 기록을 갱신해 관리자 기기가 잠기지 않게 한다.
 //   다른 기기는 config.pinHash 변경을 구독으로 감지해 자동 재잠금(DaylongPage 현행 동작).
@@ -14,15 +15,17 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { DaylongConfig } from '@/types/daylong';
-import { updateConfig } from '@/utils/daylongFirestore';
+import { addBalanceAdjustment, updateConfig } from '@/utils/daylongFirestore';
 import { hashPin, saveUnlockedHash } from '@/utils/daylongStorage';
-import { describeFirestoreError, formatWon } from './format';
+import { describeFirestoreError, formatWon, todayISO } from './format';
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isAdmin: boolean;
   config: DaylongConfig;
+  /** 현재 계산 잔액(시작 잔액 + 모든 거래). 잔액 맞추기의 비교 기준. */
+  computedBalance: number;
 }
 
 /** 부호 있는 정수 문자열만 허용('-' 는 맨 앞 한 번). */
@@ -34,11 +37,13 @@ function sanitizeSignedInt(v: string): string {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export function SettingsDialog({ open, onOpenChange, isAdmin, config }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, isAdmin, config, computedBalance }: SettingsDialogProps) {
   const [title, setTitle] = useState('');
-  const [openingStr, setOpeningStr] = useState('');
-  const [openingDate, setOpeningDate] = useState('');
   const [savingInfo, setSavingInfo] = useState(false);
+
+  const [actualStr, setActualStr] = useState('');
+  const [adjustDate, setAdjustDate] = useState(todayISO());
+  const [savingAdjust, setSavingAdjust] = useState(false);
 
   const [pin1, setPin1] = useState('');
   const [pin2, setPin2] = useState('');
@@ -47,43 +52,72 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
   useEffect(() => {
     if (!open) return;
     setTitle(config.title ?? '');
-    setOpeningStr(config.openingBalance !== undefined ? String(config.openingBalance) : '');
-    setOpeningDate(config.openingBalanceDate ?? '');
+    setActualStr('');
+    setAdjustDate(todayISO());
     setPin1('');
     setPin2('');
-  }, [open, config.title, config.openingBalance, config.openingBalanceDate]);
+  }, [open, config.title]);
 
-  const opening = openingStr === '' || openingStr === '-' ? 0 : Number(openingStr);
-  const busy = savingInfo || savingPin;
+  const actual = actualStr === '' || actualStr === '-' ? NaN : Number(actualStr);
+  const diff = Number.isInteger(actual) ? actual - computedBalance : NaN;
+  const busy = savingInfo || savingAdjust || savingPin;
 
   const handleSaveInfo = async () => {
     if (!isAdmin) {
       toast.error('관리자 권한이 필요합니다.');
       return;
     }
-    if (!Number.isInteger(opening)) {
-      toast.error('기초 잔액은 정수로 입력해주세요.');
-      return;
-    }
-    if (openingDate && !DATE_RE.test(openingDate)) {
-      toast.error('기준일 형식이 올바르지 않습니다.');
-      return;
-    }
     if (!db) {
       toast.error('Firebase 연결이 필요합니다.');
       return;
     }
-    if (savingInfo) return;
+    if (busy) return;
 
     setSavingInfo(true);
     try {
-      await updateConfig({ title: title.trim(), openingBalance: opening, openingBalanceDate: openingDate });
+      await updateConfig({ title: title.trim() });
       toast.success('설정을 저장했습니다.');
     } catch (error) {
       console.error('❌ [Daylong] 설정 저장 오류:', error);
       toast.error(describeFirestoreError(error, '설정 저장 중 오류가 발생했습니다.'));
     } finally {
       setSavingInfo(false);
+    }
+  };
+
+  const handleAdjust = async () => {
+    if (!isAdmin) {
+      toast.error('관리자 권한이 필요합니다.');
+      return;
+    }
+    if (!Number.isInteger(actual)) {
+      toast.error('통장 실제 잔액을 정수로 입력해주세요.');
+      return;
+    }
+    if (!DATE_RE.test(adjustDate)) {
+      toast.error('날짜를 선택해주세요.');
+      return;
+    }
+    if (!db) {
+      toast.error('Firebase 연결이 필요합니다.');
+      return;
+    }
+    if (busy) return;
+
+    setSavingAdjust(true);
+    try {
+      const applied = await addBalanceAdjustment(actual, computedBalance, adjustDate);
+      if (applied === 0) {
+        toast.info('이미 일치합니다.');
+      } else {
+        toast.success(`${applied > 0 ? '+' : '−'}${formatWon(Math.abs(applied))} 잔액 조정 기록을 추가했습니다.`);
+        setActualStr('');
+      }
+    } catch (error) {
+      console.error('❌ [Daylong] 잔액 맞추기 오류:', error);
+      toast.error(describeFirestoreError(error, '잔액 맞추기 중 오류가 발생했습니다.'));
+    } finally {
+      setSavingAdjust(false);
     }
   };
 
@@ -133,7 +167,7 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
         <DialogHeader>
           <DialogTitle className="text-white">설정</DialogTitle>
           <DialogDescription className="text-gray-400 text-xs">
-            제목·기초 잔액과 회원용 비밀번호를 관리합니다.
+            제목·잔액 맞추기와 회원용 비밀번호를 관리합니다.
           </DialogDescription>
         </DialogHeader>
 
@@ -152,41 +186,6 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
                 className="bg-slate-700 border-slate-600 text-white"
               />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1.5">
-                <Label htmlFor="daylong-opening" className="text-white text-xs">기초 잔액</Label>
-                <Input
-                  id="daylong-opening"
-                  inputMode="numeric"
-                  placeholder="0"
-                  value={openingStr}
-                  disabled={busy}
-                  onChange={(e) => setOpeningStr(sanitizeSignedInt(e.target.value))}
-                  className="bg-slate-700 border-slate-600 text-white tabular-nums"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="daylong-opening-date" className="text-white text-xs">기준일 시작 잔액(당일 거래부터 반영)</Label>
-                <Input
-                  id="daylong-opening-date"
-                  type="date"
-                  value={openingDate}
-                  disabled={busy}
-                  onChange={(e) => setOpeningDate(e.target.value)}
-                  className="bg-slate-700 border-slate-600 text-white"
-                />
-              </div>
-            </div>
-            <p className="min-h-[1rem] text-right text-xs text-purple-200/70 tabular-nums">
-              {Number.isInteger(opening)
-                ? openingDate
-                  ? `${openingDate} 시작 잔액 ${formatWon(opening)}`
-                  : formatWon(opening)
-                : ''}
-            </p>
-            <p className="-mt-2 text-[11px] text-gray-400">
-              기준일을 지정하면 그 전날까지의 거래는 잔액에 넣지 않고, 기준일 당일 거래부터 기초 잔액에 누적합니다. 비우면 전체 거래를 누적합니다.
-            </p>
             <div className="flex justify-end">
               <button
                 type="button"
@@ -195,6 +194,63 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
                 className="flex min-w-[6rem] items-center justify-center rounded-md bg-purple-600 px-4 py-2 text-sm font-semibold text-white hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {savingInfo ? <Loader2 className="h-4 w-4 animate-spin" /> : '저장'}
+              </button>
+            </div>
+          </section>
+
+          <div className="h-px bg-white/10" />
+
+          {/* 잔액 맞추기 */}
+          <section className="space-y-3">
+            <h3 className="text-xs font-semibold tracking-wide text-purple-200/80">잔액 맞추기</h3>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="daylong-actual" className="text-white text-xs">통장 실제 잔액</Label>
+                <Input
+                  id="daylong-actual"
+                  inputMode="numeric"
+                  placeholder="숫자만 입력"
+                  value={actualStr}
+                  disabled={busy}
+                  onChange={(e) => setActualStr(sanitizeSignedInt(e.target.value))}
+                  className="bg-slate-700 border-slate-600 text-white tabular-nums"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="daylong-adjust-date" className="text-white text-xs">날짜</Label>
+                <Input
+                  id="daylong-adjust-date"
+                  type="date"
+                  value={adjustDate}
+                  disabled={busy}
+                  onChange={(e) => setAdjustDate(e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-white"
+                />
+              </div>
+            </div>
+            <div className="flex items-center justify-between text-xs tabular-nums">
+              <span className="text-purple-200/70">
+                현재 계산 잔액 <span className="text-white">{formatWon(computedBalance)}</span>
+              </span>
+              <span className={diff > 0 ? 'text-emerald-300' : diff < 0 ? 'text-rose-300' : 'text-gray-400'}>
+                {Number.isNaN(diff)
+                  ? ''
+                  : diff === 0
+                    ? '일치'
+                    : `차액 ${diff > 0 ? '+' : '−'}${formatWon(Math.abs(diff))}`}
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-400">
+              통장 잔액과 다르면 잔액 맞추기로 조정하세요. 차액이 '잔액 조정' 기록으로 남습니다.
+            </p>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                disabled={busy || !Number.isInteger(actual)}
+                onClick={() => void handleAdjust()}
+                className="flex min-w-[6rem] items-center justify-center rounded-md border border-amber-400/40 bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {savingAdjust ? <Loader2 className="h-4 w-4 animate-spin" /> : '잔액 맞추기'}
               </button>
             </div>
           </section>

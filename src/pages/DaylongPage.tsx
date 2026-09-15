@@ -7,13 +7,13 @@
 // - 관리자 = props.isAdmin(SarangbangPage 와 동일 관례). MusicPlayer 가 /0691(isAdminRoute) + Firebase 로그인일 때만
 //   true 로 내려준다. /daylong 직접 진입(App 라우트)은 isAdmin 을 넘기지 않으므로 항상 회원용 읽기 화면.
 //   관리자 전용 요소는 모두 isAdmin 조건 안에 있어 비관리자 렌더 결과에 편집 요소가 없다.
-//   · 헤더: '관리' 배지 + 설정(톱니) → SettingsDialog(제목·기초 잔액·기준일·PIN 변경)
+//   · 헤더: '관리' 배지 + 설정(톱니) → SettingsDialog(제목·잔액 맞추기·PIN 변경). 현재 계산 잔액을 넘겨준다.
 //   · 입출금 내역: '+ 기록 추가', 행 편집·삭제 → TransactionDialog / deleteTransaction(window.confirm)
 //   · 월 납입 현황: 빈 셀 → 미리 채운 납부 폼, 납입·면제 셀 → 1건이면 편집, 여러 건이면 내역 탭으로 이동
 //   · 세 번째 탭 '회원' → MembersPanel(이름·월 회비·활성·순서)
 // - 헤더 공유(Share2, 모든 사용자): navigator.share 가 있으면 { title, url: origin + '/daylong' }, 없으면 클립보드 복사 + toast.
 // - 통과 후: 잔액 카드 + 탭(입출금 내역 / 월 납입 현황 / [관리자] 회원).
-//   · 잔액 = openingBalance(기준일 시작 잔액) + Σ(기준일 당일부터의 거래). 기준일(openingBalanceDate)이 없으면 전체 거래. → utils/daylongCalc
+//   · 잔액 = openingBalance(선택, 기본 0) + 모든 거래 합. 기준일 개념 없음. → utils/daylongCalc
 //   · 월 납입 현황 = 회비 납입 거래를 회원×월로 집계(납입 합계·최근 납부일·면제). 선택 월 −2 ~ +2 (5개월).
 // - 데이터 구독(회원·거래)은 PIN 통과 후에만 시작(enabled 플래그).
 // - 레이아웃: MinistersPage 헤더 패턴(보라 그라데이션, sticky 헤더, 제목 + 오른쪽 X). 모바일 우선.
@@ -30,7 +30,7 @@ import { copyToClipboard } from '@/hooks/useShare';
 import { isDuesExempt, isDuesPayment, type DaylongMember, type DaylongTransaction } from '@/types/daylong';
 import { hashPin, readUnlockedHash, saveUnlockedHash } from '@/utils/daylongStorage';
 import { deleteTransaction } from '@/utils/daylongFirestore';
-import { buildDuesCells, computeBalance, type DuesCell } from '@/utils/daylongCalc';
+import { buildDuesCells, computeBalance, describeBalanceNote, type DuesCell } from '@/utils/daylongCalc';
 import { TransactionList } from '@/components/daylong/TransactionList';
 import { DuesGrid } from '@/components/daylong/DuesGrid';
 import { MembersPanel } from '@/components/daylong/MembersPanel';
@@ -141,7 +141,7 @@ export default function DaylongPage({ onClose, isAdmin = false }: DaylongPagePro
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  // 잔액(기준일 규칙 적용)
+  // 잔액(시작 잔액 + 모든 거래)
   const { balance, countedCount } = useMemo(() => computeBalance(transactions, config), [transactions, config]);
 
   // 회원 id → 이름
@@ -235,9 +235,7 @@ export default function DaylongPage({ onClose, isAdmin = false }: DaylongPagePro
     toast.info(`${member.name} ${formatMonth(monthKey)} 회비 기록이 ${matches.length}건입니다. 입출금 내역에서 선택해 수정하세요.`);
   };
 
-  const balanceNote = config?.openingBalanceDate
-    ? `기준일 ${formatDateFull(config.openingBalanceDate)} 잔액 ${formatWon(config.openingBalance ?? 0)} + 이후 거래 ${countedCount}건`
-    : `기초 잔액 ${formatWon(config?.openingBalance ?? 0)} + 거래 ${countedCount}건`;
+  const balanceNote = describeBalanceNote(config, countedCount, formatWon);
 
   // ── 본문 분기 ──
   let body: React.ReactNode;
@@ -449,7 +447,13 @@ export default function DaylongPage({ onClose, isAdmin = false }: DaylongPagePro
         />
       )}
       {isAdmin && config && (
-        <SettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} isAdmin={isAdmin} config={config} />
+        <SettingsDialog
+          open={settingsOpen}
+          onOpenChange={setSettingsOpen}
+          isAdmin={isAdmin}
+          config={config}
+          computedBalance={balance}
+        />
       )}
     </div>
   );

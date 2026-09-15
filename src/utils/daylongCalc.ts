@@ -1,8 +1,7 @@
 // daylong 계산 헬퍼 — 잔액·행별 누적 잔액·월 납입 셀 집계. 화면(DaylongPage / TransactionList / DuesGrid)이 공유한다.
-// - 잔액 규칙: config.openingBalanceDate 가 있으면 date >= 기준일 인 거래만 openingBalance 에 누적(기준일 당일 포함, 이전은 제외).
-//   openingBalance = 기준일 시작 시점 잔액.
-//   없으면 전체 거래 누적. 'YYYY-MM-DD' 문자열 비교로 충분하다.
-// - 누적 잔액: 거래를 date asc, createdAt asc 로 정렬해 순서대로 누적 → id → 잔액 맵. 필터와 무관하게 전체 기준.
+// - 잔액 규칙: openingBalance(선택, 기본 0) + 모든 거래 합. 기준일 개념 없음 — 모든 거래가 항상 누적 대상.
+//   '잔액 조정' 거래(isBalanceAdjustment)도 잔액에는 포함된다(수입/지출 합계에서만 제외 — TransactionList).
+// - 누적 잔액: 거래를 date asc, createdAt asc 로 정렬해 순서대로 누적 → id → 잔액 맵. 필터와 무관하게 전체 기준. 모든 행에 존재.
 // - 면제(회비 amount 0)는 누적에 0 을 더하므로 잔액 변동이 없다.
 // - 선납 분할(splitPrepayment): 총액을 N 등분, 나머지는 첫 달에 합산. 회원×월 셀 집계는 선납 여부를 구분하지 않는다.
 import type { DaylongConfig, DaylongTransaction } from '@/types/daylong';
@@ -12,14 +11,9 @@ export function signedAmount(t: DaylongTransaction): number {
   return t.type === 'in' ? t.amount : -t.amount;
 }
 
-/** 잔액에 포함되는 거래인지(기준일 당일 포함 이후). */
-export function countsTowardBalance(t: DaylongTransaction, openingBalanceDate?: string): boolean {
-  return !openingBalanceDate || t.date >= openingBalanceDate;
-}
-
 export interface BalanceSummary {
   balance: number;
-  /** 잔액에 포함된 거래 수 */
+  /** 잔액에 포함된 거래 수(= 전체 거래 수) */
   countedCount: number;
 }
 
@@ -27,26 +21,23 @@ export function computeBalance(
   transactions: DaylongTransaction[],
   config: DaylongConfig | null | undefined,
 ): BalanceSummary {
-  const cutoff = config?.openingBalanceDate;
   let balance = config?.openingBalance ?? 0;
-  let countedCount = 0;
-  for (const t of transactions) {
-    if (!countsTowardBalance(t, cutoff)) continue;
-    balance += signedAmount(t);
-    countedCount += 1;
-  }
-  return { balance, countedCount };
+  for (const t of transactions) balance += signedAmount(t);
+  return { balance, countedCount: transactions.length };
 }
 
-/** 거래 직후 누적 잔액(id → 잔액). 기준일 이전(date < 기준일) 거래는 맵에 없다. */
+/** 잔액 카드 보조 문구: '거래 N건' 또는 시작 잔액이 0 이 아니면 '시작 잔액 X원 + 거래 N건'. */
+export function describeBalanceNote(config: DaylongConfig | null | undefined, count: number, won: (n: number) => string): string {
+  const opening = config?.openingBalance ?? 0;
+  return opening !== 0 ? `시작 잔액 ${won(opening)} + 거래 ${count}건` : `거래 ${count}건`;
+}
+
+/** 거래 직후 누적 잔액(id → 잔액). 모든 거래가 맵에 있다. */
 export function computeRunningBalances(
   transactions: DaylongTransaction[],
   config: DaylongConfig | null | undefined,
 ): Map<string, number> {
-  const cutoff = config?.openingBalanceDate;
-  const ordered = transactions
-    .filter((t) => countsTowardBalance(t, cutoff))
-    .sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
+  const ordered = [...transactions].sort((a, b) => a.date.localeCompare(b.date) || a.createdAt.localeCompare(b.createdAt));
   const map = new Map<string, number>();
   let acc = config?.openingBalance ?? 0;
   for (const t of ordered) {

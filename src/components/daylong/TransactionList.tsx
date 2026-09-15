@@ -1,16 +1,16 @@
 // daylong 입출금 내역 — 모임가계부 '수입/지출' 방식.
 // - 상단 기간 필터: 시작일·종료일(type=date) + '전체' 토글. 기본 = 오늘 기준 최근 3개월. 필터는 화면 표시에만 적용.
-// - 요약 카드: 가운데 '잔액'(전체 기준, 기준일 규칙 적용) + 아래 작은 글씨(기준일 잔액 + 이후 거래 건수),
-//   가로 막대(지출 rose / 수입 emerald 비율) + 좌 '지출 합계' 우 '수입 합계'(필터 기간 기준).
+// - 요약 카드: 가운데 '잔액'(전체 거래 기준) + 아래 작은 글씨('거래 N건', 시작 잔액이 있으면 '시작 잔액 X원 + 거래 N건'),
+//   가로 막대(지출 rose / 수입 emerald 비율) + 좌 '지출 합계' 우 '수입 합계'(필터 기간 기준, '잔액 조정' 거래 제외).
 // - 행: 왼쪽 날짜 'YYYY.MM.DD' + 아래 `${memo} (${category})`(회비는 `${회원명} (정기회비)`),
-//       오른쪽 금액(출금 −rose / 입금 +emerald, 면제는 teal '면제') + 아래 '잔액 N원' = 그 거래 직후 누적 잔액.
-//       기준일 이전(date < 기준일) 거래는 잔액 자리에 '기준일 이전' 흐리게. 당일 거래부터 누적 잔액 표시.
+//       오른쪽 금액(출금 −rose / 입금 +emerald, 면제는 teal '면제', '잔액 조정'은 gray) + 아래 '잔액 N원' = 그 거래 직후 누적 잔액.
+//       모든 행에 누적 잔액이 있다(기준일 개념 없음). 조정 거래도 편집·삭제 가능.
 // - 관리자에게만 행 오른쪽에 편집·삭제 아이콘. 비관리자 렌더에 편집 요소 없음.
 import { useMemo, useState } from 'react';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { isDuesExempt, type DaylongConfig, type DaylongTransaction } from '@/types/daylong';
-import { computeBalance, computeRunningBalances } from '@/utils/daylongCalc';
+import { isBalanceAdjustment, isDuesExempt, type DaylongConfig, type DaylongTransaction } from '@/types/daylong';
+import { computeBalance, computeRunningBalances, describeBalanceNote } from '@/utils/daylongCalc';
 import { describeTransaction, formatDateFull, formatWon, shiftDateMonths, todayISO } from './format';
 
 interface TransactionListProps {
@@ -51,6 +51,7 @@ export function TransactionList({
     let inSum = 0;
     let outSum = 0;
     for (const t of visible) {
+      if (isBalanceAdjustment(t)) continue; // 조정 거래는 합계에서 제외(잔액에는 포함)
       if (t.type === 'in') inSum += t.amount;
       else outSum += t.amount;
     }
@@ -61,9 +62,7 @@ export function TransactionList({
   const outPct = gross > 0 ? Math.round((totals.outSum / gross) * 100) : 0;
   const inPct = gross > 0 ? 100 - outPct : 0;
 
-  const openingNote = config?.openingBalanceDate
-    ? `기준일 ${formatDateFull(config.openingBalanceDate)} 잔액 ${formatWon(config.openingBalance ?? 0)} + 이후 거래 ${countedCount}건`
-    : `기초 잔액 ${formatWon(config?.openingBalance ?? 0)} + 거래 ${countedCount}건`;
+  const openingNote = describeBalanceNote(config, countedCount, formatWon);
 
   const dateInputClass = 'h-9 bg-slate-700 border-slate-600 text-white text-xs disabled:opacity-40';
 
@@ -135,8 +134,9 @@ export function TransactionList({
           {visible.map((t) => {
             const isIn = t.type === 'in';
             const exempt = isDuesExempt(t);
+            const adjustment = isBalanceAdjustment(t);
             const deleting = deletingId === t.id;
-            const after = running.get(t.id);
+            const after = running.get(t.id) ?? 0;
             return (
               <li key={t.id} className="flex items-center gap-3 px-3 py-2.5 sm:px-4">
                 <span className="min-w-0 flex-1">
@@ -147,16 +147,16 @@ export function TransactionList({
                   {exempt ? (
                     <span className="text-sm font-semibold text-teal-300">면제</span>
                   ) : (
-                    <span className={`text-sm font-semibold tabular-nums ${isIn ? 'text-emerald-300' : 'text-rose-300'}`}>
+                    <span
+                      className={`text-sm font-semibold tabular-nums ${
+                        adjustment ? 'text-gray-300' : isIn ? 'text-emerald-300' : 'text-rose-300'
+                      }`}
+                    >
                       {isIn ? '+' : '−'}
                       {formatWon(t.amount)}
                     </span>
                   )}
-                  {after === undefined ? (
-                    <span className="text-[10px] text-white/30">기준일 이전</span>
-                  ) : (
-                    <span className="text-[10px] tabular-nums text-gray-400">잔액 {formatWon(after)}</span>
-                  )}
+                  <span className="text-[10px] tabular-nums text-gray-400">잔액 {formatWon(after)}</span>
                 </span>
                 {isAdmin && (
                   <span className="flex shrink-0 items-center gap-0.5">

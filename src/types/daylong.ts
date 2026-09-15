@@ -1,6 +1,7 @@
 // daylong 모임 회비 관리 — Firestore 문서 타입과 방어적 파서.
-// - config/daylong (단일 문서): { pinHash, title?, openingBalance?, openingBalanceDate?, categories? }
-//   · openingBalanceDate('YYYY-MM-DD') = "이 날 시작 시점의 잔액이 openingBalance". 잔액 계산은 date >= 기준일 인 거래만 누적(당일 포함).
+// - config/daylong (단일 문서): { pinHash, title?, openingBalance?, categories? }
+//   · openingBalance = 시작 잔액(선택, 기본 0). 잔액 = openingBalance + 모든 거래 합. 하위호환용으로 읽기만 하고 UI 편집은 없다.
+//     통장 잔액과 어긋나면 설정 모달 '잔액 맞추기'가 차액을 category ADJUST_CATEGORY('잔액 조정') 거래 1건으로 남긴다.
 //   · categories = { in: string[], out: string[] } 수입·지출 분류 목록. 비어 있으면 DEFAULT_CATEGORIES 사용.
 // - daylongMembers/{id}: { name, order, active, monthlyDue? }  · monthlyDue = 회원별 월 회비(기본 DEFAULT_MONTHLY_DUE)
 // - daylongTransactions/{id}: { date, type, amount, memo, category?, memberId?, dueMonth?, createdAt }
@@ -17,9 +18,8 @@ export interface DaylongConfig {
   /** 4자리 PIN 의 SHA-256 16진 해시. 평문 PIN 은 저장하지 않는다. */
   pinHash: string;
   title?: string;
+  /** 시작 잔액(선택, 기본 0). 하위호환용 — 설정 UI 에서는 편집하지 않는다. */
   openingBalance?: number;
-  /** 'YYYY-MM-DD' — 이 날 마감 기준 잔액이 openingBalance. 없으면 전체 거래 누적. */
-  openingBalanceDate?: string;
   categories?: DaylongCategories;
 }
 
@@ -51,6 +51,8 @@ export interface DaylongTransaction {
 }
 
 export const DUES_CATEGORY = '정기회비';
+/** 잔액 맞추기로 생성되는 조정 거래의 분류. 수입/지출 합계에서는 제외, 잔액에는 포함. */
+export const ADJUST_CATEGORY = '잔액 조정';
 export const DEFAULT_MONTHLY_DUE = 30000;
 export const DEFAULT_CATEGORIES: DaylongCategories = {
   in: ['예금이자', '이월회비', '입회비', '찬조금', '기타'],
@@ -76,15 +78,12 @@ function strList(v: unknown): string[] {
     .filter(Boolean);
 }
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-
 /** config/daylong 원본 → DaylongConfig. 문서가 없으면 null. */
 export function parseConfig(raw: Raw): DaylongConfig | null {
   if (!raw) return null;
   const pinHash = str(raw.pinHash).trim();
   const title = str(raw.title).trim();
   const openingBalance = raw.openingBalance === undefined ? undefined : num(raw.openingBalance, 0);
-  const openingBalanceDate = str(raw.openingBalanceDate).trim();
   const rawCats =
     raw.categories && typeof raw.categories === 'object' ? (raw.categories as Record<string, unknown>) : null;
   const categories = rawCats ? { in: strList(rawCats.in), out: strList(rawCats.out) } : undefined;
@@ -92,7 +91,6 @@ export function parseConfig(raw: Raw): DaylongConfig | null {
     pinHash,
     ...(title ? { title } : {}),
     ...(openingBalance !== undefined ? { openingBalance } : {}),
-    ...(DATE_RE.test(openingBalanceDate) ? { openingBalanceDate } : {}),
     ...(categories ? { categories } : {}),
   };
 }
@@ -148,4 +146,9 @@ export function isDuesPayment(t: DaylongTransaction): boolean {
 /** 회비 면제 거래(회비 납입 + 금액 0). */
 export function isDuesExempt(t: DaylongTransaction): boolean {
   return isDuesPayment(t) && t.amount === 0;
+}
+
+/** 잔액 맞추기로 만들어진 조정 거래(category '잔액 조정'). */
+export function isBalanceAdjustment(t: DaylongTransaction): boolean {
+  return t.category === ADJUST_CATEGORY;
 }

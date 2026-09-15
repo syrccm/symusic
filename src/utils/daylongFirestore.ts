@@ -7,12 +7,13 @@
 //   편집에서 회비 → 수입·지출로 바꾸면 memberId·dueMonth 를 deleteField() 로 제거한다. category 가 비면 필드 제거.
 // - 선납(여러 달 한 번에): addTransactions(inputs) 가 writeBatch 로 N건을 한 번에 커밋한다(부분 성공 없음).
 //   입력 배열은 호출 측(TransactionDialog → buildPrepaymentInputs)이 만든다.
+// - 잔액 맞추기(addBalanceAdjustment): 차액을 category '잔액 조정' 의 in/out 거래 1건으로 addTransaction.
 // - 분류 추가: config/daylong.categories.{in|out} 에 arrayUnion. 기본값을 쓰던 상태(필드 없음/빈 배열)라면
 //   기본 목록을 함께 넣어 기존 선택지가 사라지지 않게 한다(seed).
 import { addDoc, arrayUnion, collection, deleteDoc, deleteField, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { DaylongConfig, DaylongTransaction } from '@/types/daylong';
-import { DUES_CATEGORY, isDuesPayment } from '@/types/daylong';
+import { ADJUST_CATEGORY, DUES_CATEGORY, isDuesPayment } from '@/types/daylong';
 
 export const TX_COLLECTION = 'daylongTransactions';
 export const MEMBER_COLLECTION = 'daylongMembers';
@@ -130,11 +131,26 @@ export async function deleteMember(id: string): Promise<void> {
 
 // ── 설정 ─────────────────────────────────────────────────────
 
-/** config/daylong 부분 갱신. openingBalanceDate 를 빈 문자열로 주면 필드를 제거한다. */
+/** config/daylong 부분 갱신. */
 export async function updateConfig(patch: Partial<DaylongConfig>): Promise<void> {
-  const data: Record<string, unknown> = { ...patch, updatedAt: nowISO() };
-  if ('openingBalanceDate' in patch && !patch.openingBalanceDate) data.openingBalanceDate = deleteField();
-  await updateDoc(doc(db, 'config', 'daylong'), data);
+  await updateDoc(doc(db, 'config', 'daylong'), { ...patch, updatedAt: nowISO() });
+}
+
+/**
+ * 잔액 맞추기: 통장 실제 잔액 − 현재 계산 잔액 = 차액을 '잔액 조정' 거래 1건으로 기록.
+ * 차액 0 이면 아무것도 쓰지 않고 0 을 돌려준다. 반환값 = 차액(부호 포함).
+ */
+export async function addBalanceAdjustment(actual: number, computed: number, date: string): Promise<number> {
+  const diff = actual - computed;
+  if (diff === 0) return 0;
+  await addTransaction({
+    kind: diff > 0 ? 'in' : 'out',
+    date,
+    amount: Math.abs(diff),
+    memo: `잔액 맞추기 (통장 ${actual.toLocaleString('ko-KR')}원)`,
+    category: ADJUST_CATEGORY,
+  });
+  return diff;
 }
 
 /**
