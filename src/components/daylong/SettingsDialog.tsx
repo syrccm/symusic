@@ -1,31 +1,33 @@
 // daylong 설정 모달(관리자) — 제목 편집, 잔액 맞추기, PIN 변경.
-// - 기본 정보: updateConfig({ title }) → config/daylong. 기초 잔액·기준일 입력은 제거(openingBalance 는 읽기만, UI 편집 없음).
-// - 잔액 맞추기: '통장 실제 잔액' + 날짜(기본 오늘) 입력, 옆에 현재 계산 잔액(props.computedBalance) 표시.
-//   저장 = addBalanceAdjustment(실제, 계산, 날짜) → 차액 0 이면 '이미 일치합니다' toast, 아니면 '잔액 조정' 거래 1건 생성
-//   (type = 차액>0 ? in : out, amount = |차액|, memo '잔액 맞추기 (통장 X원)').
+// - 기본 정보: updateConfig({ title }) → config/daylong. 시작 잔액 필드는 모델에서 제거됨.
+// - 잔액 맞추기: '통장 실제 잔액' + 날짜(기본 오늘) 입력. 아래에 '선택일까지 계산 잔액 N원'(props.transactions 로
+//   computeBalanceAsOf(date <= 선택일, 같은 날짜 전부 포함)) 과 차액 표시.
+//   저장 = addBalanceAdjustment(실제, 선택일까지 계산 잔액, 날짜) → 차액 0 이면 '이미 일치합니다' toast, 아니면 '잔액 조정' 거래 1건 생성
+//   (type = 차액>0 ? in : out, amount = |차액|, memo '잔액 맞추기 (통장 X원)', createdAt 선택일 23:59:59).
 // - PIN 변경: 새 PIN 4자리 + 확인 4자리 일치 시 hashPin → updateConfig({ pinHash }).
 //   갱신 직후 saveUnlockedHash(새 해시) 로 이 기기의 통과 기록을 갱신해 관리자 기기가 잠기지 않게 한다.
 //   다른 기기는 config.pinHash 변경을 구독으로 감지해 자동 재잠금(DaylongPage 현행 동작).
 // - 핸들러 순서는 PlaylistManagerDialog 패턴.
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import type { DaylongConfig } from '@/types/daylong';
+import type { DaylongConfig, DaylongTransaction } from '@/types/daylong';
+import { computeBalanceAsOf } from '@/utils/daylongCalc';
 import { addBalanceAdjustment, updateConfig } from '@/utils/daylongFirestore';
 import { hashPin, saveUnlockedHash } from '@/utils/daylongStorage';
-import { describeFirestoreError, formatWon, todayISO } from './format';
+import { describeFirestoreError, formatDateFull, formatWon, todayISO } from './format';
 
 interface SettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isAdmin: boolean;
   config: DaylongConfig;
-  /** 현재 계산 잔액(시작 잔액 + 모든 거래). 잔액 맞추기의 비교 기준. */
-  computedBalance: number;
+  /** 전체 거래. 잔액 맞추기의 '선택일까지 계산 잔액' 을 여기서 구한다. */
+  transactions: DaylongTransaction[];
 }
 
 /** 부호 있는 정수 문자열만 허용('-' 는 맨 앞 한 번). */
@@ -37,7 +39,7 @@ function sanitizeSignedInt(v: string): string {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export function SettingsDialog({ open, onOpenChange, isAdmin, config, computedBalance }: SettingsDialogProps) {
+export function SettingsDialog({ open, onOpenChange, isAdmin, config, transactions }: SettingsDialogProps) {
   const [title, setTitle] = useState('');
   const [savingInfo, setSavingInfo] = useState(false);
 
@@ -58,8 +60,14 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, computedBa
     setPin2('');
   }, [open, config.title]);
 
+  const dateValid = DATE_RE.test(adjustDate);
+  // 선택일까지 누적 잔액(date <= 선택일, 같은 날짜 전부 포함). 날짜가 비면 전체 합.
+  const computedAsOf = useMemo(
+    () => computeBalanceAsOf(transactions, dateValid ? adjustDate : '9999-12-31'),
+    [transactions, adjustDate, dateValid],
+  );
   const actual = actualStr === '' || actualStr === '-' ? NaN : Number(actualStr);
-  const diff = Number.isInteger(actual) ? actual - computedBalance : NaN;
+  const diff = Number.isInteger(actual) ? actual - computedAsOf : NaN;
   const busy = savingInfo || savingAdjust || savingPin;
 
   const handleSaveInfo = async () => {
@@ -94,7 +102,7 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, computedBa
       toast.error('통장 실제 잔액을 정수로 입력해주세요.');
       return;
     }
-    if (!DATE_RE.test(adjustDate)) {
+    if (!dateValid) {
       toast.error('날짜를 선택해주세요.');
       return;
     }
@@ -106,7 +114,7 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, computedBa
 
     setSavingAdjust(true);
     try {
-      const applied = await addBalanceAdjustment(actual, computedBalance, adjustDate);
+      const applied = await addBalanceAdjustment(actual, computedAsOf, adjustDate);
       if (applied === 0) {
         toast.info('이미 일치합니다.');
       } else {
@@ -230,7 +238,8 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, computedBa
             </div>
             <div className="flex items-center justify-between text-xs tabular-nums">
               <span className="text-purple-200/70">
-                현재 계산 잔액 <span className="text-white">{formatWon(computedBalance)}</span>
+                {dateValid ? `${formatDateFull(adjustDate)}까지 계산 잔액 ` : '계산 잔액 '}
+                <span className="text-white">{formatWon(computedAsOf)}</span>
               </span>
               <span className={diff > 0 ? 'text-emerald-300' : diff < 0 ? 'text-rose-300' : 'text-gray-400'}>
                 {Number.isNaN(diff)
@@ -241,12 +250,12 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config, computedBa
               </span>
             </div>
             <p className="text-[11px] text-gray-400">
-              통장 잔액과 다르면 잔액 맞추기로 조정하세요. 차액이 '잔액 조정' 기록으로 남습니다.
+              선택한 날짜의 통장 잔액을 입력하세요. 그날까지의 계산 잔액과의 차액이 그날 마지막 '잔액 조정' 기록으로 남습니다.
             </p>
             <div className="flex justify-end">
               <button
                 type="button"
-                disabled={busy || !Number.isInteger(actual)}
+                disabled={busy || !Number.isInteger(actual) || !dateValid}
                 onClick={() => void handleAdjust()}
                 className="flex min-w-[6rem] items-center justify-center rounded-md border border-amber-400/40 bg-amber-500/20 px-4 py-2 text-sm font-semibold text-amber-100 hover:bg-amber-500/30 disabled:cursor-not-allowed disabled:opacity-50"
               >

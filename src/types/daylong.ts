@@ -1,7 +1,7 @@
 // daylong 모임 회비 관리 — Firestore 문서 타입과 방어적 파서.
-// - config/daylong (단일 문서): { pinHash, title?, openingBalance?, categories? }
-//   · openingBalance = 시작 잔액(선택, 기본 0). 잔액 = openingBalance + 모든 거래 합. 하위호환용으로 읽기만 하고 UI 편집은 없다.
-//     통장 잔액과 어긋나면 설정 모달 '잔액 맞추기'가 차액을 category ADJUST_CATEGORY('잔액 조정') 거래 1건으로 남긴다.
+// - config/daylong (단일 문서): { pinHash, title?, categories? }
+//   · 잔액 = 모든 거래의 합. 시작 잔액 필드는 없다(콘솔에 남은 openingBalance / openingBalanceDate 는 읽지 않고 무시).
+//     통장 잔액과 어긋나면 설정 모달 '잔액 맞추기'가 선택일까지의 차액을 category ADJUST_CATEGORY('잔액 조정') 거래 1건으로 남긴다.
 //   · categories = { in: string[], out: string[] } 수입·지출 분류 목록. 비어 있으면 DEFAULT_CATEGORIES 사용.
 // - daylongMembers/{id}: { name, order, active, monthlyDue? }  · monthlyDue = 회원별 월 회비(기본 DEFAULT_MONTHLY_DUE)
 // - daylongTransactions/{id}: { date, type, amount, memo, category?, memberId?, dueMonth?, createdAt }
@@ -18,8 +18,6 @@ export interface DaylongConfig {
   /** 4자리 PIN 의 SHA-256 16진 해시. 평문 PIN 은 저장하지 않는다. */
   pinHash: string;
   title?: string;
-  /** 시작 잔액(선택, 기본 0). 하위호환용 — 설정 UI 에서는 편집하지 않는다. */
-  openingBalance?: number;
   categories?: DaylongCategories;
 }
 
@@ -83,14 +81,12 @@ export function parseConfig(raw: Raw): DaylongConfig | null {
   if (!raw) return null;
   const pinHash = str(raw.pinHash).trim();
   const title = str(raw.title).trim();
-  const openingBalance = raw.openingBalance === undefined ? undefined : num(raw.openingBalance, 0);
   const rawCats =
     raw.categories && typeof raw.categories === 'object' ? (raw.categories as Record<string, unknown>) : null;
   const categories = rawCats ? { in: strList(rawCats.in), out: strList(rawCats.out) } : undefined;
   return {
     pinHash,
     ...(title ? { title } : {}),
-    ...(openingBalance !== undefined ? { openingBalance } : {}),
     ...(categories ? { categories } : {}),
   };
 }

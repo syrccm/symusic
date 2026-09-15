@@ -7,7 +7,8 @@
 //   편집에서 회비 → 수입·지출로 바꾸면 memberId·dueMonth 를 deleteField() 로 제거한다. category 가 비면 필드 제거.
 // - 선납(여러 달 한 번에): addTransactions(inputs) 가 writeBatch 로 N건을 한 번에 커밋한다(부분 성공 없음).
 //   입력 배열은 호출 측(TransactionDialog → buildPrepaymentInputs)이 만든다.
-// - 잔액 맞추기(addBalanceAdjustment): 차액을 category '잔액 조정' 의 in/out 거래 1건으로 addTransaction.
+// - 잔액 맞추기(addBalanceAdjustment): 통장 실제 잔액 − 선택일까지 계산 잔액 = 차액을 category '잔액 조정' 의 in/out 거래 1건으로 기록.
+//   createdAt 은 선택일 23:59:59 로 적어 그날 거래 중 마지막임을 데이터에도 남긴다(정렬 자체는 daylongCalc 가 조정 거래를 맨 뒤로 둔다).
 // - 분류 추가: config/daylong.categories.{in|out} 에 arrayUnion. 기본값을 쓰던 상태(필드 없음/빈 배열)라면
 //   기본 목록을 함께 넣어 기존 선택지가 사라지지 않게 한다(seed).
 import { addDoc, arrayUnion, collection, deleteDoc, deleteField, doc, updateDoc, writeBatch } from 'firebase/firestore';
@@ -59,8 +60,8 @@ function toCreateData(input: TransactionInput, createdAt: string): Record<string
   return data;
 }
 
-export async function addTransaction(input: TransactionInput): Promise<string> {
-  const ref = await addDoc(collection(db, TX_COLLECTION), toCreateData(input, nowISO()));
+export async function addTransaction(input: TransactionInput, createdAt = nowISO()): Promise<string> {
+  const ref = await addDoc(collection(db, TX_COLLECTION), toCreateData(input, createdAt));
   return ref.id;
 }
 
@@ -137,19 +138,22 @@ export async function updateConfig(patch: Partial<DaylongConfig>): Promise<void>
 }
 
 /**
- * 잔액 맞추기: 통장 실제 잔액 − 현재 계산 잔액 = 차액을 '잔액 조정' 거래 1건으로 기록.
- * 차액 0 이면 아무것도 쓰지 않고 0 을 돌려준다. 반환값 = 차액(부호 포함).
+ * 잔액 맞추기: 통장 실제 잔액 − 선택일까지 계산 잔액(computedAsOf) = 차액을 '잔액 조정' 거래 1건으로 기록.
+ * createdAt = `${date}T23:59:59` (그날의 마지막 순서). 차액 0 이면 아무것도 쓰지 않고 0 을 돌려준다. 반환값 = 차액(부호 포함).
  */
-export async function addBalanceAdjustment(actual: number, computed: number, date: string): Promise<number> {
-  const diff = actual - computed;
+export async function addBalanceAdjustment(actual: number, computedAsOf: number, date: string): Promise<number> {
+  const diff = actual - computedAsOf;
   if (diff === 0) return 0;
-  await addTransaction({
-    kind: diff > 0 ? 'in' : 'out',
-    date,
-    amount: Math.abs(diff),
-    memo: `잔액 맞추기 (통장 ${actual.toLocaleString('ko-KR')}원)`,
-    category: ADJUST_CATEGORY,
-  });
+  await addTransaction(
+    {
+      kind: diff > 0 ? 'in' : 'out',
+      date,
+      amount: Math.abs(diff),
+      memo: `잔액 맞추기 (통장 ${actual.toLocaleString('ko-KR')}원)`,
+      category: ADJUST_CATEGORY,
+    },
+    `${date}T23:59:59`,
+  );
   return diff;
 }
 

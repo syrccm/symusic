@@ -1,23 +1,22 @@
 // daylong 입출금 내역 — 모임가계부 '수입/지출' 방식.
 // - 상단 기간 필터: 시작일·종료일(type=date) + '전체' 토글. 기본 = 오늘 기준 최근 3개월. 필터는 화면 표시에만 적용.
-// - 요약 카드: 가운데 '잔액'(전체 거래 기준) + 아래 작은 글씨('거래 N건', 시작 잔액이 있으면 '시작 잔액 X원 + 거래 N건'),
-//   가로 막대(지출 rose / 수입 emerald 비율) + 좌 '지출 합계' 우 '수입 합계'(필터 기간 기준, '잔액 조정' 거래 제외).
+// - 요약 카드: 가로 막대(지출 rose / 수입 emerald 비율) + 좌 '지출 합계' 우 '수입 합계'(필터 기간 기준, '잔액 조정' 거래 제외).
+//   잔액 큰 숫자는 여기 두지 않는다 — 페이지 상단 '현재 잔액' 카드와 중복되므로(DaylongPage).
 // - 행: 왼쪽 날짜 'YYYY.MM.DD' + 아래 `${memo} (${category})`(회비는 `${회원명} (정기회비)`),
 //       오른쪽 금액(출금 −rose / 입금 +emerald, 면제는 teal '면제', '잔액 조정'은 gray) + 아래 '잔액 N원' = 그 거래 직후 누적 잔액.
-//       모든 행에 누적 잔액이 있다(기준일 개념 없음). 조정 거래도 편집·삭제 가능.
+//       모든 행에 누적 잔액이 있다. 정렬은 compareTransactions 역순(조정 거래는 같은 날짜의 맨 위). 조정 거래도 편집·삭제 가능.
 // - 관리자에게만 행 오른쪽에 편집·삭제 아이콘. 비관리자 렌더에 편집 요소 없음.
 import { useMemo, useState } from 'react';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { isBalanceAdjustment, isDuesExempt, type DaylongConfig, type DaylongTransaction } from '@/types/daylong';
-import { computeBalance, computeRunningBalances, describeBalanceNote } from '@/utils/daylongCalc';
+import { isBalanceAdjustment, isDuesExempt, type DaylongTransaction } from '@/types/daylong';
+import { computeRunningBalances } from '@/utils/daylongCalc';
 import { describeTransaction, formatDateFull, formatWon, shiftDateMonths, todayISO } from './format';
 
 interface TransactionListProps {
-  /** 전체 거래(date desc). 잔액·누적 잔액은 이 전체를 기준으로 계산한다. */
+  /** 전체 거래(최신 → 오래된). 누적 잔액은 이 전체를 기준으로 계산한다. */
   transactions: DaylongTransaction[];
   memberName: Map<string, string>;
-  config: DaylongConfig | null;
   isAdmin?: boolean;
   onEdit?: (t: DaylongTransaction) => void;
   onDelete?: (t: DaylongTransaction) => void;
@@ -28,7 +27,6 @@ interface TransactionListProps {
 export function TransactionList({
   transactions,
   memberName,
-  config,
   isAdmin = false,
   onEdit,
   onDelete,
@@ -39,8 +37,7 @@ export function TransactionList({
   const [to, setTo] = useState(today);
   const [all, setAll] = useState(false);
 
-  const { balance, countedCount } = useMemo(() => computeBalance(transactions, config), [transactions, config]);
-  const running = useMemo(() => computeRunningBalances(transactions, config), [transactions, config]);
+  const running = useMemo(() => computeRunningBalances(transactions), [transactions]);
 
   const visible = useMemo(() => {
     if (all) return transactions;
@@ -61,8 +58,6 @@ export function TransactionList({
   const gross = totals.inSum + totals.outSum;
   const outPct = gross > 0 ? Math.round((totals.outSum / gross) * 100) : 0;
   const inPct = gross > 0 ? 100 - outPct : 0;
-
-  const openingNote = describeBalanceNote(config, countedCount, formatWon);
 
   const dateInputClass = 'h-9 bg-slate-700 border-slate-600 text-white text-xs disabled:opacity-40';
 
@@ -103,12 +98,7 @@ export function TransactionList({
 
       {/* 요약 카드 */}
       <section className="rounded-xl border border-purple-500/30 bg-slate-800/60 px-4 py-3">
-        <div className="text-center text-xs font-medium tracking-wide text-purple-200/70">잔액</div>
-        <div className={`text-center text-2xl font-bold tabular-nums ${balance < 0 ? 'text-rose-300' : 'text-white'}`}>
-          {formatWon(balance)}
-        </div>
-        <div className="text-center text-[11px] text-purple-200/50">{openingNote}</div>
-        <div className="mt-3 flex h-2 w-full overflow-hidden rounded-full bg-white/10">
+        <div className="flex h-2 w-full overflow-hidden rounded-full bg-white/10">
           {outPct > 0 && <div className="h-full bg-rose-400" style={{ width: `${outPct}%` }} />}
           {inPct > 0 && <div className="h-full bg-emerald-400" style={{ width: `${inPct}%` }} />}
         </div>

@@ -1,5 +1,6 @@
 // daylongTransactions 컬렉션 구독 — useNotices 패턴.
-// - orderBy 없이 전체를 받아 클라이언트에서 date 내림차순 → createdAt 내림차순 정렬.
+// - orderBy 없이 전체를 받아 클라이언트에서 정렬(compareTransactions 의 역순 = 최신 → 오래된).
+//   누적 잔액 계산 순서(daylongCalc)와 정확히 반대 순서가 되어 목록의 '잔액' 표기가 위에서 아래로 이어진다.
 //   (orderBy 는 해당 필드가 없는 문서를 조용히 제외하므로 피한다.)
 // - enabled=false 면 구독하지 않는다(PIN 통과 전 불필요한 읽기 방지).
 // - 오류 시 loading 해제 + error 보관.
@@ -7,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { collection, onSnapshot, type FirestoreError } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { parseTransaction, type DaylongTransaction } from '@/types/daylong';
+import { compareTransactions } from '@/utils/daylongCalc';
 
 export interface UseDaylongTransactionsResult {
   transactions: DaylongTransaction[];
@@ -15,7 +17,7 @@ export interface UseDaylongTransactionsResult {
 }
 
 export function sortTransactions(list: DaylongTransaction[]): DaylongTransaction[] {
-  return [...list].sort((a, b) => b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  return [...list].sort((a, b) => compareTransactions(b, a));
 }
 
 export function useDaylongTransactions(enabled = true): UseDaylongTransactionsResult {
