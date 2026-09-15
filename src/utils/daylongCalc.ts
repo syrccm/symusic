@@ -1,8 +1,10 @@
 // daylong 계산 헬퍼 — 잔액·행별 누적 잔액·월 납입 셀 집계. 화면(DaylongPage / TransactionList / DuesGrid)이 공유한다.
-// - 잔액 규칙: config.openingBalanceDate 가 있으면 date > 기준일 인 거래만 openingBalance 에 누적(기준일 당일 이하는 제외).
+// - 잔액 규칙: config.openingBalanceDate 가 있으면 date >= 기준일 인 거래만 openingBalance 에 누적(기준일 당일 포함, 이전은 제외).
+//   openingBalance = 기준일 시작 시점 잔액.
 //   없으면 전체 거래 누적. 'YYYY-MM-DD' 문자열 비교로 충분하다.
 // - 누적 잔액: 거래를 date asc, createdAt asc 로 정렬해 순서대로 누적 → id → 잔액 맵. 필터와 무관하게 전체 기준.
 // - 면제(회비 amount 0)는 누적에 0 을 더하므로 잔액 변동이 없다.
+// - 선납 분할(splitPrepayment): 총액을 N 등분, 나머지는 첫 달에 합산. 회원×월 셀 집계는 선납 여부를 구분하지 않는다.
 import type { DaylongConfig, DaylongTransaction } from '@/types/daylong';
 import { isDuesPayment } from '@/types/daylong';
 
@@ -10,9 +12,9 @@ export function signedAmount(t: DaylongTransaction): number {
   return t.type === 'in' ? t.amount : -t.amount;
 }
 
-/** 잔액에 포함되는 거래인지(기준일 이후). */
+/** 잔액에 포함되는 거래인지(기준일 당일 포함 이후). */
 export function countsTowardBalance(t: DaylongTransaction, openingBalanceDate?: string): boolean {
-  return !openingBalanceDate || t.date > openingBalanceDate;
+  return !openingBalanceDate || t.date >= openingBalanceDate;
 }
 
 export interface BalanceSummary {
@@ -36,7 +38,7 @@ export function computeBalance(
   return { balance, countedCount };
 }
 
-/** 거래 직후 누적 잔액(id → 잔액). 기준일 이하 거래는 맵에 없다. */
+/** 거래 직후 누적 잔액(id → 잔액). 기준일 이전(date < 기준일) 거래는 맵에 없다. */
 export function computeRunningBalances(
   transactions: DaylongTransaction[],
   config: DaylongConfig | null | undefined,
@@ -52,6 +54,16 @@ export function computeRunningBalances(
     map.set(t.id, acc);
   }
   return map;
+}
+
+// ── 선납 분할 ────────────────────────────────────────────────
+
+/** 총액을 months 등분(정수). 나머지는 첫 달에 합산. months < 1 이면 [total]. */
+export function splitPrepayment(total: number, months: number): number[] {
+  const n = Math.max(1, Math.floor(months));
+  const base = Math.floor(total / n);
+  const rest = total - base * n;
+  return Array.from({ length: n }, (_, i) => (i === 0 ? base + rest : base));
 }
 
 // ── 월 납입 현황 셀 ──────────────────────────────────────────

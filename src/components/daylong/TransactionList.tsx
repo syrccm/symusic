@@ -4,7 +4,7 @@
 //   가로 막대(지출 rose / 수입 emerald 비율) + 좌 '지출 합계' 우 '수입 합계'(필터 기간 기준).
 // - 행: 왼쪽 날짜 'YYYY.MM.DD' + 아래 `${memo} (${category})`(회비는 `${회원명} (정기회비)`),
 //       오른쪽 금액(출금 −rose / 입금 +emerald, 면제는 teal '면제') + 아래 '잔액 N원' = 그 거래 직후 누적 잔액.
-//       기준일 이하 거래는 잔액 자리에 '기준일 이전' 흐리게.
+//       기준일 이전(date < 기준일) 거래는 잔액 자리에 '기준일 이전' 흐리게. 당일 거래부터 누적 잔액 표시.
 // - 관리자에게만 행 오른쪽에 편집·삭제 아이콘. 비관리자 렌더에 편집 요소 없음.
 import { useMemo, useState } from 'react';
 import { Loader2, Pencil, Trash2 } from 'lucide-react';

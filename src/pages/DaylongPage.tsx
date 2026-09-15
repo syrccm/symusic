@@ -4,7 +4,8 @@
 // - PIN 게이트: config/daylong.pinHash(SHA-256) 와 입력 해시를 비교. 통과하면 localStorage 'daylong.unlocked' 에
 //   해시를 저장해 다음 방문부터 바로 진입. 관리자가 PIN 을 바꾸면(해시 변경) 자동으로 다시 잠긴다.
 //   ※ 읽기 규칙이 개방된 소프트 게이트다. 민감 정보는 두지 않는다. 관리자도 PIN 을 동일하게 거친다.
-// - 관리자 = useAdminAuth().isAdmin(Firebase 로그인 사용자, 규칙의 request.auth != null 과 같은 기준).
+// - 관리자 = props.isAdmin(SarangbangPage 와 동일 관례). MusicPlayer 가 /0691(isAdminRoute) + Firebase 로그인일 때만
+//   true 로 내려준다. /daylong 직접 진입(App 라우트)은 isAdmin 을 넘기지 않으므로 항상 회원용 읽기 화면.
 //   관리자 전용 요소는 모두 isAdmin 조건 안에 있어 비관리자 렌더 결과에 편집 요소가 없다.
 //   · 헤더: '관리' 배지 + 설정(톱니) → SettingsDialog(제목·기초 잔액·기준일·PIN 변경)
 //   · 입출금 내역: '+ 기록 추가', 행 편집·삭제 → TransactionDialog / deleteTransaction(window.confirm)
@@ -12,7 +13,7 @@
 //   · 세 번째 탭 '회원' → MembersPanel(이름·월 회비·활성·순서)
 // - 헤더 공유(Share2, 모든 사용자): navigator.share 가 있으면 { title, url: origin + '/daylong' }, 없으면 클립보드 복사 + toast.
 // - 통과 후: 잔액 카드 + 탭(입출금 내역 / 월 납입 현황 / [관리자] 회원).
-//   · 잔액 = openingBalance + Σ(기준일 이후 거래). 기준일(openingBalanceDate)이 없으면 전체 거래. → utils/daylongCalc
+//   · 잔액 = openingBalance(기준일 시작 잔액) + Σ(기준일 당일부터의 거래). 기준일(openingBalanceDate)이 없으면 전체 거래. → utils/daylongCalc
 //   · 월 납입 현황 = 회비 납입 거래를 회원×월로 집계(납입 합계·최근 납부일·면제). 선택 월 −2 ~ +2 (5개월).
 // - 데이터 구독(회원·거래)은 PIN 통과 후에만 시작(enabled 플래그).
 // - 레이아웃: MinistersPage 헤더 패턴(보라 그라데이션, sticky 헤더, 제목 + 오른쪽 X). 모바일 우선.
@@ -22,7 +23,6 @@ import { X, Loader2, Lock, Wallet, Plus, Settings, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { db } from '@/lib/firebase';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAdminAuth } from '@/hooks/useAdminAuth';
 import { useDaylongConfig } from '@/hooks/useDaylongConfig';
 import { useDaylongMembers } from '@/hooks/useDaylongMembers';
 import { useDaylongTransactions } from '@/hooks/useDaylongTransactions';
@@ -48,6 +48,8 @@ import {
 
 interface DaylongPageProps {
   onClose?: () => void;
+  /** /0691 에서 로그인한 관리자가 음표 메뉴로 열었을 때만 true. 기본 false(읽기 전용). */
+  isAdmin?: boolean;
 }
 
 type DaylongTab = 'transactions' | 'dues' | 'members';
@@ -78,10 +80,9 @@ const headerBtnClass =
 
 // ── 페이지 ──────────────────────────────────────────────────
 
-export default function DaylongPage({ onClose }: DaylongPageProps = {}) {
+export default function DaylongPage({ onClose, isAdmin = false }: DaylongPageProps = {}) {
   const navigate = useNavigate();
   const { config, loading: configLoading, error: configError } = useDaylongConfig();
-  const { isAdmin } = useAdminAuth();
 
   // PIN 게이트 상태
   const [unlocked, setUnlocked] = useState(false);

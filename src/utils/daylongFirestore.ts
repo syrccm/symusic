@@ -5,9 +5,11 @@
 // - 거래 구분(kind): 'dues' 회비 납입(in + memberId + dueMonth, category '정기회비', amount 0 = 면제)
 //   / 'in' 수입 / 'out' 지출 (category = config.categories 목록 중 하나, amount > 0).
 //   편집에서 회비 → 수입·지출로 바꾸면 memberId·dueMonth 를 deleteField() 로 제거한다. category 가 비면 필드 제거.
+// - 선납(여러 달 한 번에): addTransactions(inputs) 가 writeBatch 로 N건을 한 번에 커밋한다(부분 성공 없음).
+//   입력 배열은 호출 측(TransactionDialog → buildPrepaymentInputs)이 만든다.
 // - 분류 추가: config/daylong.categories.{in|out} 에 arrayUnion. 기본값을 쓰던 상태(필드 없음/빈 배열)라면
 //   기본 목록을 함께 넣어 기존 선택지가 사라지지 않게 한다(seed).
-import { addDoc, arrayUnion, collection, deleteDoc, deleteField, doc, updateDoc } from 'firebase/firestore';
+import { addDoc, arrayUnion, collection, deleteDoc, deleteField, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { DaylongConfig, DaylongTransaction } from '@/types/daylong';
 import { DUES_CATEGORY, isDuesPayment } from '@/types/daylong';
@@ -38,13 +40,13 @@ function nowISO(): string {
 
 // ── 거래 ─────────────────────────────────────────────────────
 
-export async function addTransaction(input: TransactionInput): Promise<string> {
+function toCreateData(input: TransactionInput, createdAt: string): Record<string, unknown> {
   const data: Record<string, unknown> = {
     date: input.date,
     type: input.kind === 'out' ? 'out' : 'in',
     amount: input.amount,
     memo: input.memo,
-    createdAt: nowISO(),
+    createdAt,
   };
   if (input.kind === 'dues') {
     data.memberId = input.memberId;
@@ -53,8 +55,30 @@ export async function addTransaction(input: TransactionInput): Promise<string> {
   } else if (input.category) {
     data.category = input.category;
   }
-  const ref = await addDoc(collection(db, TX_COLLECTION), data);
+  return data;
+}
+
+export async function addTransaction(input: TransactionInput): Promise<string> {
+  const ref = await addDoc(collection(db, TX_COLLECTION), toCreateData(input, nowISO()));
   return ref.id;
+}
+
+/**
+ * 여러 거래를 writeBatch 로 한 번에 추가(선납). createdAt 은 배열 순서대로 1ms 씩 증가시켜
+ * 같은 날짜 안에서 누적 잔액 정렬(date asc, createdAt asc)이 입력 순서를 따르게 한다.
+ */
+export async function addTransactions(inputs: TransactionInput[]): Promise<string[]> {
+  if (inputs.length === 0) return [];
+  const batch = writeBatch(db);
+  const base = Date.now();
+  const ids: string[] = [];
+  inputs.forEach((input, i) => {
+    const ref = doc(collection(db, TX_COLLECTION));
+    batch.set(ref, toCreateData(input, new Date(base + i).toISOString()));
+    ids.push(ref.id);
+  });
+  await batch.commit();
+  return ids;
 }
 
 export async function updateTransaction(id: string, input: TransactionInput): Promise<void> {

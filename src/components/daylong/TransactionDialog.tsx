@@ -3,6 +3,10 @@
 // - 회비 납부: [납부][면제] 토글, 회원 select, 납입월(type=month), 납부일자(type=date), 금액(기본값 = 회원 monthlyDue).
 //   면제 = 금액 입력 비활성 + 0 으로 저장(납부일자는 면제 처리한 날짜로 기록). 편집 시 기존 면제 거래는 [면제] 선택 상태로 열린다.
 //   category 는 저장 헬퍼가 '정기회비' 로 고정.
+//   · 선납(추가 모드 + 납부): '개월 수'(1~12, 기본 1) 입력. 금액 칸 라벨은 '총 납부액', 기본값 = monthlyDue × 개월 수.
+//     사용자가 금액을 직접 고치면(amountTouched) 이후 개월 수 변경에도 자동 갱신하지 않는다(회원 변경 시엔 다시 자동).
+//     저장 시 N건 생성: dueMonth 는 납입월부터 N개월 연속, amount 는 splitPrepayment(총액, N), date·memo 동일,
+//     memo 가 비면 '선납 (k/N)' 자동 기입 → addTransactions(writeBatch). 면제·편집 모드에서는 개월 수 입력 없음(1건).
 // - 수입/지출: 날짜, 분류 select(config.categories + 맨 아래 '+ 항목 추가' → 인라인 입력 → addCategory(arrayUnion) 후 선택),
 //   금액(0 초과), 내용(memo).
 // - '저장 후 계속 쓰기'(추가 모드만): 저장 후 모달을 닫지 않고 날짜·구분(·회원·납입월) 유지, 금액·내용만 초기화.
@@ -27,12 +31,14 @@ import {
 import {
   addCategory,
   addTransaction,
+  addTransactions,
   kindOf,
   updateTransaction,
   type TransactionInput,
   type TxKind,
 } from '@/utils/daylongFirestore';
-import { describeFirestoreError, formatWon, thisMonth, todayISO } from './format';
+import { splitPrepayment } from '@/utils/daylongCalc';
+import { describeFirestoreError, formatMonth, formatWon, shiftMonth, thisMonth, todayISO } from './format';
 
 export interface TransactionPrefill {
   kind?: TxKind;
@@ -58,8 +64,36 @@ const KINDS: TxKind[] = ['dues', 'in', 'out'];
 const ADD_CATEGORY_VALUE = '__add_category__';
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const MONTH_RE = /^\d{4}-\d{2}$/;
+const MAX_PREPAY_MONTHS = 12;
+
+/** 선납 입력 N건 생성: 납입월부터 N개월 연속, 총액 N 등분(나머지 첫 달), memo 가 비면 '선납 (k/N)'. */
+function buildPrepaymentInputs(
+  base: { date: string; memo: string; memberId: string },
+  startMonth: string,
+  total: number,
+  months: number,
+): TransactionInput[] {
+  const amounts = splitPrepayment(total, months);
+  return amounts.map((amount, i) => ({
+    kind: 'dues',
+    date: base.date,
+    memberId: base.memberId,
+    amount,
+    dueMonth: shiftMonth(startMonth, i),
+    memo: base.memo || `선납 (${i + 1}/${amounts.length})`,
+  }));
+}
 
 const inputClass = 'bg-slate-700 border-slate-600 text-white';
+
+/** 선납 분할 안내: '30,000원 = 10,000원 × 3' 또는 '31,000원 = 11,000원 + 10,000원 × 2'. */
+function describeSplit(total: number, split: number[]): string {
+  if (split.length < 2) return formatWon(total);
+  const [first, rest] = split;
+  return first === rest
+    ? `${formatWon(total)} = ${formatWon(rest)} × ${split.length}`
+    : `${formatWon(total)} = ${formatWon(first)} + ${formatWon(rest)} × ${split.length - 1}`;
+}
 
 export function TransactionDialog({
   open,
@@ -76,6 +110,9 @@ export function TransactionDialog({
   const [exempt, setExempt] = useState(false);
   const [memberId, setMemberId] = useState('');
   const [dueMonth, setDueMonth] = useState(thisMonth());
+  const [monthsStr, setMonthsStr] = useState('1');
+  // 사용자가 금액을 직접 수정했는지(true 면 개월 수 변경 시 자동 갱신 안 함)
+  const [amountTouched, setAmountTouched] = useState(false);
   const [memo, setMemo] = useState('');
   const [category, setCategory] = useState('');
   const [addingCategory, setAddingCategory] = useState(false);
@@ -86,9 +123,9 @@ export function TransactionDialog({
   // 초기화 시점의 회원 목록만 참조(구독 갱신으로 입력 중인 폼이 초기화되지 않게 deps 에서 제외)
   const membersRef = useRef(members);
   membersRef.current = members;
-  const defaultDueStr = (id: string): string => {
+  const defaultDueStr = (id: string, months = 1): string => {
     const m = membersRef.current.find((x) => x.id === id);
-    return id ? String(memberMonthlyDue(m)) : '';
+    return id ? String(memberMonthlyDue(m) * Math.max(1, months)) : '';
   };
 
   // 열릴 때마다 편집 대상 또는 prefill 로 폼 초기화
@@ -106,6 +143,8 @@ export function TransactionDialog({
       setDueMonth(editing.dueMonth ?? thisMonth());
       setMemo(editing.memo);
       setCategory(k === 'dues' ? '' : (editing.category ?? ''));
+      setMonthsStr('1');
+      setAmountTouched(true);
     } else {
       const k = prefill?.kind ?? 'dues';
       const mid = prefill?.memberId ?? '';
@@ -117,12 +156,20 @@ export function TransactionDialog({
       setDueMonth(prefill?.dueMonth ?? thisMonth());
       setMemo('');
       setCategory('');
+      setMonthsStr('1');
+      setAmountTouched(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, editing, prefill]);
 
   const amount = amountStr ? Number(amountStr) : 0;
   const busy = saving || savingCategory;
+  // 선납 개월 수: 추가 모드 + 회비 + 납부 일 때만 의미. 그 외는 항상 1.
+  const prepayEnabled = !editing && kind === 'dues' && !exempt;
+  const monthsNum = monthsStr ? Number(monthsStr) : 0;
+  const monthsValid = Number.isInteger(monthsNum) && monthsNum >= 1 && monthsNum <= MAX_PREPAY_MONTHS;
+  const months = prepayEnabled && monthsValid ? monthsNum : 1;
+  const prepaySplit = useMemo(() => (months > 1 ? splitPrepayment(amount, months) : []), [amount, months]);
 
   const memberOptions = useMemo(
     () => members.filter((m) => m.active || m.id === memberId),
@@ -142,15 +189,36 @@ export function TransactionDialog({
     setAddingCategory(false);
     setNewCategory('');
     if (k !== 'dues') setExempt(false);
-    if (k === 'dues' && !amountStr && !exempt) setAmountStr(defaultDueStr(memberId));
+    if (k === 'dues' && !amountStr && !exempt) {
+      setAmountStr(defaultDueStr(memberId, months));
+      setAmountTouched(false);
+    }
   };
   const changeMember = (id: string) => {
     setMemberId(id);
-    if (!exempt) setAmountStr(defaultDueStr(id));
+    if (!exempt) {
+      setAmountStr(defaultDueStr(id, months));
+      setAmountTouched(false);
+    }
   };
   const changeExempt = (v: boolean) => {
     setExempt(v);
-    if (!v && !amountStr) setAmountStr(defaultDueStr(memberId));
+    if (!v && !amountStr) {
+      setAmountStr(defaultDueStr(memberId, months));
+      setAmountTouched(false);
+    }
+  };
+  const changeMonths = (raw: string) => {
+    const s = raw.replace(/\D/g, '').replace(/^0+(?=\d)/, '').slice(0, 2);
+    setMonthsStr(s);
+    const n = Number(s);
+    if (!amountTouched && Number.isInteger(n) && n >= 1 && n <= MAX_PREPAY_MONTHS) {
+      setAmountStr(defaultDueStr(memberId, n));
+    }
+  };
+  const changeAmount = (raw: string) => {
+    setAmountStr(raw.replace(/\D/g, '').replace(/^0+(?=\d)/, ''));
+    setAmountTouched(true);
   };
   const onCategoryChange = (v: string) => {
     if (v === ADD_CATEGORY_VALUE) {
@@ -225,6 +293,14 @@ export function TransactionDialog({
         toast.error("금액을 입력해주세요. 면제로 표기하려면 [면제]를 선택하세요.");
         return;
       }
+      if (prepayEnabled && !monthsValid) {
+        toast.error(`개월 수는 1~${MAX_PREPAY_MONTHS} 사이의 숫자로 입력해주세요.`);
+        return;
+      }
+      if (months > 1 && amount <= 0) {
+        toast.error('선납은 총 납부액이 0보다 커야 합니다.');
+        return;
+      }
     } else {
       if (!category) {
         toast.error('분류를 선택해주세요.');
@@ -256,15 +332,22 @@ export function TransactionDialog({
         toast.success('기록을 수정했습니다.');
         onOpenChange(false);
       } else {
-        await addTransaction(input);
-        if (continueAfter) {
-          // 날짜·구분(·회원·납입월·분류) 유지, 금액·내용만 초기화
-          setExempt(false);
-          setAmountStr(kind === 'dues' ? defaultDueStr(memberId) : '');
-          setMemo('');
-          toast.success('기록을 추가했습니다. 이어서 입력하세요.');
+        if (months > 1) {
+          await addTransactions(buildPrepaymentInputs({ date, memo: input.memo, memberId }, dueMonth, finalAmount, months));
         } else {
-          toast.success('기록을 추가했습니다.');
+          await addTransaction(input);
+        }
+        const added = months > 1 ? `회비 ${months}개월분을 선납으로 추가했습니다.` : '기록을 추가했습니다.';
+        if (continueAfter) {
+          // 날짜·구분(·회원·납입월·분류) 유지, 금액·내용·개월 수만 초기화
+          setExempt(false);
+          setMonthsStr('1');
+          setAmountStr(kind === 'dues' ? defaultDueStr(memberId) : '');
+          setAmountTouched(false);
+          setMemo('');
+          toast.success(`${added} 이어서 입력하세요.`);
+        } else {
+          toast.success(added);
           onOpenChange(false);
         }
       }
@@ -276,7 +359,11 @@ export function TransactionDialog({
     }
   };
 
-  const canSave = !busy && (kind === 'dues' ? exempt || amountStr !== '' : amount > 0 && !!category);
+  const canSave =
+    !busy &&
+    (kind === 'dues'
+      ? exempt || (amountStr !== '' && (!prepayEnabled || monthsValid) && (months <= 1 || amount > 0))
+      : amount > 0 && !!category);
 
   return (
     <Dialog open={open} onOpenChange={(v) => !busy && onOpenChange(v)}>
@@ -382,6 +469,32 @@ export function TransactionDialog({
                 </div>
               </div>
 
+              {/* 개월 수(선납) — 추가 모드 + 납부 일 때만 */}
+              {prepayEnabled && (
+                <div className="space-y-1.5">
+                  <Label htmlFor="daylong-tx-months" className="text-white text-xs">
+                    개월 수 <span className="text-gray-400">(선납은 2 이상)</span>
+                  </Label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      id="daylong-tx-months"
+                      inputMode="numeric"
+                      value={monthsStr}
+                      disabled={busy}
+                      onChange={(e) => changeMonths(e.target.value)}
+                      className={`${inputClass} w-24 tabular-nums`}
+                    />
+                    <span className="text-xs text-gray-400">
+                      {monthsValid
+                        ? months > 1
+                          ? `${formatMonth(dueMonth)} ~ ${formatMonth(shiftMonth(dueMonth, months - 1))}`
+                          : '한 달분'
+                        : `1~${MAX_PREPAY_MONTHS} 사이로 입력`}
+                    </span>
+                  </div>
+                </div>
+              )}
+
               {/* 납부일자 + 금액 */}
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div className="space-y-1.5">
@@ -396,18 +509,20 @@ export function TransactionDialog({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="daylong-tx-amount" className="text-white text-xs">금액</Label>
+                  <Label htmlFor="daylong-tx-amount" className="text-white text-xs">
+                    {prepayEnabled ? '총 납부액' : '금액'}
+                  </Label>
                   <Input
                     id="daylong-tx-amount"
                     inputMode="numeric"
                     placeholder={exempt ? '면제 (0원)' : '숫자만 입력'}
                     value={exempt ? '' : amountStr}
                     disabled={busy || exempt}
-                    onChange={(e) => setAmountStr(e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, ''))}
+                    onChange={(e) => changeAmount(e.target.value)}
                     className={`${inputClass} tabular-nums disabled:opacity-50`}
                   />
                   <p className="min-h-[1rem] text-right text-xs text-purple-200/70 tabular-nums">
-                    {exempt ? '면제 처리' : amount > 0 ? formatWon(amount) : ''}
+                    {exempt ? '면제 처리' : amount > 0 ? (months > 1 ? describeSplit(amount, prepaySplit) : formatWon(amount)) : ''}
                   </p>
                 </div>
               </div>
@@ -503,7 +618,7 @@ export function TransactionDialog({
                   placeholder="숫자만 입력"
                   value={amountStr}
                   disabled={busy}
-                  onChange={(e) => setAmountStr(e.target.value.replace(/\D/g, '').replace(/^0+(?=\d)/, ''))}
+                  onChange={(e) => changeAmount(e.target.value)}
                   className={`${inputClass} tabular-nums`}
                 />
                 <p className="min-h-[1rem] text-right text-xs text-purple-200/70 tabular-nums">

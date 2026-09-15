@@ -1,6 +1,6 @@
 // daylong 모임 회비 관리 — Firestore 문서 타입과 방어적 파서.
 // - config/daylong (단일 문서): { pinHash, title?, openingBalance?, openingBalanceDate?, categories? }
-//   · openingBalanceDate('YYYY-MM-DD') = "이 날 마감 시점의 잔액이 openingBalance". 잔액 계산은 date > 기준일 인 거래만 누적.
+//   · openingBalanceDate('YYYY-MM-DD') = "이 날 시작 시점의 잔액이 openingBalance". 잔액 계산은 date >= 기준일 인 거래만 누적(당일 포함).
 //   · categories = { in: string[], out: string[] } 수입·지출 분류 목록. 비어 있으면 DEFAULT_CATEGORIES 사용.
 // - daylongMembers/{id}: { name, order, active, monthlyDue? }  · monthlyDue = 회원별 월 회비(기본 DEFAULT_MONTHLY_DUE)
 // - daylongTransactions/{id}: { date, type, amount, memo, category?, memberId?, dueMonth?, createdAt }

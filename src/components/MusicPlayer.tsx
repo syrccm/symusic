@@ -2993,10 +2993,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         </div>
       )}
 
-      {/* daylong 모임 회비 관리: 동일하게 오버레이로 표시 */}
+      {/* daylong 모임 회비 관리: 동일하게 오버레이로 표시. 관리자 여부는 사랑방과 같이 /0691 + 로그인일 때만 전달 */}
       {isDaylongOpen && (
         <div className="fixed inset-0 z-[100] w-full max-w-full overflow-x-hidden overflow-y-auto overscroll-y-contain" style={{ touchAction: 'pan-y' }}>
-          <DaylongPage onClose={() => setIsDaylongOpen(false)} />
+          <DaylongPage onClose={() => setIsDaylongOpen(false)} isAdmin={isAdminRoute && isAdmin} />
         </div>
       )}
 

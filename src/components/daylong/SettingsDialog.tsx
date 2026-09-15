@@ -1,6 +1,6 @@
 // daylong 설정 모달(관리자) — 제목·기초 잔액(+기준일) 편집, PIN 변경.
 // - 기본 정보: updateConfig({ title, openingBalance, openingBalanceDate }) → config/daylong.
-//   · 기준일(openingBalanceDate) = "이 날 마감 시점의 잔액이 기초 잔액". 잔액 계산은 기준일 이후(date > 기준일) 거래만 누적.
+//   · 기준일(openingBalanceDate) = "이 날 시작 시점의 잔액이 기초 잔액". 잔액 계산은 기준일 당일부터(date >= 기준일) 거래만 누적.
 //   · 기준일을 비우면 필드를 제거(updateConfig 가 deleteField 처리) → 전체 거래 누적.
 // - PIN 변경: 새 PIN 4자리 + 확인 4자리 일치 시 hashPin → updateConfig({ pinHash }).
 //   갱신 직후 saveUnlockedHash(새 해시) 로 이 기기의 통과 기록을 갱신해 관리자 기기가 잠기지 않게 한다.
@@ -166,7 +166,7 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="daylong-opening-date" className="text-white text-xs">기준일</Label>
+                <Label htmlFor="daylong-opening-date" className="text-white text-xs">기준일 시작 잔액(당일 거래부터 반영)</Label>
                 <Input
                   id="daylong-opening-date"
                   type="date"
@@ -180,12 +180,12 @@ export function SettingsDialog({ open, onOpenChange, isAdmin, config }: Settings
             <p className="min-h-[1rem] text-right text-xs text-purple-200/70 tabular-nums">
               {Number.isInteger(opening)
                 ? openingDate
-                  ? `${openingDate} 기준 잔액 ${formatWon(opening)}`
+                  ? `${openingDate} 시작 잔액 ${formatWon(opening)}`
                   : formatWon(opening)
                 : ''}
             </p>
             <p className="-mt-2 text-[11px] text-gray-400">
-              기준일을 지정하면 그 날까지의 거래는 잔액에 넣지 않고, 기준일 이후 거래만 기초 잔액에 누적합니다. 비우면 전체 거래를 누적합니다.
+              기준일을 지정하면 그 전날까지의 거래는 잔액에 넣지 않고, 기준일 당일 거래부터 기초 잔액에 누적합니다. 비우면 전체 거래를 누적합니다.
             </p>
             <div className="flex justify-end">
               <button
