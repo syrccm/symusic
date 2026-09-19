@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-09-13T13:32:21.937Z",
+  "updatedAt": "2026-09-19T07:46:53.723Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.09.13",
+      "seq": 341,
+      "youtubeId": "J6vrmuOxO2s",
+      "title": "구하고 찾고 두드리라",
+      "noteSeq": 514,
+      "notePdfUrl": "/data/notes/20260913.pdf"
+    },
     {
       "date": "2026.09.06",
       "seq": 340,
@@ -47,9 +55,7 @@
       "date": "2026.07.19",
       "seq": 335,
       "youtubeId": "LyV2io7fGg0",
-      "title": "공급의 원천은 어디인가?",
-      "noteSeq": 506,
-      "notePdfUrl": "/data/notes/20260719.pdf"
+      "title": "공급의 원천은 어디인가?"
     },
     {
       "date": "2026.07.05",
@@ -68,12 +74,6 @@
       "seq": 332,
       "youtubeId": "cTEBbJQUJ8Q",
       "title": "너무나 모범적인, 그러나"
-    },
-    {
-      "date": "2026.06.14",
-      "seq": 331,
-      "youtubeId": "55O3ewx2kFo",
-      "title": "사랑 너머 사랑"
     }
   ]
 }
