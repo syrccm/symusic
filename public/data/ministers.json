@@ -1,7 +1,7 @@
 {
-  "updatedAt": "2026-07-27T12:30:43.223Z",
+  "updatedAt": "2026-09-21T15:49:10.735Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/minister.jsp",
-  "count": 159,
+  "count": 157,
   "ministers": [
     {
       "role": "목사",
@@ -516,108 +516,94 @@
     },
     {
       "role": "목사",
-      "name": "최다니엘",
-      "photoUrl": "/data/ministers/8e2a47792536.gif",
-      "department": "베트남어예배부",
-      "order": 73
-    },
-    {
-      "role": "목사",
       "name": "틴아웅쉐",
       "photoUrl": "/data/ministers/095700d59625.jpg",
       "department": "미얀마어예배부",
-      "order": 74
+      "order": 73
     },
     {
       "role": "목사",
       "name": "디벤드라",
       "photoUrl": "/data/ministers/14a9577d9884.jpg",
       "department": "네팔어예배부",
-      "order": 75
+      "order": 74
     },
     {
       "role": "목사",
       "name": "정요셉",
       "photoUrl": "/data/ministers/84937a221575.gif",
       "department": "우즈벡어예배부",
-      "order": 76
+      "order": 75
     },
     {
       "role": "목사",
       "name": "나랑바타르",
       "photoUrl": "/data/ministers/1806ba4be0ac.jpg",
       "department": "몽골어예배부",
-      "order": 77
+      "order": 76
     },
     {
       "role": "목사",
       "name": "조우현",
       "photoUrl": "/data/ministers/f3fb67bd3975.jpg",
       "department": "서울로교회",
-      "order": 78
+      "order": 77
     },
     {
       "role": "목사",
       "name": "김지찬",
       "photoUrl": "/data/ministers/0c782ae50ea6.jpg",
       "department": "협동목사",
-      "order": 79
+      "order": 78
     },
     {
       "role": "목사",
       "name": "이진수",
       "photoUrl": "/data/ministers/89eafa1b9144.jpg",
       "department": "목회개발",
-      "order": 80
+      "order": 79
     },
     {
       "role": "목사",
       "name": "조원상",
       "photoUrl": "/data/ministers/590dac49cd4e.jpg",
       "department": "목회개발",
-      "order": 81
-    },
-    {
-      "role": "목사",
-      "name": "박남주",
-      "photoUrl": "/data/ministers/ca080fc8a2d9.jpg",
-      "department": "목회개발",
-      "order": 82
+      "order": 80
     },
     {
       "role": "목사",
       "name": "안성수",
       "photoUrl": "/data/ministers/36274b422b02.jpg",
       "department": "목회개발",
-      "order": 83
+      "order": 81
     },
     {
       "role": "목사",
       "name": "정용태",
       "photoUrl": "/data/ministers/d065978f7ff5.jpg",
       "department": "목회개발",
-      "order": 84
+      "order": 82
     },
     {
       "role": "목사",
       "name": "정철",
       "photoUrl": "/data/ministers/84b99495295b.jpg",
       "department": "목회개발",
-      "order": 85
+      "order": 83
     },
     {
       "role": "목사",
       "name": "고갑균",
       "photoUrl": "/data/ministers/ae97e8dec4e2.jpg",
       "department": "목회개발",
-      "order": 86
+      "order": 84
     },
     {
       "role": "목사",
       "name": "강지훈",
       "photoUrl": "/data/ministers/f9f6226900a2.jpg",
       "department": "목회개발",
-      "order": 87
+      "order": 85
     },
     {
       "role": "강도사",
