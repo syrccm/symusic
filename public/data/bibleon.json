@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-09-20T13:17:43.436Z",
+  "updatedAt": "2026-09-26T08:16:21.631Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.09.20",
+      "seq": 342,
+      "youtubeId": "49VJQ7q4OWo",
+      "title": "제 3의 길은 없다",
+      "noteSeq": 515,
+      "notePdfUrl": "/data/notes/20260920.pdf"
+    },
     {
       "date": "2026.09.13",
       "seq": 341,
@@ -47,9 +55,7 @@
       "date": "2026.07.26",
       "seq": 336,
       "youtubeId": "2CFLaIhXLKg",
-      "title": "빠뜨리면 안될 기도들",
-      "noteSeq": 507,
-      "notePdfUrl": "/data/notes/20260726.pdf"
+      "title": "빠뜨리면 안될 기도들"
     },
     {
       "date": "2026.07.19",
@@ -68,12 +74,6 @@
       "seq": 333,
       "youtubeId": "EErxlkWheE8",
       "title": "하늘에 계신 우리 아버지여!"
-    },
-    {
-      "date": "2026.06.21",
-      "seq": 332,
-      "youtubeId": "cTEBbJQUJ8Q",
-      "title": "너무나 모범적인, 그러나"
     }
   ]
 }
