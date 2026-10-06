@@ -21,6 +21,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
+  ADJUST_CATEGORY,
   isDuesExempt,
   memberMonthlyDue,
   resolveCategories,
@@ -238,6 +239,10 @@ export function TransactionDialog({
     const name = newCategory.trim();
     if (!name) {
       toast.error('분류 이름을 입력해주세요.');
+      return;
+    }
+    if (name === ADJUST_CATEGORY) {
+      toast.error(`'${ADJUST_CATEGORY}'은 잔액 맞추기 전용 이름이라 분류로 쓸 수 없습니다.`);
       return;
     }
     if (categoryList.includes(name)) {

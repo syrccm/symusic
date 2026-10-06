@@ -7,7 +7,8 @@
 //   조정 거래를 맨 뒤에 두는 이유: 같은 날짜의 다른 거래가 나중에 입력돼 createdAt 이 더 늦어도 조정 행의 누적 잔액이
 //   '선택일까지 계산 잔액 + 차액 = 통장 실제 잔액' 으로 유지되게 하기 위해서다.
 // - 누적 잔액: 위 정렬 순서로 누적 → id → 잔액 맵. 필터와 무관하게 전체 기준. 조정 거래는 행이 없으므로 맵에 넣지 않고
-//   직전(오래된 쪽) 일반 거래의 잔액에 흡수한다 — 그 행의 잔액이 '그날 마감(통장) 잔액' 이 되어 표기가 끊기지 않는다.
+//   직전(오래된 쪽) 일반 거래의 잔액에 흡수한다 — 그 행의 잔액이 '조정 시점까지의 통장 잔액' 이 되어 표기가 끊기지 않는다.
+//   직전 일반 거래 행의 날짜는 조정 날짜와 다를 수 있다(그 사이에 일반 거래가 없으면 더 이른 날짜의 행에 흡수된다).
 //   조정 거래보다 앞선 일반 거래가 없으면 다음 일반 거래부터 자연히 반영된다.
 // - 선택일 기준 잔액(computeBalanceAsOf): date <= 선택일 인 거래의 합(같은 날짜 전부 포함). 잔액 맞추기의 비교 기준.
 // - 면제(회비 amount 0)는 누적에 0 을 더하므로 잔액 변동이 없다.
@@ -62,7 +63,7 @@ export function describeBalanceNote(count: number): string {
   return `거래 ${count}건`;
 }
 
-/** 거래 직후 누적 잔액(id → 잔액). 일반 거래만 맵에 있고, 조정 거래 금액은 직전 일반 거래의 잔액에 흡수된다. */
+/** 거래 직후 누적 잔액(id → 잔액). 일반 거래만 맵에 있고, 조정 거래 금액은 직전 일반 거래(날짜가 다를 수 있음)의 잔액에 흡수된다. */
 export function computeRunningBalances(transactions: DaylongTransaction[]): Map<string, number> {
   const ordered = [...transactions].sort(compareTransactions);
   const map = new Map<string, number>();
