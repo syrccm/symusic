@@ -29,6 +29,7 @@ import { PlaylistBanner } from '@/components/PlaylistBanner';
 import { AboutModal } from '@/components/AboutModal';
 import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 import { PlaylistManagerDialog } from '@/components/PlaylistManagerDialog';
+import { BannerManagerDialog } from '@/components/BannerManagerDialog';
 import { NoticePanel } from '@/components/NoticePanel';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import { fixSermonSeparator } from '@/utils/sermonDescription';
@@ -140,13 +141,23 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const { songs: allSongs, loading, isOfflineMode, setSongsLocal } = useSongs();
   // 메인 배너(config/banner). 켜져 있을 때만 값이 있고, 관리자 여부와 무관하게 모두에게 표시.
   const banner = useBanner();
-  // 배너는 항상 새 탭으로 연다. 내부 경로(/p/코드 등)는 현재 origin 을 붙여 전체 주소로 만든다.
+  // 배너는 항상 새 탭으로 연다. link 를 현재 origin 기준 URL 로 조립하고(new URL — 문자열 접합 시 '/' 누락이면
+  // 다른 호스트가 되는 문제 방지), origin 이 다르면(외부 주소·javascript: 등) 열지 않는다. 링크는 관리 모달에서
+  // 플레이리스트 경로(/p/코드)만 고를 수 있다.
   const handleBannerClick = () => {
     if (!banner) return;
-    const url = /^https?:\/\//i.test(banner.link)
-      ? banner.link
-      : window.location.origin + banner.link;
-    window.open(url, '_blank', 'noopener,noreferrer');
+    let url: URL;
+    try {
+      url = new URL(banner.link, window.location.origin);
+    } catch {
+      return;
+    }
+    if (url.origin !== window.location.origin) {
+      // 프로덕션 빌드는 console.warn 을 제거하므로(vite.config pure) 추적용으로 error 를 쓴다.
+      console.error('[Banner] origin 이 달라 열지 않음:', banner.link);
+      return;
+    }
+    window.open(url.href, '_blank', 'noopener,noreferrer');
   };
   // 비활성(active === false) 곡은 일반 사용자 목록(전체/즐겨찾기/검색·곡 개수)에서 제외.
   // 관리 '기존 곡 관리' 목록은 allSongs 를 사용해 비활성 곡도 표시(토글 가능).
@@ -210,6 +221,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // Analytics dialog (관리자 모드 전용)
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [showPlaylistDialog, setShowPlaylistDialog] = useState(false); // 플레이리스트 관리 모달(관리자)
+  const [showBannerDialog, setShowBannerDialog] = useState(false); // 배너 관리 모달(관리자)
 
   // 햄버거 메뉴 + 카포·조옮김 / 메트로놈 모달
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1665,6 +1677,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             <button
                               type="button"
                               onClick={() => {
+                                setShowBannerDialog(true);
+                                setIsMusicMenuOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                            >
+                              📣 배너 관리
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
                                 handleAdminLogout();
                                 setIsMusicMenuOpen(false);
                               }}
@@ -2925,6 +2947,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           isAdmin={isAdmin}
           songs={allSongs}
         />
+      )}
+
+      {isAdminRoute && (
+        <BannerManagerDialog open={showBannerDialog} onOpenChange={setShowBannerDialog} isAdmin={isAdmin} />
       )}
 
       {isGitaOpen && (

@@ -1,7 +1,7 @@
 // 메인 화면 배너 설정 훅 — Firestore config/banner 단일 문서를 실시간 구독한다.
 // - 문서 구조: config/banner = { enabled: boolean, text: string, link: string, updatedAt?: string }
 // - 문서가 없거나 enabled !== true 이거나 text/link 가 비어 있으면 null 을 반환(배너 숨김).
-// - 읽기 규칙: 비로그인 읽기 개방(2026-09-08 프로브로 확인). 쓰기(관리 모달)는 STEP 2.
+// - 읽기 규칙: 비로그인 읽기 개방(2026-09-08 프로브로 확인). 쓰기는 관리자 모달(BannerManagerDialog, setDoc)·규칙은 로그인 사용자.
 import { useEffect, useState } from 'react';
 import { doc, onSnapshot } from 'firebase/firestore';
 import { db } from '@/lib/firebase';

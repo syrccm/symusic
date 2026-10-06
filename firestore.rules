@@ -34,6 +34,16 @@ service cloud.firestore {
       }
     }
 
+    // ── 메인 배너 (신규 추가, 콘솔 수동 반영) ──────────────────────
+    // config/banner = { enabled, text, link, updatedAt }. 읽기는 모두 허용(모든 방문자에게 표시),
+    // 쓰기는 로그인한 관리자만(BannerManagerDialog 의 setDoc). 기본 버전만 적용(필드 검증 없음).
+    // ※ 콘솔에 config 쓰기를 허용하는 `match /config/{docId}` 와일드카드 규칙이 있으면 이 블록만으로는 쓰기가
+    //    좁혀지지 않습니다(허용 규칙 하나라도 맞으면 허용). 와일드카드에서 config/banner 를 제외해야 합니다(daylong 과 같은 방식).
+    match /config/banner {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
     // ── daylong 모임 회비 관리 (신규 추가, 콘솔 수동 반영) ──────────
     // 읽기는 모두 허용(앱의 4자리 PIN 은 소프트 게이트), 쓰기는 로그인한 관리자만.
     // config/daylong = { pinHash(SHA-256 16진), title?, categories? }
