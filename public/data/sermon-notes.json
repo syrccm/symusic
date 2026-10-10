@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-10-03T08:49:30.399Z",
+  "updatedAt": "2026-10-10T09:21:16.814Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 16,
+  "count": 17,
   "notes": [
+    {
+      "seq": 517,
+      "title": "어떤 집을 지을 것인가?",
+      "date": "2026.10.07",
+      "pdfUrl": null,
+      "normTitle": "어떤집을지을것인가"
+    },
     {
       "seq": 516,
       "title": "고도의 영적 분별력",
