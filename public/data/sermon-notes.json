@@ -1,14 +1,14 @@
 {
-  "updatedAt": "2026-10-10T09:21:16.814Z",
+  "updatedAt": "2026-10-11T15:12:11.887Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 17,
+  "count": 16,
   "notes": [
     {
       "seq": 517,
       "title": "어떤 집을 지을 것인가?",
       "date": "2026.10.07",
-      "pdfUrl": null,
+      "pdfUrl": "/data/notes/20261004.pdf",
       "normTitle": "어떤집을지을것인가"
     },
     {
@@ -115,13 +115,6 @@
       "date": "2026.06.26",
       "pdfUrl": null,
       "normTitle": "너무나모범적인그러나"
-    },
-    {
-      "seq": 501,
-      "title": "사랑 너머 사랑",
-      "date": "2026.06.19",
-      "pdfUrl": null,
-      "normTitle": "사랑너머사랑"
     }
   ]
 }
