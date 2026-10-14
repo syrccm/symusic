@@ -245,6 +245,9 @@ export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }
                 R2 download 버킷의 {folder.trim() || title.trim() || '{폴더명}'}/ 에 올린 파일 이름을 그대로 한 줄씩
                 붙여넣으세요
               </p>
+              <p className="text-[11px] text-gray-400 break-keep">
+                원음은 제목과 같은 이름(예: 제목.mp3)으로 올리면 맨 위에 표시됩니다
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="download-note" className="text-white text-xs">

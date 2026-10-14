@@ -3,8 +3,10 @@
 // - 목록: active !== false 만, 최신순(훅이 정렬). 상단 검색(제목·설명 includes, NFC 정규화).
 // - 파일 주소 = VITE_DOWNLOAD_BASE_URL(끝 '/' 정규화) + enc(folder) + '/' + enc(filename). 세그먼트별 encodeURIComponent.
 //   기본 URL 이 비어 있으면(환경변수 미설정) 상단에 안내만 보여 주고 파일 링크는 만들지 않는다.
-// - 목록 행: 제목 + 요약("악보 5 · MR 2") + 등록일. 확장자 .pdf → 악보, .mp3/.m4a/.wav → 반주(MR), 그 외 → 기타.
-// - 상세: 제목·설명(줄바꿈 유지) 아래 악보/반주/기타 섹션(빈 섹션 숨김). 각 행 = 라벨 + [보기|듣기](새 탭) + [저장](download).
+// - 목록 행: 제목 + 요약("원음 · 악보 5 · MR 2") + 등록일. 확장자 .pdf → 악보, .mp3/.m4a/.wav → 반주(MR), 그 외 → 기타.
+//   단, 오디오 확장자이면서 확장자를 뺀 이름이 게시글 title 과 같으면(NFC·trim 비교) '원음'(전체 믹스).
+// - 상세: 제목·설명(줄바꿈 유지) 아래 원음/악보/반주/기타 섹션(빈 섹션 숨김). 각 행 = 라벨 + [보기|듣기](새 탭) + [저장](download).
+//   원음 섹션은 teal 테두리·굵은 라벨로 살짝 강조하고 행 라벨은 '원음(전체 믹스)' 고정.
 //   라벨 = 파일명에서 확장자 제거 → 앞이 `${folder}_` 또는 `${title}_` 이면 그 접두사 제거.
 //   [저장] 은 같은 주소에 `?dl=1` 을 붙인다 — Cloudflare 응답 헤더 규칙이 이 쿼리에 Content-Disposition: attachment 를
 //   붙여 주므로 교차 출처라도 첨부 다운로드가 된다(download 속성만으로는 교차 출처에서 무시됨). download 속성은 유지.
@@ -29,18 +31,23 @@ function fileUrl(folder: string, filename: string, options: { download?: boolean
   return options.download ? `${url}?dl=1` : url;
 }
 
-type FileKind = 'score' | 'mr' | 'other';
+type FileKind = 'original' | 'score' | 'mr' | 'other';
 
 const SECTIONS: { kind: FileKind; label: string; summary: string; open: string }[] = [
+  { kind: 'original', label: '원음', summary: '원음', open: '듣기' },
   { kind: 'score', label: '악보', summary: '악보', open: '보기' },
   { kind: 'mr', label: '반주', summary: 'MR', open: '듣기' },
   { kind: 'other', label: '기타', summary: '기타', open: '보기' },
 ];
 
-function fileKind(filename: string): FileKind {
-  const ext = filename.slice(filename.lastIndexOf('.') + 1).toLowerCase();
+function fileKind(filename: string, title: string): FileKind {
+  const dot = filename.lastIndexOf('.');
+  const ext = filename.slice(dot + 1).toLowerCase();
   if (ext === 'pdf') return 'score';
-  if (ext === 'mp3' || ext === 'm4a' || ext === 'wav') return 'mr';
+  if (ext === 'mp3' || ext === 'm4a' || ext === 'wav') {
+    const base = (dot > 0 ? filename.slice(0, dot) : filename).normalize('NFC').trim();
+    return base === title.normalize('NFC').trim() ? 'original' : 'mr';
+  }
   return 'other';
 }
 
@@ -54,12 +61,12 @@ function fileLabel(filename: string, folder: string, title: string): string {
   return base;
 }
 
-/** "악보 5 · MR 2" 형태 요약. 0개인 종류는 생략. */
-function summarizeFiles(files: string[]): string {
-  const counts: Record<FileKind, number> = { score: 0, mr: 0, other: 0 };
-  for (const f of files) counts[fileKind(f)] += 1;
+/** "원음 · 악보 5 · MR 2" 형태 요약. 0개인 종류는 생략, 원음은 개수 없이 표기. */
+function summarizeFiles(files: string[], title: string): string {
+  const counts: Record<FileKind, number> = { original: 0, score: 0, mr: 0, other: 0 };
+  for (const f of files) counts[fileKind(f, title)] += 1;
   return SECTIONS.filter((s) => counts[s.kind] > 0)
-    .map((s) => `${s.summary} ${counts[s.kind]}`)
+    .map((s) => (s.kind === 'original' ? s.summary : `${s.summary} ${counts[s.kind]}`))
     .join(' · ');
 }
 
@@ -124,7 +131,7 @@ export function DownloadBoard({ downloads, loading, error }: DownloadBoardProps)
     if (!selected) return [];
     return SECTIONS.map((s) => ({
       ...s,
-      files: selected.files.filter((f) => fileKind(f) === s.kind),
+      files: selected.files.filter((f) => fileKind(f, selected.title) === s.kind),
     })).filter((s) => s.files.length > 0);
   }, [selected]);
 
@@ -188,7 +195,9 @@ export function DownloadBoard({ downloads, loading, error }: DownloadBoardProps)
                     <div className="flex-1 min-w-0">
                       <p className="text-base font-light text-white line-clamp-2 break-keep">{item.title || '(제목 없음)'}</p>
                       <p className="text-sm text-purple-200/70 mt-0.5 font-light">
-                        {[summarizeFiles(item.files), formatShortDate(item.createdAt)].filter(Boolean).join(' · ')}
+                        {[summarizeFiles(item.files, item.title), formatShortDate(item.createdAt)]
+                          .filter(Boolean)
+                          .join(' · ')}
                       </p>
                     </div>
                     <Download className="w-4 h-4 text-purple-300 flex-shrink-0 mt-1" />
@@ -231,17 +240,30 @@ export function DownloadBoard({ downloads, loading, error }: DownloadBoardProps)
                 <p className="text-sm text-gray-400 font-light text-center py-4">등록된 파일이 없습니다</p>
               ) : (
                 sections.map((section) => (
+                  // 원음 섹션: 사용자가 가장 먼저 찾는 파일이라 테두리(teal)·라벨 굵기만 살짝 강조
                   <div key={section.kind} className="space-y-1.5">
-                    <p className="text-sm text-purple-200/80 font-normal">{section.label}</p>
+                    <p
+                      className={`text-sm text-purple-200/80 ${section.kind === 'original' ? 'font-semibold' : 'font-normal'}`}
+                    >
+                      {section.label}
+                    </p>
                     {section.files.map((filename, i) => {
                       const href = fileUrl(selected.folder, filename);
                       return (
                         <div
                           key={`${i}-${filename}`}
-                          className="flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-800/40 px-3 py-2"
+                          className={`flex items-center gap-2 rounded-lg border bg-slate-800/40 px-3 py-2 ${
+                            section.kind === 'original' ? 'border-teal-400/40' : 'border-slate-700'
+                          }`}
                         >
-                          <p className="flex-1 min-w-0 text-base font-light text-white break-keep">
-                            {fileLabel(filename, selected.folder, selected.title)}
+                          <p
+                            className={`flex-1 min-w-0 text-base text-white break-keep ${
+                              section.kind === 'original' ? 'font-medium' : 'font-light'
+                            }`}
+                          >
+                            {section.kind === 'original'
+                              ? '원음(전체 믹스)'
+                              : fileLabel(filename, selected.folder, selected.title)}
                           </p>
                           <a
                             href={href}
