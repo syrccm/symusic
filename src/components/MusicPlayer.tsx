@@ -2481,7 +2481,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     aria-label={tab.label}
                     aria-current={active ? 'page' : undefined}
                   >
-                    <span className="relative">
+                    {/* 다운로드 탭: 아이콘·라벨만 은은한 깜빡임(.animate-tab-glow). 보고 있는 중(활성)엔 끈다. */}
+                    <span className={`relative${tab.key === 'downloads' && !active ? ' animate-tab-glow' : ''}`}>
                       {tab.icon}
                       {tab.key === 'notices' && noticeUnreadCount > 0 && (
                         <span className="absolute -top-1 -right-1.5 min-w-[14px] h-[14px] px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center border border-slate-900">
@@ -2489,7 +2490,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         </span>
                       )}
                     </span>
-                    <span className="text-base font-medium">{tab.label}</span>
+                    <span className={`text-base font-medium${tab.key === 'downloads' && !active ? ' animate-tab-glow' : ''}`}>
+                      {tab.label}
+                    </span>
                   </button>
                 );
               })}
