@@ -63,7 +63,7 @@ service cloud.firestore {
     }
 
     // ── 다운로드 게시판 (신규 추가, 콘솔 수동 반영) ──────────────────
-    // downloads/{id} = { title, url, note?, active, createdAt, updatedAt }. 곡 문서와 연결 없음.
+    // downloads/{id} = { title, folder, files: string[], note?, active, createdAt, updatedAt }. 곡 문서와 연결 없음.
     // 읽기는 모두 허용(하단 '다운로드' 탭에 표시), 쓰기는 로그인한 관리자만(DownloadManagerDialog).
     // ※ 콘솔에 최상위 와일드카드 쓰기 허용 규칙이 있으면 daylong 과 같은 방식으로 downloads 를 제외해야 합니다.
     match /downloads/{id} {

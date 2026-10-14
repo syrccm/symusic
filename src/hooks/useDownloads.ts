@@ -1,5 +1,7 @@
 // downloads 컬렉션 구독 + 쓰기 헬퍼 — useDaylongMembers 패턴.
-// - 문서 구조: downloads/{id} = { title, url(MEGA 폴더 공유 링크), note?, active, createdAt, updatedAt }
+// - 문서 구조: downloads/{id} = { title, folder, files: string[], note?, active, createdAt, updatedAt }
+//   folder = R2 download 버킷의 폴더명, files = 그 폴더에 올린 파일 이름(관리자가 올린 이름 그대로, 순서 유지).
+//   실제 URL 은 게시판(DownloadBoard)이 VITE_DOWNLOAD_BASE_URL + folder + '/' + file 로 만든다. 문서에 url 은 없다.
 //   곡 문서와 연결하지 않는다. createdAt / updatedAt 은 serverTimestamp(Timestamp). 파서는 toMillis(), 없으면 0.
 // - orderBy 없이 전체를 받아 클라이언트에서 createdAt 내림차순 정렬(콘솔 수동 입력 문서가 필드를 빠뜨려도 사라지지 않게).
 // - active 필터는 하지 않는다. 게시판(DownloadBoard)이 active !== false 만 보여 주고, 관리 모달은 전체를 쓴다.
@@ -23,7 +25,8 @@ export const DOWNLOADS_COLLECTION = 'downloads';
 export interface DownloadItem {
   id: string;
   title: string;
-  url: string;
+  folder: string;
+  files: string[];
   note: string;
   active: boolean;
   /** createdAt millis. 없으면 0 */
@@ -34,7 +37,8 @@ export interface DownloadItem {
 
 export interface DownloadInput {
   title: string;
-  url: string;
+  folder: string;
+  files: string[];
   note: string;
 }
 
@@ -49,12 +53,21 @@ function toMillis(value: unknown): number {
   return ts && typeof ts.toMillis === 'function' ? ts.toMillis() : 0;
 }
 
+/** files 배열: trim 후 비어 있지 않고 '/' 를 포함하지 않는 문자열만, 순서 유지. */
+function parseFiles(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((f) => (typeof f === 'string' ? f.trim() : ''))
+    .filter((f) => f !== '' && !f.includes('/'));
+}
+
 /** 필드 누락·타입 불일치 시 기본값으로 채운다(콘솔 수동 입력 대비). */
 export function parseDownload(id: string, raw: Record<string, unknown>): DownloadItem {
   return {
     id,
     title: typeof raw.title === 'string' ? raw.title : '',
-    url: typeof raw.url === 'string' ? raw.url.trim() : '',
+    folder: typeof raw.folder === 'string' ? raw.folder.trim() : '',
+    files: parseFiles(raw.files),
     note: typeof raw.note === 'string' ? raw.note : '',
     active: raw.active !== false,
     createdAt: toMillis(raw.createdAt),
@@ -103,7 +116,8 @@ export async function addDownload(input: DownloadInput): Promise<void> {
   if (!db) throw new Error('Firebase 연결이 필요합니다.');
   await addDoc(collection(db, DOWNLOADS_COLLECTION), {
     title: input.title,
-    url: input.url,
+    folder: input.folder,
+    files: input.files,
     note: input.note,
     active: true,
     createdAt: serverTimestamp(),

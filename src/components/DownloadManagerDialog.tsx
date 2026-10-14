@@ -1,8 +1,10 @@
 // 다운로드 관리 모달 (관리자 전용, /0691 음표 메뉴 → "📥 다운로드 관리")
-// - 대상: Firestore downloads/{id} = { title, url, note?, active, createdAt, updatedAt }. 목록은 MusicPlayer 의
-//   useDownloads() 결과(전체, 비활성 포함)를 props 로 받는다 — 게시판과 구독 공유, 별도 로드 없음.
+// - 대상: Firestore downloads/{id} = { title, folder, files: string[], note?, active, createdAt, updatedAt }. 목록은
+//   MusicPlayer 의 useDownloads() 결과(전체, 비활성 포함)를 props 로 받는다 — 게시판과 구독 공유, 별도 로드 없음.
+// - 파일은 여기서 올리지 않는다. 관리자가 R2 download 버킷의 {folder}/ 에 직접 올린 뒤 파일 이름을 한 줄에 하나씩
+//   붙여넣는다(이름 그대로 저장). 폴더명은 비워 두면 제목과 같게 저장하고, 폴더명·파일명에 '/' 는 쓸 수 없다.
 // - 상단 폼 하나를 추가/편집에 함께 쓴다. [편집](Pencil) 을 누르면 그 항목 값으로 폼을 채우고 editingId 를 둔다.
-//   저장 = editingId 있으면 updateDownload, 없으면 addDownload. 링크는 isHttpsUrl 을 통과해야 한다.
+//   저장 = editingId 있으면 updateDownload, 없으면 addDownload.
 // - 활성 체크박스는 즉시 updateDoc(active). 삭제는 window.confirm 후 deleteDownload(deletingId 스피너).
 // - 핸들러 순서(PlaylistManagerDialog 패턴): !isAdmin → 입력 검증 → !db → 재진입 방지 → try/await/toast → catch → finally.
 // - 쓰기 규칙(콘솔 수동 반영): downloads read 개방, write 로그인 사용자. 규칙 반영 전에는 permission-denied 안내.
@@ -16,7 +18,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { addDownload, deleteDownload, updateDownload, type DownloadItem } from '@/hooks/useDownloads';
-import { isHttpsUrl } from '@/utils/isHttpsUrl';
 
 interface DownloadManagerDialogProps {
   open: boolean;
@@ -36,7 +37,8 @@ function describeWriteError(error: unknown, fallback: string): string {
 export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }: DownloadManagerDialogProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [title, setTitle] = useState('');
-  const [url, setUrl] = useState('');
+  const [folder, setFolder] = useState('');
+  const [filesText, setFilesText] = useState(''); // 한 줄에 파일 이름 하나
   const [note, setNote] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -45,7 +47,8 @@ export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }
   const resetForm = () => {
     setEditingId(null);
     setTitle('');
-    setUrl('');
+    setFolder('');
+    setFilesText('');
     setNote('');
   };
 
@@ -58,7 +61,8 @@ export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }
   const handleStartEdit = (item: DownloadItem) => {
     setEditingId(item.id);
     setTitle(item.title);
-    setUrl(item.url);
+    setFolder(item.folder);
+    setFilesText(item.files.join('\n'));
     setNote(item.note);
   };
 
@@ -68,13 +72,29 @@ export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }
       return;
     }
     const trimmedTitle = title.trim();
-    const trimmedUrl = url.trim();
+    const trimmedFolder = folder.trim() || trimmedTitle; // 폴더명 기본값 = 제목
+    const files = Array.from(
+      new Set(
+        filesText
+          .split('\n')
+          .map((f) => f.trim())
+          .filter((f) => f !== ''),
+      ),
+    ); // 같은 줄 중복 붙여넣기 방지
     if (!trimmedTitle) {
       toast.error('제목을 입력해주세요.');
       return;
     }
-    if (!isHttpsUrl(trimmedUrl)) {
-      toast.error('링크는 https:// 로 시작하는 주소여야 합니다.');
+    if (trimmedFolder.includes('/')) {
+      toast.error("폴더명에 '/' 는 쓸 수 없습니다.");
+      return;
+    }
+    if (files.length === 0) {
+      toast.error('파일 이름을 한 줄에 하나씩 입력해주세요.');
+      return;
+    }
+    if (files.some((f) => f.includes('/'))) {
+      toast.error("파일 이름에 '/' 는 쓸 수 없습니다. 폴더 없이 파일 이름만 적어 주세요.");
       return;
     }
     if (!db) {
@@ -85,7 +105,7 @@ export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }
 
     setIsSaving(true);
     try {
-      const input = { title: trimmedTitle, url: trimmedUrl, note: note.trim() };
+      const input = { title: trimmedTitle, folder: trimmedFolder, files, note: note.trim() };
       if (editingId) {
         await updateDownload(editingId, input);
         toast.success(`수정되었습니다: ${trimmedTitle}`);
@@ -160,7 +180,7 @@ export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }
             다운로드 관리
           </DialogTitle>
           <DialogDescription className="text-gray-400 text-xs">
-            하단 '다운로드' 탭에 보이는 자료 목록입니다. 링크는 MEGA 폴더 공유 주소(https)를 넣어 주세요.
+            하단 '다운로드' 탭에 보이는 자료 목록입니다. 파일은 R2 download 버킷에 먼저 올리고 여기에는 이름만 적습니다.
           </DialogDescription>
         </DialogHeader>
 
@@ -195,18 +215,36 @@ export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="download-url" className="text-white text-xs">
-                링크 *
+              <Label htmlFor="download-folder" className="text-white text-xs">
+                폴더명 *
               </Label>
               <Input
-                id="download-url"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://mega.nz/folder/..."
-                inputMode="url"
+                id="download-folder"
+                value={folder}
+                onChange={(e) => setFolder(e.target.value)}
+                placeholder={title.trim() || '비워 두면 제목과 같게 저장'}
                 disabled={isSaving}
+                className="bg-slate-700 border-slate-600 text-white"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="download-files" className="text-white text-xs">
+                파일 목록 *
+              </Label>
+              <Textarea
+                id="download-files"
+                value={filesText}
+                onChange={(e) => setFilesText(e.target.value)}
+                placeholder={'예:\n2026 가을 찬양 악보_1_E 키.pdf\n2026 가을 찬양 악보_MR.mp3'}
+                rows={5}
+                disabled={isSaving}
+                spellCheck={false}
                 className="bg-slate-700 border-slate-600 text-white font-mono text-xs"
               />
+              <p className="text-[11px] text-gray-400 break-keep">
+                R2 download 버킷의 {folder.trim() || title.trim() || '{폴더명}'}/ 에 올린 파일 이름을 그대로 한 줄씩
+                붙여넣으세요
+              </p>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="download-note" className="text-white text-xs">
@@ -260,7 +298,9 @@ export function DownloadManagerDialog({ open, onOpenChange, isAdmin, downloads }
                           )}
                         </div>
                         {item.note && <p className="text-xs text-gray-400 truncate mt-0.5">{item.note}</p>}
-                        <p className="text-[11px] font-mono text-gray-500 truncate mt-0.5">{item.url || '(링크 없음)'}</p>
+                        <p className="text-[11px] font-mono text-gray-500 truncate mt-0.5">
+                          {item.folder || '(폴더 없음)'}/ · 파일 {item.files.length}개
+                        </p>
                       </div>
                       <div className="flex items-center gap-1 flex-shrink-0">
                         <label className="inline-flex items-center p-1.5 cursor-pointer" title="게시판 표시">
