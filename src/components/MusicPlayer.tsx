@@ -25,11 +25,14 @@ import { useShare } from '@/hooks/useShare';
 import { useSongs, type Song } from '@/hooks/useSongs';
 import { useNotices } from '@/hooks/useNotices';
 import { useBanner } from '@/hooks/useBanner';
+import { useDownloads } from '@/hooks/useDownloads';
 import { PlaylistBanner } from '@/components/PlaylistBanner';
 import { AboutModal } from '@/components/AboutModal';
 import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 import { PlaylistManagerDialog } from '@/components/PlaylistManagerDialog';
 import { BannerManagerDialog } from '@/components/BannerManagerDialog';
+import { DownloadManagerDialog } from '@/components/DownloadManagerDialog';
+import { DownloadBoard } from '@/components/DownloadBoard';
 import { NoticePanel } from '@/components/NoticePanel';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
 import { fixSermonSeparator } from '@/utils/sermonDescription';
@@ -75,7 +78,8 @@ import {
   MonitorPlay,
   HeartHandshake,
   Eye,
-  EyeOff
+  EyeOff,
+  Download
 } from 'lucide-react';
 
 // Types
@@ -107,7 +111,7 @@ const SEARCH_TABS = [
 type SearchTabKey = (typeof SEARCH_TABS)[number]['key'];
 
 // 하단 탭바 정의
-type MainTabKey = 'songs' | 'search' | 'favorites' | 'notices';
+type MainTabKey = 'songs' | 'search' | 'downloads' | 'notices';
 
 // 상황 라벨 → moods 필드 값 1:1 매핑 (api/generate-tags.js의 10가지 상황과 동일)
 // 라벨은 "~할 때 / ~닥칠 때 / ~필요할 때" 처럼 사용자가 처한 실제 상황으로 묘사한다.
@@ -141,6 +145,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const { songs: allSongs, loading, isOfflineMode, setSongsLocal } = useSongs();
   // 메인 배너(config/banner). 켜져 있을 때만 값이 있고, 관리자 여부와 무관하게 모두에게 표시.
   const banner = useBanner();
+  // 다운로드 자료(downloads 컬렉션, 전체). 하단 '다운로드' 탭 게시판과 관리자 모달이 구독을 공유한다.
+  const { downloads, loading: downloadsLoading, error: downloadsError } = useDownloads();
   // 배너는 항상 새 탭으로 연다. link 를 현재 origin 기준 URL 로 조립하고(new URL — 문자열 접합 시 '/' 누락이면
   // 다른 호스트가 되는 문제 방지), origin 이 다르면(외부 주소·javascript: 등) 열지 않는다. 링크는 관리 모달에서
   // 플레이리스트 경로(/p/코드)만 고를 수 있다.
@@ -222,6 +228,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
   const [showPlaylistDialog, setShowPlaylistDialog] = useState(false); // 플레이리스트 관리 모달(관리자)
   const [showBannerDialog, setShowBannerDialog] = useState(false); // 배너 관리 모달(관리자)
+  const [showDownloadDialog, setShowDownloadDialog] = useState(false); // 다운로드 관리 모달(관리자)
 
   // 햄버거 메뉴 + 카포·조옮김 / 메트로놈 모달
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1144,39 +1151,6 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     playSongObject(all[0]);
   };
 
-  // 즐겨찾기 탭: 개별 곡 선택 → 즐겨찾기 모드로 재생 후 찬양 탭으로 이동
-  const playFavoriteSong = (song: Song) => {
-    setIsFavoritesMode(true);
-    setCurrentSongIndex(songs.indexOf(song));
-
-    if (song.audioUrl && audioRef.current) {
-      audioRef.current.src = song.audioUrl;
-      audioRef.current.play().then(() => {
-        setIsPlaying(true);
-        trackSongPlay(song.id).catch((err) =>
-          console.error('[Analytics] trackSongPlay failed:', err),
-        );
-      }).catch(error => {
-        console.error('Playback failed:', error);
-        toast.error(`오디오 재생에 실패했습니다: ${song.title}`);
-      });
-    } else {
-      toast.error('오디오 파일이 없습니다.');
-    }
-
-    setActiveTab('songs');
-  };
-
-  // 즐겨찾기 탭: 전체 즐겨찾기 재생 시작 → 찬양 탭으로 이동
-  const handlePlayAllFavorites = () => {
-    if (favorites.length === 0) {
-      toast('즐겨찾기한 곡이 없어요. 곡 옆 ⭐ 버튼으로 추가해보세요!');
-      return;
-    }
-    playFavorites();
-    setActiveTab('songs');
-  };
-
   // Toggle play/pause
   const togglePlay = () => {
     if (!audioRef.current) return;
@@ -1571,7 +1545,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const TABS: { key: MainTabKey; label: string; icon: React.ReactNode }[] = [
     { key: 'songs', label: '찬양', icon: <Music className="h-6 w-6" /> },
     { key: 'search', label: '검색', icon: <Search className="h-6 w-6" /> },
-    { key: 'favorites', label: '즐겨찾기', icon: <Star className="h-6 w-6" /> },
+    { key: 'downloads', label: '다운로드', icon: <Download className="h-6 w-6" /> },
     { key: 'notices', label: '공지', icon: <Bell className="h-6 w-6" /> },
   ];
 
@@ -1683,6 +1657,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                               className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
                             >
                               📣 배너 관리
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowDownloadDialog(true);
+                                setIsMusicMenuOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                            >
+                              📥 다운로드 관리
                             </button>
                             <button
                               type="button"
@@ -2427,28 +2411,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
             </div>
           )}
 
-          {/* --- ⭐ 즐겨찾기 탭 --- */}
-          {activeTab === 'favorites' && (
-            <div className="px-4 py-4 space-y-3">
-              <Button
-                onClick={handlePlayAllFavorites}
-                className="w-full h-12 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white justify-center"
-              >
-                <Play className="h-4 w-4 mr-2" />
-                즐겨찾기 재생 시작 ({favoriteSongs.length})
-              </Button>
-
-              <div className="flex items-center gap-2 text-base text-purple-200 pt-1">
-                <Star className="h-4 w-4 fill-pink-400 text-pink-400" />
-                <span>즐겨찾기 목록 ({favoriteSongs.length})</span>
-              </div>
-
-              {renderSongList(
-                favoriteSongs,
-                (index) => playFavoriteSong(favoriteSongs[index]),
-                '즐겨찾기한 곡이 없어요. 곡 옆 ⭐ 버튼으로 추가해보세요!',
-              )}
-            </div>
+          {/* --- 📥 다운로드 탭 --- */}
+          {activeTab === 'downloads' && (
+            <DownloadBoard downloads={downloads} loading={downloadsLoading} error={downloadsError} />
           )}
 
           {/* --- 📰 공지 탭 --- */}
@@ -2951,6 +2916,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
       {isAdminRoute && (
         <BannerManagerDialog open={showBannerDialog} onOpenChange={setShowBannerDialog} isAdmin={isAdmin} />
+      )}
+
+      {isAdminRoute && (
+        <DownloadManagerDialog
+          open={showDownloadDialog}
+          onOpenChange={setShowDownloadDialog}
+          isAdmin={isAdmin}
+          downloads={downloads}
+        />
       )}
 
       {isGitaOpen && (
