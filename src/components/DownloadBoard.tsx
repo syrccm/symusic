@@ -6,8 +6,9 @@
 // - 목록 행: 제목 + 요약("악보 5 · MR 2") + 등록일. 확장자 .pdf → 악보, .mp3/.m4a/.wav → 반주(MR), 그 외 → 기타.
 // - 상세: 제목·설명(줄바꿈 유지) 아래 악보/반주/기타 섹션(빈 섹션 숨김). 각 행 = 라벨 + [보기|듣기](새 탭) + [저장](download).
 //   라벨 = 파일명에서 확장자 제거 → 앞이 `${folder}_` 또는 `${title}_` 이면 그 접두사 제거.
-//   ※ download 속성은 교차 출처 파일에서 브라우저가 무시할 수 있다(R2 응답 헤더에 따라 다름). iOS 는 열린 파일에서
-//     공유 → 파일에 저장 안내. iOS 홈 화면(standalone) 에서는 외부 origin 링크가 Safari 로 나간다. 실기기 확인 항목.
+//   [저장] 은 같은 주소에 `?dl=1` 을 붙인다 — Cloudflare 응답 헤더 규칙이 이 쿼리에 Content-Disposition: attachment 를
+//   붙여 주므로 교차 출처라도 첨부 다운로드가 된다(download 속성만으로는 교차 출처에서 무시됨). download 속성은 유지.
+//   iOS 홈 화면(standalone) 에서는 외부 origin 링크가 Safari 로 나간다. 실기기 확인 항목.
 import { useMemo, useState } from 'react';
 import type { FirestoreError } from 'firebase/firestore';
 import { ArrowLeft, Download, ExternalLink, FolderDown, Loader2, Search } from 'lucide-react';
@@ -22,8 +23,10 @@ const DOWNLOAD_BASE_URL: string = (() => {
   return raw.endsWith('/') ? raw : `${raw}/`;
 })();
 
-function fileUrl(folder: string, filename: string): string {
-  return `${DOWNLOAD_BASE_URL}${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`;
+/** 파일 주소. download=true 면 `?dl=1` 을 붙여 첨부 다운로드(Content-Disposition: attachment) 응답을 받는다. */
+function fileUrl(folder: string, filename: string, options: { download?: boolean } = {}): string {
+  const url = `${DOWNLOAD_BASE_URL}${encodeURIComponent(folder)}/${encodeURIComponent(filename)}`;
+  return options.download ? `${url}?dl=1` : url;
 }
 
 type FileKind = 'score' | 'mr' | 'other';
@@ -250,7 +253,7 @@ export function DownloadBoard({ downloads, loading, error }: DownloadBoardProps)
                             {section.open}
                           </a>
                           <a
-                            href={href}
+                            href={fileUrl(selected.folder, filename, { download: true })}
                             download={filename}
                             target="_blank"
                             rel="noopener noreferrer"
@@ -266,7 +269,7 @@ export function DownloadBoard({ downloads, loading, error }: DownloadBoardProps)
                 ))
               )}
               <p className="text-xs text-purple-200/70 font-light text-center break-keep">
-                iPhone 은 열린 파일에서 공유 → 파일에 저장
+                iPhone 은 저장 후 '다운로드' 폴더(파일 앱)에서 확인
               </p>
             </div>
           )}
