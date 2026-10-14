@@ -2481,7 +2481,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                     aria-label={tab.label}
                     aria-current={active ? 'page' : undefined}
                   >
-                    {/* 다운로드 탭: 아이콘·라벨만 은은한 깜빡임(.animate-tab-glow). 보고 있는 중(활성)엔 끈다. */}
+                    {/* 다운로드 탭: 아이콘·라벨만 회색↔호박색 깜빡임(.animate-tab-glow). 보고 있는 중(활성)엔 끄고 활성색 유지. */}
                     <span className={`relative${tab.key === 'downloads' && !active ? ' animate-tab-glow' : ''}`}>
                       {tab.icon}
                       {tab.key === 'notices' && noticeUnreadCount > 0 && (

@@ -205,18 +205,31 @@
   animation: badge-blink 1.6s ease-in-out infinite;
 }
 /* 하단 '다운로드' 탭 — 즐겨찾기 자리에 새로 생긴 탭이라 눈에 띄게. 조건 없이 항상, 은은하게.
-   아이콘·라벨의 opacity 1 → 0.45 → 1 만 바뀌고 색·배경·레이아웃은 그대로. 활성 탭일 때는 클래스를 빼서 정지. */
+   아이콘·라벨 color 가 기본 회색(gray-400 #9CA3AF) ↔ 호박색(amber-400 #FBBF24) 사이를 오가고, 호박색 구간에서
+   아이콘(svg)만 살짝 발광. opacity 는 1 고정, 배경·레이아웃은 그대로. 활성 탭일 때는 클래스를 빼서 정지. */
 @keyframes tab-glow {
   0%,
   100% {
-    opacity: 1;
+    color: #9ca3af;
   }
   50% {
-    opacity: 0.45;
+    color: #fbbf24;
+  }
+}
+@keyframes tab-glow-icon {
+  0%,
+  100% {
+    filter: none;
+  }
+  50% {
+    filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.6));
   }
 }
 .animate-tab-glow {
   animation: tab-glow 2.4s ease-in-out infinite;
+}
+.animate-tab-glow svg {
+  animation: tab-glow-icon 2.4s ease-in-out infinite;
 }
 /* 모션 최소화 선호 시 깜빡임 끄고 항상 보이게 */
 @media (prefers-reduced-motion: reduce) {
@@ -226,7 +239,12 @@
   .animate-badge-blink {
     animation: none;
   }
+  /* 다운로드 탭은 움직임 없이 호박색 고정 */
   .animate-tab-glow {
+    animation: none;
+    color: #fbbf24;
+  }
+  .animate-tab-glow svg {
     animation: none;
   }
 }
