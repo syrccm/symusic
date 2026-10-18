@@ -10,6 +10,10 @@ export interface Song {
   date?: string;
   description?: string;
   audioUrl?: string;
+  /** 부제(선택). 가사 카드 제목 아래 "(부제: …)" 로 표시. 없으면 표시 안 함 */
+  subtitle?: string;
+  /** 한 줄 설명(선택). 부제 아래(또는 제목 아래)에 내용만 표시. 없으면 표시 안 함 */
+  note?: string;
   sermon?: string;
   musicVideo?: string;
   lyrics?: string;

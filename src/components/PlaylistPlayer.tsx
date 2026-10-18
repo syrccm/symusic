@@ -512,6 +512,8 @@ export default function PlaylistPlayer() {
             <SongTitle
               as="h3"
               title={song.title}
+              subtitle={song.subtitle}
+              note={song.note}
               className="text-xl font-bold text-white text-center break-keep"
               tagClassName="text-sm font-semibold text-purple-300 tracking-wide mb-0.5"
             />

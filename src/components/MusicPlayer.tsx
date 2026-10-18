@@ -8,7 +8,8 @@ import {
   onSnapshot,
   query,
   orderBy,
-  updateDoc
+  updateDoc,
+  deleteField
 } from 'firebase/firestore';
 import { signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'firebase/auth';
 import { Button } from '@/components/ui/button';
@@ -339,12 +340,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // Song form state
   const [newSong, setNewSong] = useState({
     title: '',
+    subtitle: '',
+    note: '',
     category: '',
     description: '',
     youtubeUrl: '',
     lyrics: '',
     catechismRefs: [] as number[]
   });
+  // '한 줄 설명 추가' 체크. 꺼져 있으면 note 입력을 숨기고 저장하지 않는다.
+  const [newSongHasNote, setNewSongHasNote] = useState(false);
   // 새 곡 음원 형식. 저장 후 폼이 비워져도 마지막 선택을 유지한다.
   const [newSongExt, setNewSongExt] = useState<AudioExt>('m4a');
 
@@ -353,12 +358,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [editSongExt, setEditSongExt] = useState<AudioExt>('mp3');
   const [editSongData, setEditSongData] = useState({
     title: '',
+    subtitle: '',
+    note: '',
     category: '',
     description: '',
     youtubeUrl: '',
     lyrics: '',
     catechismRefs: [] as number[]
   });
+  const [editSongHasNote, setEditSongHasNote] = useState(false);
 
   // Audio ref
   const audioRef = useRef<HTMLAudioElement>(null);
@@ -623,6 +631,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         songData.description = fixSermonSeparator(newSong.description.trim());
       }
 
+      // 부제·한 줄 설명(선택): 비면 필드 자체를 저장하지 않는다. 설명은 체크가 켜진 경우에만.
+      if (newSong.subtitle.trim()) {
+        songData.subtitle = newSong.subtitle.trim();
+      }
+      if (newSongHasNote && newSong.note.trim()) {
+        songData.note = newSong.note.trim();
+      }
+
       if (newSong.youtubeUrl && newSong.youtubeUrl.trim()) {
         songData.youtubeUrl = newSong.youtubeUrl.trim();
       }
@@ -664,12 +680,15 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
       setNewSong({
         title: '',
+        subtitle: '',
+        note: '',
         category: '',
         description: '',
         youtubeUrl: '',
         lyrics: '',
         catechismRefs: []
       });
+      setNewSongHasNote(false);
       console.log('✅ [AddSong] 폼 초기화 완료');
 
     } catch (error: any) {
@@ -714,6 +733,14 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
         updatedData.description = fixSermonSeparator(editSongData.description.trim());
       }
 
+      // 부제·한 줄 설명(선택): 값이 있으면 저장, 비웠거나 체크를 껐는데 기존 값이 있으면 필드를 지운다
+      const subtitle = editSongData.subtitle.trim();
+      const note = editSongHasNote ? editSongData.note.trim() : '';
+      if (subtitle) updatedData.subtitle = subtitle;
+      if (note) updatedData.note = note;
+      const clearSubtitle = !subtitle && !!editingSong.subtitle;
+      const clearNote = !note && !!editingSong.note;
+
       if (editSongData.youtubeUrl && editSongData.youtubeUrl.trim()) {
         updatedData.youtubeUrl = editSongData.youtubeUrl.trim();
       }
@@ -727,12 +754,25 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
 
       if (isOfflineMode || !db) {
         setSongsLocal((prev) =>
-          prev.map((s) => (s.id === editingSong.id ? { ...s, ...updatedData } : s))
+          prev.map((s) =>
+            s.id === editingSong.id
+              ? {
+                  ...s,
+                  ...updatedData,
+                  ...(clearSubtitle ? { subtitle: undefined } : {}),
+                  ...(clearNote ? { note: undefined } : {}),
+                }
+              : s
+          )
         );
 
         toast.success(`곡이 수정되었습니다: ${editSongData.title} (오프라인)`);
       } else {
-        await updateDoc(doc(db, 'songs', editingSong.id), updatedData);
+        await updateDoc(doc(db, 'songs', editingSong.id), {
+          ...updatedData,
+          ...(clearSubtitle ? { subtitle: deleteField() } : {}),
+          ...(clearNote ? { note: deleteField() } : {}),
+        });
         toast.success(`곡이 수정되었습니다: ${editSongData.title}`);
 
         // 수정 시 가사 또는 제목이 "실제로" 바뀐 경우에만 태그 재생성(API 호출).
@@ -760,7 +800,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
       }
 
       setEditingSong(null);
-      setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
+      setEditSongData({ title: '', subtitle: '', note: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
 
     } catch (error: any) {
       console.error('❌ [UpdateSong] 수정 오류:', error);
@@ -960,8 +1000,11 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const startEditingSong = (song: Song) => {
     setEditingSong(song);
     setEditSongExt(audioExtFromUrl(song.audioUrl));
+    setEditSongHasNote(!!song.note);
     setEditSongData({
       title: song.title,
+      subtitle: song.subtitle || '',
+      note: song.note || '',
       category: song.category,
       description: song.description || '',
       youtubeUrl: song.youtubeUrl || '',
@@ -2183,6 +2226,9 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                           <SongTitle
                             as="h3"
                             title={currentSong.title}
+                            subtitle={currentSong.subtitle}
+                            note={currentSong.note}
+                            auxClassName="mb-14"
                             className="text-2xl font-bold text-white text-center break-keep"
                             tagClassName="text-sm font-semibold text-purple-300 tracking-wide mb-0.5"
                           />
@@ -2658,6 +2704,39 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   />
                 </div>
 
+                <div>
+                  <Label htmlFor="new-song-subtitle" className="text-white">부제 (선택)</Label>
+                  <Input
+                    id="new-song-subtitle"
+                    value={newSong.subtitle}
+                    onChange={(e) => setNewSong({...newSong, subtitle: e.target.value})}
+                    className="bg-slate-700 border-slate-600 text-white"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newSongHasNote}
+                      onChange={(e) => setNewSongHasNote(e.target.checked)}
+                      className="w-4 h-4 accent-purple-600 cursor-pointer"
+                    />
+                    <span className="text-sm text-white">한 줄 설명 추가</span>
+                  </label>
+                  {newSongHasNote && (
+                    <div>
+                      <Label htmlFor="new-song-note" className="text-white">설명</Label>
+                      <Input
+                        id="new-song-note"
+                        value={newSong.note}
+                        onChange={(e) => setNewSong({...newSong, note: e.target.value})}
+                        className="bg-slate-700 border-slate-600 text-white"
+                      />
+                    </div>
+                  )}
+                </div>
+
                 <AudioExtPicker value={newSongExt} onChange={setNewSongExt} />
 
                 <div>
@@ -2722,7 +2801,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   <Button
                     variant="outline"
                     onClick={() => {
-                      setNewSong({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
+                      setNewSong({ title: '', subtitle: '', note: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
+                      setNewSongHasNote(false);
                     }}
                     className="flex-1"
                     disabled={isAddingSong}
@@ -2743,7 +2823,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         size="sm"
                         onClick={() => {
                           setEditingSong(null);
-                          setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
+                          setEditSongData({ title: '', subtitle: '', note: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
                         }}
                         className="text-gray-400 hover:text-white"
                       >
@@ -2774,6 +2854,39 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         onChange={(e) => setEditSongData({...editSongData, title: e.target.value})}
                         className="bg-slate-700 border-slate-600 text-white"
                       />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="edit-song-subtitle" className="text-white">부제 (선택)</Label>
+                      <Input
+                        id="edit-song-subtitle"
+                        value={editSongData.subtitle}
+                        onChange={(e) => setEditSongData({...editSongData, subtitle: e.target.value})}
+                        className="bg-slate-700 border-slate-600 text-white"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={editSongHasNote}
+                          onChange={(e) => setEditSongHasNote(e.target.checked)}
+                          className="w-4 h-4 accent-purple-600 cursor-pointer"
+                        />
+                        <span className="text-sm text-white">한 줄 설명 추가</span>
+                      </label>
+                      {editSongHasNote && (
+                        <div>
+                          <Label htmlFor="edit-song-note" className="text-white">설명</Label>
+                          <Input
+                            id="edit-song-note"
+                            value={editSongData.note}
+                            onChange={(e) => setEditSongData({...editSongData, note: e.target.value})}
+                            className="bg-slate-700 border-slate-600 text-white"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <AudioExtPicker value={editSongExt} onChange={setEditSongExt} />
@@ -2828,7 +2941,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         variant="outline"
                         onClick={() => {
                           setEditingSong(null);
-                          setEditSongData({ title: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
+                          setEditSongData({ title: '', subtitle: '', note: '', category: '', description: '', youtubeUrl: '', lyrics: '', catechismRefs: [] });
                         }}
                         className="flex-1"
                       >

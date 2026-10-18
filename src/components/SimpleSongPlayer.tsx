@@ -313,6 +313,9 @@ export default function SimpleSongPlayer() {
               <SongTitle
                 as="h3"
                 title={song.title}
+                subtitle={song.subtitle}
+                note={song.note}
+                auxClassName="mb-9"
                 className="text-2xl font-bold text-white text-center break-keep"
                 tagClassName="text-sm font-semibold text-purple-300 tracking-wide mb-0.5"
               />
