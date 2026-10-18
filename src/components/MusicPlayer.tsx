@@ -136,6 +136,39 @@ const R2_CONFIG = {
   publicUrl: 'https://pub-0e706e4324b149e9a79e2be1ad1de135.r2.dev'
 };
 
+// 스트리밍 음원 형식(R2 music-files 에 올린 파일의 확장자). 새 곡 기본 m4a.
+// 기존 곡은 저장된 audioUrl 끝의 확장자를 읽고, 없거나 알 수 없으면 mp3(기존 곡 보호).
+type AudioExt = 'mp3' | 'm4a';
+const AUDIO_EXTS: AudioExt[] = ['m4a', 'mp3'];
+const audioExtFromUrl = (url?: string): AudioExt => (url && /\.m4a$/i.test(url) ? 'm4a' : 'mp3');
+
+function AudioExtPicker({ value, onChange }: { value: AudioExt; onChange: (ext: AudioExt) => void }) {
+  return (
+    <div>
+      <Label className="text-white">음원 형식</Label>
+      <div className="mt-1 grid grid-cols-2 gap-1 rounded-lg border border-slate-600 bg-slate-700/60 p-1">
+        {AUDIO_EXTS.map((ext) => {
+          const active = value === ext;
+          return (
+            <button
+              key={ext}
+              type="button"
+              aria-pressed={active}
+              onClick={() => onChange(ext)}
+              className={`rounded-md py-1.5 text-sm font-medium transition-colors ${
+                active ? 'bg-purple-600 text-white' : 'text-gray-300 hover:bg-white/5'
+              }`}
+            >
+              {ext}
+            </button>
+          );
+        })}
+      </div>
+      <p className="mt-1 text-[11px] text-gray-400">R2 music-files 에 올린 파일의 확장자와 같게 선택하세요</p>
+    </div>
+  );
+}
+
 interface MusicPlayerProps {
   isAdminRoute?: boolean;
 }
@@ -312,9 +345,12 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     lyrics: '',
     catechismRefs: [] as number[]
   });
+  // 새 곡 음원 형식. 저장 후 폼이 비워져도 마지막 선택을 유지한다.
+  const [newSongExt, setNewSongExt] = useState<AudioExt>('m4a');
 
   // Edit song state
   const [editingSong, setEditingSong] = useState<Song | null>(null);
+  const [editSongExt, setEditSongExt] = useState<AudioExt>('mp3');
   const [editSongData, setEditSongData] = useState({
     title: '',
     category: '',
@@ -339,8 +375,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   };
 
   // Helper function to generate R2 URL from song title
-  const generateR2UrlFromTitle = (title: string) => {
-    const filename = title.endsWith('.mp3') ? title : `${title}.mp3`;
+  const generateR2UrlFromTitle = (title: string, ext: AudioExt) => {
+    const filename = title.endsWith('.mp3') || title.endsWith('.m4a') ? title : `${title}.${ext}`;
     const encodedFilename = encodeURIComponent(filename);
     return `${R2_CONFIG.publicUrl}/${encodedFilename}`;
   };
@@ -574,7 +610,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     console.log('🎵 [AddSong] 곡 추가 시작:', newSong.title);
 
     try {
-      const finalAudioUrl = generateR2UrlFromTitle(newSong.title);
+      const finalAudioUrl = generateR2UrlFromTitle(newSong.title, newSongExt);
 
       const songData: any = {
         title: newSong.title.trim(),
@@ -665,7 +701,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
     }
 
     try {
-      const finalAudioUrl = generateR2UrlFromTitle(editSongData.title);
+      const finalAudioUrl = generateR2UrlFromTitle(editSongData.title, editSongExt);
 
       const updatedData: any = {
         title: editSongData.title.trim(),
@@ -923,6 +959,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   // Start editing song
   const startEditingSong = (song: Song) => {
     setEditingSong(song);
+    setEditSongExt(audioExtFromUrl(song.audioUrl));
     setEditSongData({
       title: song.title,
       category: song.category,
@@ -2621,6 +2658,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                   />
                 </div>
 
+                <AudioExtPicker value={newSongExt} onChange={setNewSongExt} />
+
                 <div>
                   <Label htmlFor="new-song-description" className="text-white">곡 설명</Label>
                   <Input
@@ -2736,6 +2775,8 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                         className="bg-slate-700 border-slate-600 text-white"
                       />
                     </div>
+
+                    <AudioExtPicker value={editSongExt} onChange={setEditSongExt} />
 
                     <div>
                       <Label htmlFor="edit-song-description" className="text-white">곡 설명</Label>
