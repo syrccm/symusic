@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-10-24T07:51:29.736Z",
+  "updatedAt": "2026-10-31T09:14:28.531Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 16,
+  "count": 17,
   "notes": [
+    {
+      "seq": 520,
+      "title": "그 같은 것이 또 없나니",
+      "date": "2026.10.30",
+      "pdfUrl": null,
+      "normTitle": "그같은것이또없나니"
+    },
     {
       "seq": 519,
       "title": "흔들리지 않는 꽉 찬 삶을 위하여",
@@ -57,7 +64,7 @@
       "seq": 512,
       "title": "내일이 아닌 오늘을 살라",
       "date": "2026.09.04",
-      "pdfUrl": "/data/notes/20260830.pdf",
+      "pdfUrl": null,
       "normTitle": "내일이아닌오늘을살라"
     },
     {
