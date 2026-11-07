@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-10-31T09:14:28.531Z",
+  "updatedAt": "2026-11-07T09:33:47.573Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 17,
+  "count": 18,
   "notes": [
+    {
+      "seq": 521,
+      "title": "깊은 강이 흐르다",
+      "date": "2026.11.07",
+      "pdfUrl": null,
+      "normTitle": "깊은강이흐르다"
+    },
     {
       "seq": 520,
       "title": "그 같은 것이 또 없나니",
@@ -57,7 +64,7 @@
       "seq": 513,
       "title": "비판할 것이 눈에 띈다면",
       "date": "2026.09.11",
-      "pdfUrl": "/data/notes/20260906.pdf",
+      "pdfUrl": null,
       "normTitle": "비판할것이눈에띈다면"
     },
     {
