@@ -1,9 +1,16 @@
 {
-  "updatedAt": "2026-11-07T09:33:47.573Z",
+  "updatedAt": "2026-11-14T09:47:26.244Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrintro/elibrary.jsp?tab=tab1",
   "retentionDays": 60,
-  "count": 18,
+  "count": 19,
   "notes": [
+    {
+      "seq": 522,
+      "title": "여호와는 나의 목자시니",
+      "date": "2026.11.13",
+      "pdfUrl": null,
+      "normTitle": "여호와는나의목자시니"
+    },
     {
       "seq": 521,
       "title": "깊은 강이 흐르다",
@@ -57,7 +64,7 @@
       "seq": 514,
       "title": "구하고 찾고 두드리라",
       "date": "2026.09.18",
-      "pdfUrl": "/data/notes/20260913.pdf",
+      "pdfUrl": null,
       "normTitle": "구하고찾고두드리라"
     },
     {
