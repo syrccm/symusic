@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-11-15T15:58:33.712Z",
+  "updatedAt": "2026-11-21T10:36:13.131Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.11.15",
+      "seq": 345,
+      "youtubeId": "gCUxrL9-0c0",
+      "title": "감사는 저항이다",
+      "noteSeq": 523,
+      "notePdfUrl": "/data/notes/20261115.pdf"
+    },
     {
       "date": "2026.10.11",
       "seq": 344,
@@ -23,9 +31,7 @@
       "date": "2026.09.20",
       "seq": 342,
       "youtubeId": "49VJQ7q4OWo",
-      "title": "제 3의 길은 없다",
-      "noteSeq": 515,
-      "notePdfUrl": "/data/notes/20260920.pdf"
+      "title": "제 3의 길은 없다"
     },
     {
       "date": "2026.09.13",
@@ -62,12 +68,6 @@
       "seq": 336,
       "youtubeId": "2CFLaIhXLKg",
       "title": "빠뜨리면 안될 기도들"
-    },
-    {
-      "date": "2026.07.19",
-      "seq": 335,
-      "youtubeId": "LyV2io7fGg0",
-      "title": "공급의 원천은 어디인가?"
     }
   ]
 }
