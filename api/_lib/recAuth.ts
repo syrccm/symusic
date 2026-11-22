@@ -87,6 +87,8 @@ export async function recGuard(req: ApiReq, res: ApiRes, method: 'GET' | 'POST')
     console.error('[rec] REC_ADMIN_UIDS 환경변수가 비어 있어 모든 요청을 거부합니다.');
   }
   if (!allowed.includes(uid)) {
+    // 배포본에서 원인을 추적할 수 있게 거부된 uid 를 로그로만 남긴다(응답·화면에는 넣지 않는다).
+    console.error('[rec] 허용 목록에 없는 uid:', uid);
     res.status(403).json({ error: '녹음 관리 권한이 없습니다.' });
     return null;
   }

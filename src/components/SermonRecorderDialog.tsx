@@ -2,7 +2,8 @@
 // - 녹음 자체는 별도 리포(syrccm/symusic-recorder)의 GitHub Actions 가 한다. 이 모달은 api/rec/* 로 시작·정지를 요청하고
 //   R2 비공개 버킷의 녹음 목록을 보여 준다. 키(GitHub PAT·R2)는 전부 서버에만 있고 여기서는 Firebase ID 토큰만 보낸다.
 // - 모든 호출은 현재 로그인 사용자의 ID 토큰을 Authorization 헤더로 붙인다. 서버가 UID 허용 목록(REC_ADMIN_UIDS)으로
-//   다시 거르므로, 로그인만 되어 있고 목록에 없는 계정은 401/403 → "녹음 관리 권한이 없습니다".
+//   다시 거른다. 401 → "로그인이 만료되었습니다…"(토큰 문제), 403 → "녹음 관리 권한이 없습니다 (…허용 목록에 없습니다)"
+//   (로그인만 되어 있고 목록에 없는 계정). 문구는 DENIED_MESSAGES.
 // - 상태는 모달이 열려 있는 동안만 10초마다 status 를 폴링한다. 권한 오류가 나면 폴링을 멈춘다(denied).
 // - 시작 직후에는 GitHub 에 실행이 잡히기까지 몇 초~수십 초 걸린다 → pending 으로 "시작하는 중"을 보여 주고,
 //   같은 세션의 실행이 목록에 보이면(또는 PENDING_MS 가 지나면) pending 을 지운다.
@@ -47,7 +48,11 @@ const POLL_MS = 10_000;
 const PENDING_MS = 90_000;
 const STOP_WAIT_MS = 180_000; // 종료 요청 후 이 시간이 지나도 안 끝나면 다시 누를 수 있게 한다
 const TITLE_MAX = 100;
-const DENIED_MESSAGE = '녹음 관리 권한이 없습니다';
+// 권한 오류 문구 — 401(로그인 문제)과 403(허용 목록에 없음)을 구분해 원인을 알 수 있게 한다.
+const DENIED_MESSAGES: Record<number, string> = {
+  401: '로그인이 만료되었습니다. 로그아웃 후 다시 로그인해 주세요.',
+  403: '녹음 관리 권한이 없습니다 (이 계정이 허용 목록에 없습니다)',
+};
 
 class RecApiError extends Error {
   status: number;
@@ -57,7 +62,10 @@ class RecApiError extends Error {
   }
 }
 
-const isDenied = (error: unknown) => error instanceof RecApiError && (error.status === 401 || error.status === 403);
+/** 권한 오류(401/403)면 그 상태에 맞는 문구, 아니면 null */
+const deniedMessage = (error: unknown): string | null =>
+  error instanceof RecApiError ? (DENIED_MESSAGES[error.status] ?? null) : null;
+const isDenied = (error: unknown) => deniedMessage(error) !== null;
 
 /** api/rec/* 호출. 현재 로그인 사용자의 ID 토큰을 붙이고, 실패하면 RecApiError 를 던진다. */
 async function recFetch<T>(path: string, body?: Record<string, unknown>): Promise<T> {
@@ -104,7 +112,7 @@ export function SermonRecorderDialog({ open, onOpenChange, isAdmin }: SermonReco
   const [statusLoading, setStatusLoading] = useState(true);
   const [items, setItems] = useState<RecItem[]>([]);
   const [listLoading, setListLoading] = useState(true);
-  const [denied, setDenied] = useState(false);
+  const [denied, setDenied] = useState<string | null>(null); // 권한 오류 문구(없으면 null)
   const [title, setTitle] = useState('');
   const [starting, setStarting] = useState(false);
   const [stopping, setStopping] = useState(false);
@@ -117,11 +125,12 @@ export function SermonRecorderDialog({ open, onOpenChange, isAdmin }: SermonReco
 
   // 권한 오류는 토스트를 한 번만 띄우고(폴링마다 반복하지 않게) 폴링을 멈춘다.
   const handleError = useCallback((error: unknown, fallback: string) => {
-    if (isDenied(error)) {
-      setDenied(true);
+    const message = deniedMessage(error);
+    if (message) {
+      setDenied(message);
       if (!deniedToastShown.current) {
         deniedToastShown.current = true;
-        toast.error(DENIED_MESSAGE);
+        toast.error(message);
       }
       return;
     }
@@ -159,7 +168,7 @@ export function SermonRecorderDialog({ open, onOpenChange, isAdmin }: SermonReco
   // 모달을 열 때 상태·목록을 읽는다. 닫았다 다시 열면 권한 오류 상태도 초기화(다른 계정으로 다시 로그인했을 수 있으므로).
   useEffect(() => {
     if (!open || !isAdmin) return;
-    setDenied(false);
+    setDenied(null);
     deniedToastShown.current = false;
     setStatusLoading(true);
     void loadStatus(false);
@@ -290,7 +299,7 @@ export function SermonRecorderDialog({ open, onOpenChange, isAdmin }: SermonReco
         </DialogHeader>
 
         {denied ? (
-          <p className="py-6 text-center text-sm text-rose-300">{DENIED_MESSAGE}</p>
+          <p className="py-6 text-center text-sm text-rose-300">{denied}</p>
         ) : (
           <div className="space-y-5">
             {/* 현재 상태 */}
