@@ -33,6 +33,7 @@ import { AnalyticsDialog } from '@/components/AnalyticsDialog';
 import { PlaylistManagerDialog } from '@/components/PlaylistManagerDialog';
 import { BannerManagerDialog } from '@/components/BannerManagerDialog';
 import { DownloadManagerDialog } from '@/components/DownloadManagerDialog';
+import { SermonRecorderDialog } from '@/components/SermonRecorderDialog';
 import { DownloadBoard } from '@/components/DownloadBoard';
 import { NoticePanel } from '@/components/NoticePanel';
 import { trackSongPlay, trackShare } from '@/utils/analyticsTracker';
@@ -263,6 +264,7 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
   const [showPlaylistDialog, setShowPlaylistDialog] = useState(false); // 플레이리스트 관리 모달(관리자)
   const [showBannerDialog, setShowBannerDialog] = useState(false); // 배너 관리 모달(관리자)
   const [showDownloadDialog, setShowDownloadDialog] = useState(false); // 다운로드 관리 모달(관리자)
+  const [showRecorderDialog, setShowRecorderDialog] = useState(false); // 설교녹음 모달(관리자)
 
   // 햄버거 메뉴 + 카포·조옮김 / 메트로놈 모달
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -1751,6 +1753,16 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
                             <button
                               type="button"
                               onClick={() => {
+                                setShowRecorderDialog(true);
+                                setIsMusicMenuOpen(false);
+                              }}
+                              className="w-full text-left px-3 py-2.5 text-sm text-gray-100 hover:bg-purple-500/20 transition-colors"
+                            >
+                              🎙️ 설교녹음
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
                                 handleAdminLogout();
                                 setIsMusicMenuOpen(false);
                               }}
@@ -3082,6 +3094,10 @@ export default function MusicPlayer({ isAdminRoute = false }: MusicPlayerProps) 
           isAdmin={isAdmin}
           downloads={downloads}
         />
+      )}
+
+      {isAdminRoute && (
+        <SermonRecorderDialog open={showRecorderDialog} onOpenChange={setShowRecorderDialog} isAdmin={isAdmin} />
       )}
 
       {isGitaOpen && (

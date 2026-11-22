@@ -42,6 +42,8 @@ function shouldBypassSW(request) {
   if (request.method !== 'GET') return true;
   const url = request.url;
   return (
+    // 같은 출처 API(/api/rec/* 의 녹음 상태·목록·서명 URL 등)는 캐시하면 옛 응답이 되살아나므로 네트워크 직행
+    new URL(url).pathname.startsWith('/api/') ||
     url.includes('firestore.googleapis.com') ||
     url.includes('firebaseio.com') ||
     url.includes('firebaseapp.com') ||
