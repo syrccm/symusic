@@ -1,6 +1,7 @@
 // 설교녹음 — Cloudflare R2(S3 호환) 비공개 버킷 접근. SigV4 서명은 aws4fetch 로 한다.
 // - 환경변수(서버 전용): R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET.
-// - 이 모듈이 다루는 키는 recordings/ 아래의 정해진 이름 형식뿐이다(아래 정규식). 다른 키는 목록에도 넣지 않고 서명도 하지 않는다.
+// - 이 모듈이 다루는 키는 recordings/ 아래의 정해진 이름 형식(아래 정규식)과 예약 기능의 고정 키 3개(파일 아래쪽)뿐이다.
+//   다른 키는 목록에도 넣지 않고 서명도 하지 않는다.
 import { AwsClient } from 'aws4fetch';
 
 // 녹음 워크플로가 만드는 키: recordings/{YYYY-MM-DD}_{HHMM}_{session_id}.mp3 | .json
@@ -88,4 +89,111 @@ export async function presignDownload(key: string): Promise<string | null> {
   );
   const signed = await client.sign(url.toString(), { method: 'GET', aws: { signQuery: true } });
   return signed.url;
+}
+
+// ── 예약 기능의 JSON 파일 3개 ─────────────────────────────────────
+// 키는 아래 상수뿐이다. 요청에서 온 값으로 키를 만들지 않는다(형식은 녹음 리포 README "R2 에 있는 파일").
+const RESERVATIONS_KEY = 'reservations.json'; // 앱이 쓰고 발사기가 읽는다(발사기도 실행 기록을 쓴다)
+const UPCOMING_KEY = 'upcoming.json'; // 발사기가 쓰고 앱이 읽는다
+const STATE_KEY = 'state/current.json'; // 녹음 러너가 쓰고 앱이 읽는다
+type FixedKey = typeof RESERVATIONS_KEY | typeof UPCOMING_KEY | typeof STATE_KEY;
+
+const YT_VIDEO_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+const str = (value: unknown, max: number): string => (typeof value === 'string' ? value.slice(0, max) : '');
+
+/** 고정 키의 JSON 객체를 읽는다. 객체가 없으면(404) null, 그 밖의 오류·형식 오류는 던진다. */
+async function getJson(key: FixedKey): Promise<{ data: Record<string, unknown>; etag: string | null } | null> {
+  const { client, base } = config();
+  const res = await client.fetch(`${base}/${key}`);
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`R2 읽기 실패 (${key}, HTTP ${res.status})`);
+  const data: unknown = await res.json();
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error(`R2 파일 형식 오류 (${key})`);
+  return { data: data as Record<string, unknown>, etag: res.headers.get('etag') };
+}
+
+export interface ReservationsFile {
+  /** 파일 전체(items 밖의 키를 보존해 다시 쓰기 위함) */
+  doc: Record<string, unknown>;
+  items: unknown[];
+  /** 조건부 쓰기용. 파일이 없으면 null */
+  etag: string | null;
+}
+
+/** reservations.json 을 읽는다. 없으면 빈 목록. items 배열이 없는 파일은 덮어쓰지 않도록 오류로 던진다. */
+export async function readReservations(): Promise<ReservationsFile> {
+  const got = await getJson(RESERVATIONS_KEY);
+  if (!got) return { doc: {}, items: [], etag: null };
+  if (!Array.isArray(got.data.items)) throw new Error('reservations.json 형식 오류 (items 배열 없음)');
+  return { doc: got.data, items: got.data.items, etag: got.etag };
+}
+
+/**
+ * reservations.json 을 쓴다. etag 가 있으면 If-Match 조건부 PUT — 읽은 뒤 발사기가 파일을 바꿨으면 412 가 되고 false 를 돌려준다.
+ * (aws4fetch 는 If-Match 를 서명에 포함해 그대로 보낸다)
+ */
+export async function writeReservations(doc: Record<string, unknown>, items: unknown[], etag: string | null): Promise<boolean> {
+  const { client, base } = config();
+  const res = await client.fetch(`${base}/${RESERVATIONS_KEY}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      ...(etag ? { 'If-Match': etag } : {}),
+    },
+    body: `${JSON.stringify({ ...doc, items }, null, 2)}\n`,
+  });
+  if (res.status === 412) return false;
+  if (!res.ok) throw new Error(`R2 쓰기 실패 (${RESERVATIONS_KEY}, HTTP ${res.status})`);
+  return true;
+}
+
+export interface UpcomingItem {
+  video_id: string;
+  title: string;
+  /** KST ISO 8601. 예정 시각을 얻지 못한 영상은 null */
+  scheduled_at: string | null;
+  status: 'upcoming' | 'live';
+}
+
+/** upcoming.json 을 읽어 필요한 필드만 돌려준다. 없으면 빈 목록. */
+export async function readUpcoming(): Promise<{ updated_at: string | null; items: UpcomingItem[] }> {
+  const got = await getJson(UPCOMING_KEY);
+  if (!got) return { updated_at: null, items: [] };
+  const rawItems = Array.isArray(got.data.items) ? (got.data.items as unknown[]) : [];
+  const items: UpcomingItem[] = [];
+  for (const raw of rawItems) {
+    if (!raw || typeof raw !== 'object') continue;
+    const it = raw as Record<string, unknown>;
+    if (typeof it.video_id !== 'string' || !YT_VIDEO_ID_RE.test(it.video_id)) continue;
+    items.push({
+      video_id: it.video_id,
+      title: str(it.title, 200),
+      scheduled_at: str(it.scheduled_at, 40) || null,
+      status: it.status === 'live' ? 'live' : 'upcoming',
+    });
+  }
+  return { updated_at: str(got.data.updated_at, 40) || null, items };
+}
+
+export interface RecState {
+  phase: 'waiting' | 'recording';
+  session_id: string;
+  title: string;
+  video_id: string | null;
+  started_at: string;
+}
+
+/** state/current.json 을 읽는다. 없거나 phase 를 알 수 없으면 null. */
+export async function readState(): Promise<RecState | null> {
+  const got = await getJson(STATE_KEY);
+  if (!got) return null;
+  const { phase } = got.data;
+  if (phase !== 'waiting' && phase !== 'recording') return null;
+  return {
+    phase,
+    session_id: str(got.data.session_id, 64),
+    title: str(got.data.title, 200),
+    video_id: typeof got.data.video_id === 'string' && YT_VIDEO_ID_RE.test(got.data.video_id) ? got.data.video_id : null,
+    started_at: str(got.data.started_at, 40),
+  };
 }

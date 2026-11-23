@@ -69,12 +69,12 @@ export async function listRuns(perPage: number): Promise<RecRun[]> {
   });
 }
 
-/** 녹음 워크플로를 main 에서 실행한다. */
-export async function dispatchRecord(sessionId: string, title: string): Promise<void> {
+/** 녹음 워크플로를 main 에서 실행한다. videoId 가 있으면 그 영상을, 없으면 리포 변수 LIVE_URL 을 녹음한다. */
+export async function dispatchRecord(sessionId: string, title: string, videoId?: string): Promise<void> {
   const { workflow } = config();
   const res = await gh(`/actions/workflows/${encodeURIComponent(workflow)}/dispatches`, {
     method: 'POST',
-    body: { ref: 'main', inputs: { session_id: sessionId, title } },
+    body: { ref: 'main', inputs: { session_id: sessionId, title, ...(videoId ? { video_id: videoId } : {}) } },
   });
   if (!res.ok) fail('워크플로 실행', res);
 }
