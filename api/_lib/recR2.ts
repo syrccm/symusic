@@ -104,7 +104,9 @@ const str = (value: unknown, max: number): string => (typeof value === 'string' 
 /** 고정 키의 JSON 객체를 읽는다. 객체가 없으면(404) null, 그 밖의 오류·형식 오류는 던진다. */
 async function getJson(key: FixedKey): Promise<{ data: Record<string, unknown>; etag: string | null } | null> {
   const { client, base } = config();
-  const res = await client.fetch(`${base}/${key}`);
+  // 압축 없이 받는다. Node 의 fetch 는 기본으로 gzip·br 을 요청하는데, 응답이 전송 중 압축되면 ETag 가
+  // 약한 형식(W/"…")으로 바뀌어 내려올 수 있고, 그 값은 If-Match(강한 비교)에서 절대 일치하지 않는다.
+  const res = await client.fetch(`${base}/${key}`, { headers: { 'Accept-Encoding': 'identity' } });
   if (res.status === 404) return null;
   if (!res.ok) throw new Error(`R2 읽기 실패 (${key}, HTTP ${res.status})`);
   const data: unknown = await res.json();
@@ -129,22 +131,36 @@ export async function readReservations(): Promise<ReservationsFile> {
 }
 
 /**
- * reservations.json 을 쓴다. etag 가 있으면 If-Match 조건부 PUT — 읽은 뒤 발사기가 파일을 바꿨으면 412 가 되고 false 를 돌려준다.
- * (aws4fetch 는 If-Match 를 서명에 포함해 그대로 보낸다)
+ * GET 응답의 ETag 를 If-Match 에 넣을 형식으로 맞춘다: 약한 표시(W/)를 떼고 따옴표로 감싼다.
+ * R2 의 If-Match 는 강한 비교라 W/"…" 는 절대 일치하지 않고, 값은 따옴표로 감싼 형식("…")이어야 한다.
+ */
+function ifMatchValue(etag: string): string {
+  return `"${etag.trim().replace(/^W\//i, '').replace(/^"|"$/g, '')}"`;
+}
+
+/**
+ * reservations.json 을 쓴다. etag(읽을 때 받은 ETag 헤더 값)가 있으면 If-Match 조건부 PUT —
+ * 읽은 뒤 발사기가 파일을 바꿨으면 412 가 되고 false 를 돌려준다. (aws4fetch 는 If-Match 를 서명에 포함해 그대로 보낸다)
  */
 export async function writeReservations(doc: Record<string, unknown>, items: unknown[], etag: string | null): Promise<boolean> {
   const { client, base } = config();
+  const ifMatch = etag ? ifMatchValue(etag) : null;
   const res = await client.fetch(`${base}/${RESERVATIONS_KEY}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json; charset=utf-8',
-      ...(etag ? { 'If-Match': etag } : {}),
+      ...(ifMatch ? { 'If-Match': ifMatch } : {}),
     },
     body: `${JSON.stringify({ ...doc, items }, null, 2)}\n`,
   });
-  if (res.status === 412) return false;
-  if (!res.ok) throw new Error(`R2 쓰기 실패 (${RESERVATIONS_KEY}, HTTP ${res.status})`);
-  return true;
+  if (res.ok) return true;
+  // 실패 원인을 로그로 바로 가릴 수 있게 상태 코드와 보낸 If-Match·읽을 때 받은 ETag 를 남긴다(ETag 는 비밀값이 아니다).
+  const detail = `HTTP ${res.status}, If-Match=${ifMatch ?? '(없음)'}, 받은 ETag=${etag ?? '(없음)'}`;
+  if (res.status === 412) {
+    console.error(`[rec/reservations] 조건부 쓰기 거부: ${detail}`);
+    return false;
+  }
+  throw new Error(`R2 쓰기 실패 (${RESERVATIONS_KEY}, ${detail})`);
 }
 
 export interface UpcomingItem {
