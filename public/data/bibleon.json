@@ -1,8 +1,16 @@
 {
-  "updatedAt": "2026-11-21T10:36:13.131Z",
+  "updatedAt": "2026-11-28T11:17:47.930Z",
   "source": "https://www.sooyoungro.org/main/new-layout/syrtv/bibleontv.jsp?tab=tab1",
   "count": 10,
   "items": [
+    {
+      "date": "2026.11.22",
+      "seq": 346,
+      "youtubeId": "A8VtX9c0sUA",
+      "title": "예수면 충분합니다",
+      "noteSeq": 524,
+      "notePdfUrl": "/data/notes/20261122.pdf"
+    },
     {
       "date": "2026.11.15",
       "seq": 345,
@@ -62,12 +70,6 @@
       "seq": 337,
       "youtubeId": "K9njb8E_Qys",
       "title": "내 마음은 어디에?"
-    },
-    {
-      "date": "2026.07.26",
-      "seq": 336,
-      "youtubeId": "2CFLaIhXLKg",
-      "title": "빠뜨리면 안될 기도들"
     }
   ]
 }
